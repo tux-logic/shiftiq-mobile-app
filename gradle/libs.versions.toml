@@ -1,35 +1,55 @@
 [versions]
+# Core Android & Kotlin Toolchain
 agp = "9.4.1"
+kotlin = "2.4.21"
+ksp = "2.3.4"
+
+# AndroidX Core & Lifecycle
 coreKtx = "1.19.1"
-datastorePreferences = "1.2.1"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-kotlin = "2.4.21"
-coilCompose = "3.6.3"
+
+# Jetpack Compose BOM & Navigation
 composeBom = "2026.09.00"
-retrofit = "3.0.0"
-ksp = "2.3.4"
+# Añadido: Navegación declarativa oficial para Compose (requerido para flujo de login, pantallas por rol y rutas tipadas)
+navigationCompose = "2.8.8"
+
+# Persistencia local (DataStore & Room)
+datastorePreferences = "1.2.1"
+# Room 3.0.3 (usando artefacto androidx.room3 oficial)
+room = "3.0.3"
+
+# Inyección de dependencias (Hilt)
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
-kotlinSerialization = "2.4.21"
-room = "3.0.3"
-navigationCompose = "2.8.8"
+
+# Serialización y Red (Retrofit, OkHttp, Coil)
+retrofit = "3.0.0"
+# Añadido: Cliente HTTP base y logging interceptor para depurar peticiones y gestionar AuthInterceptor + TokenAuthenticator
 okhttp = "4.12.0"
+coilCompose = "3.6.3"
+kotlinSerialization = "2.4.21"
+
+# Compatibilidad de APIs modernas de Java (Desugaring)
+# Añadido: Permite usar java.time.* (Instant, LocalDateTime) en dispositivos con minSdk 24 sin crasheos
 desugarJdkLibs = "2.1.5"
+
+# Concurrencia y Pruebas Unitarias
+# Añadidos: Corrutinas para asincronía en DataStore/Retrofit, Turbine para testear Flows reactivos y MockK para mocks idiomáticos
 coroutines = "1.10.1"
 turbine = "1.2.0"
 mockk = "1.13.17"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
 
 [libraries]
+# AndroidX Base
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+
+# Compose UI & Material 3
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
@@ -38,34 +58,45 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 
+# Navegación Compose (Añadido: contratos de navegación en AppDestination)
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
+# Carga de Imágenes (Coil)
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
 
-androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
-
+# Capa de Red (Añadido: OkHttp y Logging Interceptor para autenticación e inspección)
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 
+# Inyección de Dependencias (Hilt)
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 
+# Persistencia (Room & DataStore)
 room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room"}
 room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room"}
-
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+
+# Compatibilidad Java Time (Añadido: Desugaring de Bytecode para minSdk 24)
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 
+# Concurrencia y Pruebas (Añadidos: Coroutines Test, Turbine y MockK)
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+# Testing Base
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
