@@ -84,6 +84,28 @@ class MainActivity : ComponentActivity() {
                                                 popUpTo(AppDestination.Login.route) { inclusive = true }
                                             }
                                         }
+                                    },
+                                    onNavigateToRegister = {
+                                        navController.navigate(AppDestination.Register.route)
+                                    }
+                                )
+                            }
+
+                            composable(AppDestination.Register.route) {
+                                val registerViewModel: com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register.RegisterViewModel = hiltViewModel()
+                                val uiState by registerViewModel.uiState.collectAsState()
+
+                                com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register.RegisterScreen(
+                                    uiState = uiState,
+                                    onEmailChanged = registerViewModel::onEmailChanged,
+                                    onPasswordChanged = registerViewModel::onPasswordChanged,
+                                    onRoleSelected = registerViewModel::onRoleSelected,
+                                    onRegisterClick = registerViewModel::register,
+                                    onNavigateToLogin = { navController.popBackStack() },
+                                    onRegisterSuccess = {
+                                        navController.navigate(AppDestination.Dashboard.route) {
+                                            popUpTo(AppDestination.Login.route) { inclusive = true }
+                                        }
                                     }
                                 )
                             }

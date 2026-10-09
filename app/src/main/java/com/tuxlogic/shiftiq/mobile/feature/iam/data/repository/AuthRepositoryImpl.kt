@@ -12,6 +12,7 @@ import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.api.AuthApiService
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.RefreshTokenRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignInRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UserResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.AuthenticatedUser
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): AppResult<AuthenticatedUser> =
         withContext(dispatchers.io) {
             val result = safeApiCall {
-                authApiService.login(SignInRequestDto(username = email, password = password))
+                authApiService.login(SignInRequestDto(email = email, password = password))
             }
             result.map { dto ->
                 val role = Role.fromName(dto.role) ?: Role.ROLE_USER
@@ -49,6 +50,22 @@ class AuthRepositoryImpl @Inject constructor(
                 )
             }
         }
+
+    override suspend fun register(
+        email: String,
+        password: String,
+        roles: List<String>
+    ): AppResult<UserResourceDto> = withContext(dispatchers.io) {
+        safeApiCall {
+            authApiService.register(
+                com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignUpRequestDto(
+                    email = email,
+                    password = password,
+                    roles = roles
+                )
+            )
+        }
+    }
 
     override suspend fun logout(): AppResult<Unit> = withContext(dispatchers.io) {
         val session = sessionDataStore.sessionState.first()

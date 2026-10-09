@@ -7,6 +7,7 @@ package com.tuxlogic.shiftiq.mobile.core.navigation
 sealed class AppDestination(val route: String) {
     // Flujo de autenticación (Feature IAM)
     data object Login : AppDestination("auth/login")
+    data object Register : AppDestination("auth/register")
     data object ForgotPassword : AppDestination("auth/forgot-password")
 
     // Flujos principales por rol y dashboard general
