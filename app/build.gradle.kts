@@ -23,7 +23,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        }
         release {
+            buildConfigField("String", "BASE_URL", "\"https://shiftiq-platform.onrender.com/\"")
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -31,15 +35,19 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -48,7 +56,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
+
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -66,6 +80,8 @@ dependencies {
     // Retrofit
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     // Hilt
     implementation(libs.androidx.hilt.navigation.compose)
@@ -78,5 +94,4 @@ dependencies {
 
     // Data Store
     implementation(libs.androidx.datastore.preferences)
-
 }
