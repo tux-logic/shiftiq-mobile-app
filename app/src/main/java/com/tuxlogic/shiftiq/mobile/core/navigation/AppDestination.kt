@@ -17,6 +17,19 @@ sealed class AppDestination(val route: String) {
     data object TechnicianDashboard : AppDestination("dashboard/technician")
     data object CustomerDashboard : AppDestination("dashboard/customer")
 
+    // Feature Core: Talleres, sedes y perfil de dueño
+    data object WorkshopList : AppDestination("core/workshops")
+    data object CreateWorkshop : AppDestination("core/workshops/create/{ownerId}") {
+        fun createRoute(ownerId: String) = "core/workshops/create/$ownerId"
+    }
+    data object BranchManagement : AppDestination("core/workshops/{workshopId}/branches") {
+        fun createRoute(workshopId: String) = "core/workshops/$workshopId/branches"
+    }
+    data object CreateBranch : AppDestination("core/workshops/{workshopId}/branches/create") {
+        fun createRoute(workshopId: String) = "core/workshops/$workshopId/branches/create"
+    }
+    data object OwnerProfile : AppDestination("core/profile/owner")
+
     // Rutas operativas
     data object BranchSelection : AppDestination("branches/select")
     data object BranchSelector : AppDestination("branches/select")
