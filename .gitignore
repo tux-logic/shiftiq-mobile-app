@@ -17,3 +17,6 @@ local.properties
 **/build/
 
 .idea/
+
+# Local personal reference (do not push to GitHub)
+docs/MIGRATION-FOUNDATION-APP.md
