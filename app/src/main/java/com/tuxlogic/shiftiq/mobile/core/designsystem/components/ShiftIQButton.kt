@@ -19,6 +19,23 @@ import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 
 @Composable
+fun ShiftIQButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false
+) {
+    ShiftIQPrimaryButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        isLoading = isLoading
+    )
+}
+
+@Composable
 fun ShiftIQPrimaryButton(
     text: String,
     onClick: () -> Unit,
