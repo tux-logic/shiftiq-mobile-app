@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPrimaryButton
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQSecondaryButton
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
@@ -37,6 +38,8 @@ fun RoleDashboardScreen(
     activeBranchId: BranchId?,
     userId: UserId?,
     onLogoutClick: () -> Unit,
+    onNavigateToWorkshops: () -> Unit = {},
+    onNavigateToOwnerProfile: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -154,6 +157,24 @@ fun RoleDashboardScreen(
                             )
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ShiftIQPrimaryButton(
+                    text = "Gestionar Talleres y Sedes",
+                    onClick = onNavigateToWorkshops,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onNavigateToOwnerProfile,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Ver / Editar Mi Perfil de Dueño")
                 }
             }
 

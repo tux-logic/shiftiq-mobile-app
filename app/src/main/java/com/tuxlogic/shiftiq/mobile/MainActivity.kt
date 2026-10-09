@@ -131,6 +131,12 @@ class MainActivity : ComponentActivity() {
                                     userRole = session.userRole,
                                     activeBranchId = session.activeBranchId,
                                     userId = session.userId,
+                                    onNavigateToWorkshops = {
+                                        navController.navigate(AppDestination.WorkshopList.route)
+                                    },
+                                    onNavigateToOwnerProfile = {
+                                        navController.navigate(AppDestination.OwnerProfile.route)
+                                    },
                                     onLogoutClick = {
                                         scope.launch {
                                             logoutUseCase()
@@ -141,6 +147,75 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
+                                )
+                            }
+
+                            // Bloque 2: Core (Talleres y Sedes)
+                            composable(AppDestination.WorkshopList.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.workshops.WorkshopListViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.workshops.WorkshopListScreen(
+                                    viewModel = viewModel,
+                                    onNavigateToCreateWorkshop = { ownerId ->
+                                        navController.navigate(AppDestination.CreateWorkshop.createRoute(ownerId))
+                                    },
+                                    onNavigateToOwnerProfile = {
+                                        navController.navigate(AppDestination.OwnerProfile.route)
+                                    },
+                                    onNavigateToBranches = { workshopId ->
+                                        navController.navigate(AppDestination.BranchManagement.createRoute(workshopId))
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.CreateWorkshop.route,
+                                arguments = listOf(androidx.navigation.navArgument("ownerId") { type = androidx.navigation.NavType.StringType })
+                            ) { backStackEntry ->
+                                val ownerId = backStackEntry.arguments?.getString("ownerId") ?: ""
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.workshops.CreateWorkshopViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.workshops.CreateWorkshopScreen(
+                                    ownerId = ownerId,
+                                    viewModel = viewModel,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onWorkshopCreated = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.BranchManagement.route,
+                                arguments = listOf(androidx.navigation.navArgument("workshopId") { type = androidx.navigation.NavType.StringType })
+                            ) { backStackEntry ->
+                                val workshopId = backStackEntry.arguments?.getString("workshopId") ?: ""
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.branches.BranchManagementViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.branches.BranchManagementScreen(
+                                    workshopId = workshopId,
+                                    viewModel = viewModel,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onNavigateToCreateBranch = { wId ->
+                                        navController.navigate(AppDestination.CreateBranch.createRoute(wId))
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.CreateBranch.route,
+                                arguments = listOf(androidx.navigation.navArgument("workshopId") { type = androidx.navigation.NavType.StringType })
+                            ) { backStackEntry ->
+                                val workshopId = backStackEntry.arguments?.getString("workshopId") ?: ""
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.branches.CreateBranchViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.branches.CreateBranchScreen(
+                                    workshopId = workshopId,
+                                    viewModel = viewModel,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onBranchCreated = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(AppDestination.OwnerProfile.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner.OwnerProfileViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner.OwnerProfileScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
                         }
