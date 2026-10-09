@@ -40,9 +40,7 @@ data class SignUpRequestDto(
     @SerializedName("email")
     val email: String,
     @SerializedName("password")
-    val password: String,
-    @SerializedName("roles")
-    val roles: List<String> = listOf("ROLE_USER")
+    val password: String
 )
 
 data class UserResourceDto(
@@ -50,6 +48,6 @@ data class UserResourceDto(
     val id: String,
     @SerializedName("email")
     val email: String,
-    @SerializedName("roles")
-    val roles: List<String> = emptyList()
+    @SerializedName(value = "role", alternate = ["roles"])
+    val role: String? = null
 )

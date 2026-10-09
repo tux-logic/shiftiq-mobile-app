@@ -60,8 +60,7 @@ class AuthRepositoryImpl @Inject constructor(
             authApiService.register(
                 com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignUpRequestDto(
                     email = email,
-                    password = password,
-                    roles = roles
+                    password = password
                 )
             )
         }

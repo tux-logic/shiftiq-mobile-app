@@ -24,8 +24,8 @@ class RegisterUseCase @Inject constructor(
         if (password.isBlank()) {
             return AppResult.Failure(AppError.Validation(details = "password", message = "La contraseña es requerida"))
         }
-        if (password.length < 6) {
-            return AppResult.Failure(AppError.Validation(details = "password", message = "La contraseña debe tener al menos 6 caracteres"))
+        if (password.length < 8) {
+            return AppResult.Failure(AppError.Validation(details = "password", message = "La contraseña debe tener al menos 8 caracteres"))
         }
         return authRepository.register(trimmedEmail, password, listOf(role))
     }
