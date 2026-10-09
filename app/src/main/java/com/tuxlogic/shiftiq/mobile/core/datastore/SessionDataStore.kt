@@ -5,6 +5,17 @@ import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
 import kotlinx.coroutines.flow.Flow
 
+data class SessionState(
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val userId: UserId? = null,
+    val userEmail: String? = null,
+    val userRole: Role? = null,
+    val activeBranchId: BranchId? = null
+) {
+    val isAuthenticated: Boolean get() = !accessToken.isNullOrBlank()
+}
+
 /**
  * Fuente de verdad local para la sesión activa del usuario.
  * Almacena de forma persistente y asíncrona los tokens JWT, identidad y contexto de sede.
@@ -16,6 +27,7 @@ interface SessionDataStore {
     val userEmail: Flow<String?>
     val userRole: Flow<Role?>
     val activeBranchId: Flow<BranchId?>
+    val sessionState: Flow<SessionState>
 
     /**
      * Guarda la sesión completa obtenida tras un inicio de sesión exitoso.

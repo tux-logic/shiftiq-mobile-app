@@ -25,7 +25,8 @@ android {
     buildTypes {
         debug {
             // URL para desarrollo local con emulador Android estándar (mapea a localhost:8080 del host)
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "BASE_URL", "\"https://shiftiq-platform.onrender.com/\"")
+            //http://10.0.2.2:8080/\
         }
         release {
             // URL del backend desplegado en la nube para versión de producción
@@ -63,6 +64,8 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    // Añadido: Fuentes de Google Fonts descargables en Compose (Inter / Roboto)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     // Añadido: Navegación declarativa Compose para flujo de pantallas e integración de NavHost

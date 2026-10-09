@@ -62,6 +62,17 @@ class SessionDataStoreImpl @Inject constructor(
         prefs[Keys.ACTIVE_BRANCH_ID]?.let { runCatching { BranchId(it) }.getOrNull() }
     }
 
+    override val sessionState: Flow<SessionState> = safePreferences.map { prefs ->
+        SessionState(
+            accessToken = prefs[Keys.ACCESS_TOKEN],
+            refreshToken = prefs[Keys.REFRESH_TOKEN],
+            userId = prefs[Keys.USER_ID]?.let { runCatching { UserId(it) }.getOrNull() },
+            userEmail = prefs[Keys.USER_EMAIL],
+            userRole = prefs[Keys.USER_ROLE]?.let { Role.fromName(it) },
+            activeBranchId = prefs[Keys.ACTIVE_BRANCH_ID]?.let { runCatching { BranchId(it) }.getOrNull() }
+        )
+    }
+
     override suspend fun saveSession(
         accessToken: String,
         refreshToken: String,

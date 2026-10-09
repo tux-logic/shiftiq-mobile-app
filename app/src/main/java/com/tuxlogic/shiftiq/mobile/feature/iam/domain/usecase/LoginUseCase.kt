@@ -1,0 +1,32 @@
+package com.tuxlogic.shiftiq.mobile.feature.iam.domain.usecase
+
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
+import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.AuthenticatedUser
+import com.tuxlogic.shiftiq.mobile.feature.iam.domain.repository.AuthRepository
+import javax.inject.Inject
+
+class LoginUseCase @Inject constructor(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(email: String, password: String): AppResult<AuthenticatedUser> {
+        val trimmedEmail = email.trim()
+        if (trimmedEmail.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "email", message = "El correo electrónico es requerido"))
+        }
+        if (!EMAIL_REGEX.matches(trimmedEmail)) {
+            return AppResult.Failure(AppError.Validation(details = "email", message = "Formato de correo inválido"))
+        }
+        if (password.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "password", message = "La contraseña es requerida"))
+        }
+        if (password.length < 6) {
+            return AppResult.Failure(AppError.Validation(details = "password", message = "La contraseña debe tener al menos 6 caracteres"))
+        }
+        return authRepository.login(trimmedEmail, password)
+    }
+
+    companion object {
+        private val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
+    }
+}
