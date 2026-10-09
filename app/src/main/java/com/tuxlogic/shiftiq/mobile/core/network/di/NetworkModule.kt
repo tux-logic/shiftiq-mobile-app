@@ -43,7 +43,25 @@ object NetworkModule {
         tokenAuthenticator: TokenAuthenticator,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
+        val resilientDns = object : okhttp3.Dns {
+            override fun lookup(hostname: String): List<java.net.InetAddress> {
+                return try {
+                    okhttp3.Dns.SYSTEM.lookup(hostname)
+                } catch (e: java.net.UnknownHostException) {
+                    if (hostname.contains("shiftiq-platform.onrender.com")) {
+                        listOf(
+                            java.net.InetAddress.getByName("216.24.57.18"),
+                            java.net.InetAddress.getByName("216.24.57.16")
+                        )
+                    } else {
+                        throw e
+                    }
+                }
+            }
+        }
+
         return OkHttpClient.Builder()
+            .dns(resilientDns)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)

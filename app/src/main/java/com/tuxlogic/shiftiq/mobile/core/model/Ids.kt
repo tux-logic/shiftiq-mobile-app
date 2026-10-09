@@ -8,36 +8,48 @@ import java.util.UUID
  */
 @JvmInline
 value class UserId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
 
 @JvmInline
 value class BranchId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
 
 @JvmInline
 value class WorkshopId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
 
 @JvmInline
 value class CustomerId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
 
 @JvmInline
 value class EmployeeId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
 
 @JvmInline
 value class VehicleId(val value: UUID) {
-    constructor(uuidString: String) : this(UUID.fromString(uuidString))
+    constructor(idStr: String) : this(
+        runCatching { UUID.fromString(idStr) }.getOrElse { UUID.nameUUIDFromBytes(idStr.toByteArray()) }
+    )
     override fun toString(): String = value.toString()
 }
