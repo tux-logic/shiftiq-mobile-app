@@ -53,24 +53,25 @@ app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/
 
 ## 4. Pantallas Visibles en Navegación y Flujo de Interacción
 
-Con el Bloque 1 se implementaron **3 pantallas interactivas reales**:
+Con el Bloque 1 se implementaron **4 pantallas interactivas reales**:
 
 | Pantalla | Composable | Rol y Propósito | Destino NavHost |
 | :--- | :--- | :--- | :--- |
-| **1. Login** | [LoginScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/login/LoginScreen.kt) | Formulario de email/contraseña con validación visual, toggle de contraseña y feedback de error. | `auth/login` |
-| **2. Selección de Sucursal** | [BranchSelectionScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/branch/BranchSelectionScreen.kt) | Permite a roles multi-sucursal (como `ROLE_OWNER`) seleccionar el taller activo. | `branches/select` |
-| **3. Dashboard por Rol** | [RoleDashboardScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/dashboard/RoleDashboardScreen.kt) | Muestra el badge del rol (`Dueño`, `Gerente`, `Mecánico`, etc.), los datos de sesión activa y botón funcional de "Cerrar Sesión". | `dashboard` |
+| **1. Login** | [LoginScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/login/LoginScreen.kt) | Formulario de email/contraseña con validación visual, toggle de contraseña y enlace a registro. | `auth/login` |
+| **2. Registro (Sign-Up)** | [RegisterScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/register/RegisterScreen.kt) | Creación de cuenta nueva con selección de rol (`ROLE_OWNER`, `ROLE_EMPLOYEE`, `ROLE_USER`) y auto-login. | `auth/register` |
+| **3. Selección de Sucursal** | [BranchSelectionScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/branch/BranchSelectionScreen.kt) | Permite a roles multi-sucursal (como `ROLE_OWNER`) seleccionar el taller activo. | `branches/select` |
+| **4. Dashboard por Rol** | [RoleDashboardScreen.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/presentation/dashboard/RoleDashboardScreen.kt) | Muestra el badge del rol (`Dueño`, `Gerente`, `Mecánico`, etc.), los datos de sesión activa y botón de "Cerrar Sesión". | `dashboard` |
 
 ### Flujo de Navegación Reactivo en [MainActivity.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/MainActivity.kt):
 1. **Inicio de la App:** La app observa `sessionDataStore.sessionState`.
    - Si no está autenticado $\rightarrow$ Inicia en `LoginScreen`.
+   - Si pulsa *"Regístrate aquí"* $\rightarrow$ Navega a `RegisterScreen`.
    - Si ya está autenticado y es `ROLE_OWNER` sin sucursal $\rightarrow$ Inicia en `BranchSelectionScreen`.
    - Si ya tiene sesión completa $\rightarrow$ Inicia en `RoleDashboardScreen`.
-2. **Al iniciar sesión:**
-   - Si el rol es `ROLE_OWNER` $\rightarrow$ Navega a `BranchSelectionScreen`.
-   - Cualquier otro rol $\rightarrow$ Navega directamente a `RoleDashboardScreen`.
+2. **Al registrarse:**
+   - Envía `POST /api/v1/users`, realiza login automático con el nuevo usuario y navega a su espacio correspondiente.
 3. **Al cerrar sesión:**
-   - Se ejecuta `LogoutUseCase`, se limpia `SessionDataStore` y el `NavHost` vuelve a `LoginScreen` limpiando el historial de navegación.
+   - Se ejecuta `LogoutUseCase` (`DELETE /api/v1/authentication/sessions`), se limpia `SessionDataStore` y el `NavHost` vuelve a `LoginScreen` limpiando el historial de navegación.
 
 ---
 
@@ -78,9 +79,10 @@ Con el Bloque 1 se implementaron **3 pantallas interactivas reales**:
 
 | Endpoint | Método HTTP | Request Body | Response | Uso en la App |
 | :--- | :---: | :--- | :--- | :--- |
-| `/api/v1/auth/login` | `POST` | `SignInRequestDto(username, password)` | `AuthenticatedUserResponseDto` | Inicia sesión, obtiene tokens JWT y rol. |
-| `/api/v1/auth/refresh` | `POST` | `RefreshTokenRequestDto(refreshToken)` | `TokenResponseDto` | Refresca el token de forma transparente vía `TokenAuthenticator`. |
-| `/api/v1/auth/logout` | `POST` | `RefreshTokenRequestDto(refreshToken)` | `200 OK / 204 No Content` | Invalida la sesión en el servidor. |
+| `/api/v1/authentication/sessions` | `POST` | `SignInRequestDto(email, password)` | `AuthenticatedUserResponseDto` | Inicia sesión, obtiene tokens JWT y rol. |
+| `/api/v1/authentication/sessions/refresh` | `POST` | `RefreshTokenRequestDto(refreshToken)` | `TokenResponseDto` | Refresca el token de forma transparente vía `TokenAuthenticator`. |
+| `/api/v1/authentication/sessions` | `DELETE` | `RefreshTokenRequestDto(refreshToken)` | `200 OK / 204 No Content` | Invalida la sesión en el servidor. |
+| `/api/v1/users` | `POST` | `SignUpRequestDto(email, password, roles)` | `UserResourceDto` | Registro de nuevo usuario (dueño, técnico o cliente). |
 
 ---
 
