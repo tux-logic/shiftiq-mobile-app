@@ -47,6 +47,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainPreview() {
     ShiftIQTheme {
-        Text("ShiftIQ Mobile Platform")
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "ShiftIQ Mobile Platform",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
