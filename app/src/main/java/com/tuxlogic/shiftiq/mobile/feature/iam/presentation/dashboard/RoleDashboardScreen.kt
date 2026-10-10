@@ -1,6 +1,8 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +55,7 @@ fun RoleDashboardScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(24.dp)
-                .androidx.compose.foundation.verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
