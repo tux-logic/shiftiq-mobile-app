@@ -57,7 +57,7 @@ Sirve para marcar el avance durante el desarrollo.
 | 0 | Fundación | H1 | ✅ Completado |
 | 1 | IAM | H1 | ✅ Completado |
 | 2 | Core | H2 | ✅ Completado |
-| 3 | Fleet | H2 | ⬜ Pendiente |
+| 3 | Fleet | H2 | ✅ Completado |
 | 4 | Operations | H3 | ⬜ Pendiente |
 | 5 | Inventory | H3 | ⬜ Pendiente |
 | 6 | Billing | H4 | ⬜ Pendiente |
