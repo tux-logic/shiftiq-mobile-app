@@ -137,6 +137,12 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToOwnerProfile = {
                                         navController.navigate(AppDestination.OwnerProfile.route)
                                     },
+                                    onNavigateToAppointments = {
+                                        navController.navigate(AppDestination.Appointments.route)
+                                    },
+                                    onNavigateToStaff = {
+                                        navController.navigate(AppDestination.StaffManagement.route)
+                                    },
                                     onLogoutClick = {
                                         scope.launch {
                                             logoutUseCase()
@@ -216,6 +222,62 @@ class MainActivity : ComponentActivity() {
                                 com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner.OwnerProfileScreen(
                                     viewModel = viewModel,
                                     onNavigateBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            // Bloque 3: Fleet (Citas y Personal de Taller)
+                            composable(AppDestination.Appointments.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.AppointmentListViewModel = hiltViewModel()
+                                val uiState by viewModel.uiState.collectAsState()
+
+                                com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.AppointmentListScreen(
+                                    uiState = uiState,
+                                    onRefresh = viewModel::loadAppointments,
+                                    onFilterSelected = viewModel::setStatusFilter,
+                                    onMarkStatus = viewModel::markAppointmentStatus,
+                                    onDeleteAppointment = viewModel::deleteAppointment,
+                                    onNavigateToCreate = { navController.navigate(AppDestination.CreateAppointment.route) },
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onClearMessages = viewModel::clearMessages
+                                )
+                            }
+
+                            composable(AppDestination.CreateAppointment.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentViewModel = hiltViewModel()
+                                val uiState by viewModel.uiState.collectAsState()
+
+                                com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentScreen(
+                                    uiState = uiState,
+                                    onBranchIdChanged = viewModel::onBranchIdChanged,
+                                    onCustomerIdChanged = viewModel::onCustomerIdChanged,
+                                    onVehicleIdChanged = viewModel::onVehicleIdChanged,
+                                    onScheduledStartChanged = viewModel::onScheduledStartChanged,
+                                    onNotesChanged = viewModel::onNotesChanged,
+                                    onSubmit = viewModel::createAppointment,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onAppointmentCreated = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(AppDestination.StaffManagement.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.staff.StaffManagementViewModel = hiltViewModel()
+                                val uiState by viewModel.uiState.collectAsState()
+
+                                com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.staff.StaffManagementScreen(
+                                    uiState = uiState,
+                                    onTabSelected = viewModel::setSelectedTab,
+                                    onRefresh = viewModel::loadRegistrations,
+                                    onApprove = viewModel::approveRegistration,
+                                    onReject = viewModel::rejectRegistration,
+                                    onOpenAddDialog = viewModel::openAddDialog,
+                                    onCloseAddDialog = viewModel::closeAddDialog,
+                                    onAddEmployeeIdChanged = viewModel::onAddEmployeeIdChanged,
+                                    onAddSpecialityChanged = viewModel::onAddSpecialityChanged,
+                                    onAddSalaryChanged = viewModel::onAddSalaryChanged,
+                                    onAddRoleChanged = viewModel::onAddRoleChanged,
+                                    onSubmitAddStaff = viewModel::submitAddStaff,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onClearMessages = viewModel::clearMessages
                                 )
                             }
                         }
