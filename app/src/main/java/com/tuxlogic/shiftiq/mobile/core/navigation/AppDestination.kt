@@ -33,8 +33,10 @@ sealed class AppDestination(val route: String) {
     // Rutas operativas
     data object BranchSelection : AppDestination("branches/select")
     data object BranchSelector : AppDestination("branches/select")
-    data object WorkOrders : AppDestination("operations/work-orders")
+    // Feature Fleet: Citas y gestión de personal
     data object Appointments : AppDestination("fleet/appointments")
+    data object CreateAppointment : AppDestination("fleet/appointments/create")
+    data object StaffManagement : AppDestination("fleet/staff")
     data object Inventory : AppDestination("inventory/products")
     data object Telemetry : AppDestination("iot/telemetry")
 }

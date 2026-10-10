@@ -40,6 +40,8 @@ fun RoleDashboardScreen(
     onLogoutClick: () -> Unit,
     onNavigateToWorkshops: () -> Unit = {},
     onNavigateToOwnerProfile: () -> Unit = {},
+    onNavigateToAppointments: () -> Unit = {},
+    onNavigateToStaff: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -50,7 +52,8 @@ fun RoleDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp),
+                .padding(24.dp)
+                .androidx.compose.foundation.verticalScroll(androidx.compose.foundation.rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
@@ -175,6 +178,24 @@ fun RoleDashboardScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Ver / Editar Mi Perfil de Dueño")
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                ShiftIQPrimaryButton(
+                    text = "Agenda y Citas (Fleet)",
+                    onClick = onNavigateToAppointments,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onNavigateToStaff,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Equipo y Personal de Taller (Fleet)")
                 }
             }
 
