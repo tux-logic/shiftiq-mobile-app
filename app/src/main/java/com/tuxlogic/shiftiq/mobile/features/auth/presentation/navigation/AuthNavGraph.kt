@@ -9,10 +9,14 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.tuxlogic.shiftiq.mobile.features.auth.presentation.login.LoginScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
 data object AuthNavGraphRoute
+
+@Serializable
+data object LoginRoute
 
 @Serializable
 data object SignInRoute
@@ -21,13 +25,44 @@ data object SignInRoute
 data object SignUpRoute
 
 @Serializable
+data object ForgotPasswordRoute
+
+@Serializable
 data object WorkshopRegisterRoute
 
 fun NavGraphBuilder.authNavGraph(navController: NavController) {
-    navigation<AuthNavGraphRoute>(startDestination = SignInRoute) {
+    navigation<AuthNavGraphRoute>(startDestination = LoginRoute) {
+        composable<LoginRoute> {
+            LoginScreen(
+                onBack = { navController.popBackStack() },
+                onLoginSuccess = {
+                    // Navigate to Driver Main/Dashboard
+                },
+                onForgotPasswordClick = {
+                    navController.navigate(ForgotPasswordRoute)
+                },
+                onRegisterClick = {
+                    navController.navigate(SignUpRoute)
+                }
+            )
+        }
         composable<SignInRoute> {
+            LoginScreen(
+                onBack = { navController.popBackStack() },
+                onLoginSuccess = {
+                    // Navigate to Driver Main/Dashboard
+                },
+                onForgotPasswordClick = {
+                    navController.navigate(ForgotPasswordRoute)
+                },
+                onRegisterClick = {
+                    navController.navigate(SignUpRoute)
+                }
+            )
+        }
+        composable<ForgotPasswordRoute> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Pantalla de Inicio de Sesión B2C")
+                Text(text = "Recuperar Contraseña (US004)")
             }
         }
         composable<SignUpRoute> {

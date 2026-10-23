@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.navigation.AuthNavGraphRoute
-import com.tuxlogic.shiftiq.mobile.features.auth.presentation.navigation.SignInRoute
+import com.tuxlogic.shiftiq.mobile.features.auth.presentation.navigation.LoginRoute
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.navigation.WorkshopRegisterRoute
 import com.tuxlogic.shiftiq.mobile.features.onboarding.presentation.OnboardingScreen
 
@@ -21,21 +21,15 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavController) {
         composable<OnboardingRoute> {
             OnboardingScreen(
                 onDriverEmailSignInClick = {
-                    navController.navigate(SignInRoute)
+                    navController.navigate(LoginRoute)
                 },
                 onDriverPhoneSignInClick = {
-                    navController.navigate(SignInRoute)
+                    navController.navigate(LoginRoute)
                 },
                 onDriverAuthSuccess = {
                     navController.navigate(AuthNavGraphRoute) {
                         popUpTo<OnboardingRoute> { inclusive = true }
                     }
-                },
-                onRegisterWorkshopClick = {
-                    navController.navigate(WorkshopRegisterRoute)
-                },
-                onWorkshopSignInClick = {
-                    navController.navigate(SignInRoute)
                 }
             )
         }
