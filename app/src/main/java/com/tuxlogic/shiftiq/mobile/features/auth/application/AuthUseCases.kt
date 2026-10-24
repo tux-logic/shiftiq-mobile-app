@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.features.auth.application
 
 import com.tuxlogic.shiftiq.mobile.features.auth.domain.AuthRepository
 import com.tuxlogic.shiftiq.mobile.features.auth.domain.User
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.IdentityLookupResponseDto
 import javax.inject.Inject
 
 class SignInUseCase @Inject constructor(
@@ -68,13 +69,30 @@ class RequestPasswordResetUseCase @Inject constructor(
     }
 }
 
-class VerifyOtpUseCase @Inject constructor() {
-    operator fun invoke(otpCode: String): Result<Unit> {
-        return if (otpCode.length == 6 && otpCode.all { it.isDigit() }) {
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("El código de verificación debe contener 6 dígitos numéricos."))
+class SendOtpUseCase @Inject constructor(
+    private val repository: AuthRepository
+) {
+    suspend operator fun invoke(email: String): Result<Unit> {
+        return repository.sendOtp(email)
+    }
+}
+
+class VerifyOtpUseCase @Inject constructor(
+    private val repository: AuthRepository
+) {
+    suspend operator fun invoke(email: String, otpCode: String): Result<Unit> {
+        if (otpCode.length != 6 || !otpCode.all { it.isDigit() }) {
+            return Result.failure(IllegalArgumentException("El código de verificación debe contener 6 dígitos numéricos."))
         }
+        return repository.verifyOtp(email, otpCode)
+    }
+}
+
+class LookupIdentityUseCase @Inject constructor(
+    private val repository: AuthRepository
+) {
+    suspend operator fun invoke(type: String, number: String): Result<IdentityLookupResponseDto> {
+        return repository.lookupIdentity(type, number)
     }
 }
 

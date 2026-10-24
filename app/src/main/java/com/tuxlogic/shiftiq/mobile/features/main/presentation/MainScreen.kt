@@ -34,9 +34,9 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
+import com.tuxlogic.shiftiq.mobile.features.home.presentation.HomeScreen
 import com.tuxlogic.shiftiq.mobile.features.main.presentation.screens.DiagnosticsScreen
 import com.tuxlogic.shiftiq.mobile.features.main.presentation.screens.GarageScreen
-import com.tuxlogic.shiftiq.mobile.features.main.presentation.screens.HomeScreen
 import com.tuxlogic.shiftiq.mobile.features.main.presentation.screens.WorkshopsScreen
 
 enum class MainTab(
@@ -103,7 +103,10 @@ fun MainScreen(
         ) {
             Crossfade(targetState = currentTab, label = "MainTabTransition") { tab ->
                 when (tab) {
-                    MainTab.HOME -> HomeScreen()
+                    MainTab.HOME -> HomeScreen(
+                        onNavigateToDiagnostics = { currentTab = MainTab.DIAGNOSTICS },
+                        onNavigateToWorkshops = { currentTab = MainTab.WORKSHOPS }
+                    )
                     MainTab.DIAGNOSTICS -> DiagnosticsScreen()
                     MainTab.WORKSHOPS -> WorkshopsScreen()
                     MainTab.GARAGE -> GarageScreen()

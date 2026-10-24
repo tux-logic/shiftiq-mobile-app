@@ -7,11 +7,14 @@ import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserEntity
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.AuthApiService
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.CustomerRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.IdentityLookupResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SendOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignUpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VehicleRegistrationRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VerifyOtpRequestDto
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -135,6 +138,7 @@ class AuthRepositoryImpl @Inject constructor(
         dongleId: String?
     ): Result<User> {
         return try {
+            // 1. Registro de usuario en IAM (POST /api/v1/users -> HTTP 201 Created)
             val userResponse = authApiService.registerUser(SignUpRequestDto(email.trim(), password))
             if (userResponse.isSuccessful && userResponse.body() != null) {
                 val userDto = userResponse.body()!!
@@ -142,41 +146,59 @@ class AuthRepositoryImpl @Inject constructor(
                 val firstName = nameParts.firstOrNull() ?: fullName.trim()
                 val lastName = if (nameParts.size > 1) nameParts.drop(1).joinToString(" ") else ""
 
-                // 2. Register customer profile (best effort)
+                // 2. Autenticación inmediata para obtener Bearer token real
+                var authToken = "token-${userDto.id}"
+                var refreshToken = "refresh-${userDto.id}"
+                var bearerHeader = ""
                 try {
-                    authApiService.createCustomer(
-                        CustomerRegistrationRequestDto(
-                            userId = userDto.id,
-                            isCorporate = false,
-                            firstName = firstName,
-                            lastName = lastName,
-                            documentType = "DNI",
-                            documentNumber = documentNumber.trim(),
-                            phone = phone.trim()
-                        )
-                    )
+                    val authResponse = authApiService.signIn(SignInRequestDto(email.trim(), password))
+                    if (authResponse.isSuccessful && authResponse.body() != null) {
+                        val authBody = authResponse.body()!!
+                        authToken = authBody.token
+                        refreshToken = authBody.refreshToken
+                        bearerHeader = "Bearer $authToken"
+                    }
                 } catch (_: Exception) { }
 
-                // 3. Register vehicle profile (best effort)
-                try {
-                    authApiService.registerVehicle(
-                        VehicleRegistrationRequestDto(
-                            plateNumber = plateNumber.trim().uppercase(),
-                            brand = brand.trim(),
-                            model = model.trim(),
-                            year = year,
-                            vin = vin.trim().uppercase()
+                // 3. Registrar perfil de cliente (requiere Bearer token)
+                if (bearerHeader.isNotBlank()) {
+                    try {
+                        authApiService.createCustomer(
+                            authorization = bearerHeader,
+                            request = CustomerRegistrationRequestDto(
+                                userId = userDto.id,
+                                isCorporate = false,
+                                firstName = firstName,
+                                lastName = lastName,
+                                documentType = "DNI",
+                                documentNumber = documentNumber.trim(),
+                                phone = phone.trim()
+                            )
                         )
-                    )
-                } catch (_: Exception) { }
+                    } catch (_: Exception) { }
 
-                // 4. Authenticate or store active user session
+                    // 4. Registrar vehículo (requiere Bearer token)
+                    try {
+                        authApiService.registerVehicle(
+                            authorization = bearerHeader,
+                            request = VehicleRegistrationRequestDto(
+                                plateNumber = plateNumber.trim().uppercase(),
+                                brand = brand.trim(),
+                                model = model.trim(),
+                                year = year,
+                                vin = vin.trim().uppercase()
+                            )
+                        )
+                    } catch (_: Exception) { }
+                }
+
+                // 5. Almacenar sesión de usuario activa en base de datos local Room
                 val entity = UserEntity(
                     id = userDto.id,
                     email = userDto.email,
                     role = userDto.role,
-                    token = "token-${userDto.id}",
-                    refreshToken = "refresh-${userDto.id}"
+                    token = authToken,
+                    refreshToken = refreshToken
                 )
                 userDao.clearUsers()
                 userDao.insertUser(entity)
@@ -196,6 +218,49 @@ class AuthRepositoryImpl @Inject constructor(
                     else -> "No se pudo completar el registro (${userResponse.code()}). Verifica tus datos."
                 }
                 Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(resolveErrorMessage(e)))
+        }
+    }
+
+    override suspend fun sendOtp(email: String): Result<Unit> {
+        return try {
+            val response = authApiService.sendOtp(SendOtpRequestDto(email.trim()))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No se pudo enviar el código OTP (${response.code()})."))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(resolveErrorMessage(e)))
+        }
+    }
+
+    override suspend fun verifyOtp(email: String, code: String): Result<Unit> {
+        return try {
+            val response = authApiService.verifyOtp(VerifyOtpRequestDto(email.trim(), code.trim()))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val msg = when (response.code()) {
+                    400, 404 -> "El código de verificación es inválido o ha expirado."
+                    else -> "Error al verificar el código de seguridad (${response.code()})."
+                }
+                Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(resolveErrorMessage(e)))
+        }
+    }
+
+    override suspend fun lookupIdentity(type: String, number: String): Result<IdentityLookupResponseDto> {
+        return try {
+            val response = authApiService.lookupIdentity(type.trim().uppercase(), number.trim())
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("No se pudo consultar el documento (${response.code()})."))
             }
         } catch (e: Exception) {
             Result.failure(Exception(resolveErrorMessage(e)))

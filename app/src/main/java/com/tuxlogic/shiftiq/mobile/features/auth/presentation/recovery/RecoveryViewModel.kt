@@ -159,26 +159,31 @@ class RecoveryViewModel @Inject constructor(
             return
         }
 
-        val result = verifyOtpUseCase(currentState.otpCode)
-        result.fold(
-            onSuccess = {
-                _uiState.update {
-                    it.copy(
-                        step = RecoveryStep.NEW_PASSWORD,
-                        errorMessage = null,
-                        isOtpValid = true
-                    )
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = verifyOtpUseCase(currentState.email.trim(), currentState.otpCode)
+            result.fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            step = RecoveryStep.NEW_PASSWORD,
+                            errorMessage = null,
+                            isOtpValid = true
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "El código ha expirado o es incorrecto. Solicita un nuevo código de recuperación.",
+                            isOtpValid = false
+                        )
+                    }
                 }
-            },
-            onFailure = { error ->
-                _uiState.update {
-                    it.copy(
-                        errorMessage = "El código ha expirado o es incorrecto. Solicita un nuevo código de recuperación.",
-                        isOtpValid = false
-                    )
-                }
-            }
-        )
+            )
+        }
     }
 
     fun onResetPassword(onSuccess: () -> Unit = {}) {

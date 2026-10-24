@@ -1,68 +1,103 @@
 package com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class SignInRequestDto(
-    val email: String,
-    val password: String
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
 )
 
 data class SignUpRequestDto(
-    val email: String,
-    val password: String
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
 )
 
 data class GoogleSignInRequestDto(
-    val idToken: String
+    @SerializedName("idToken") val idToken: String
 )
 
 data class AuthenticatedUserDto(
-    val id: String,
-    val email: String,
-    val role: String,
-    val token: String,
-    val refreshToken: String,
-    val accessTokenExpiresInSeconds: Long
+    @SerializedName("id") val id: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("token") val token: String,
+    @SerializedName("refreshToken") val refreshToken: String,
+    @SerializedName("accessTokenExpiresInSeconds") val accessTokenExpiresInSeconds: Long
 )
 
 data class PasswordRecoveryRequestDto(
-    val email: String
+    @SerializedName("email") val email: String
 )
 
 data class ResetPasswordRequestDto(
-    val token: String,
-    val newPassword: String
+    @SerializedName("token") val token: String,
+    @SerializedName("newPassword") val newPassword: String
+)
+
+data class SendOtpRequestDto(
+    @SerializedName("email") val email: String
+)
+
+data class VerifyOtpRequestDto(
+    @SerializedName("email") val email: String,
+    @SerializedName("code") val code: String
 )
 
 data class UserResponseDto(
-    val id: String,
-    val email: String,
-    val role: String
-)
-
-data class VehicleRegistrationRequestDto(
-    val plateNumber: String,
-    val brand: String,
-    val model: String,
-    val year: Int,
-    val vin: String,
-    val photoUrl: String? = null
-)
-
-data class VehicleResponseDto(
-    val id: String? = null,
-    val plateNumber: String,
-    val brand: String,
-    val model: String,
-    val year: Int,
-    val vin: String
+    @SerializedName("id") val id: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("role") val role: String
 )
 
 data class CustomerRegistrationRequestDto(
-    val userId: String,
-    val isCorporate: Boolean = false,
-    val firstName: String,
-    val lastName: String,
-    val businessName: String = "",
-    val documentType: String = "DNI",
-    val documentNumber: String,
-    val phone: String
+    @SerializedName("userId") val userId: String,
+    @SerializedName("isCorporate") val isCorporate: Boolean = false,
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("businessName") val businessName: String = "",
+    @SerializedName("documentType") val documentType: String = "DNI",
+    @SerializedName("documentNumber") val documentNumber: String,
+    @SerializedName("phone") val phone: String
+)
+
+data class CustomerResponseDto(
+    @SerializedName("id") val id: String,
+    @SerializedName("userId") val userId: String,
+    @SerializedName("isCorporate") val isCorporate: Boolean,
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("businessName") val businessName: String?,
+    @SerializedName("documentType") val documentType: String,
+    @SerializedName("documentNumber") val documentNumber: String,
+    @SerializedName("phone") val phone: String,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+data class VehicleRegistrationRequestDto(
+    @SerializedName("plateNumber") val plateNumber: String,
+    @SerializedName("brand") val brand: String,
+    @SerializedName("model") val model: String,
+    @SerializedName("year") val year: Int,
+    @SerializedName("vin") val vin: String,
+    @SerializedName("photoUrl") val photoUrl: String? = null
+)
+
+data class VehicleRegistrationResponseDto(
+    @SerializedName("id") val id: String,
+    @SerializedName("userId") val userId: String,
+    @SerializedName("vehicleId") val vehicleId: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+typealias VehicleResponseDto = VehicleRegistrationResponseDto
+
+data class IdentityLookupResponseDto(
+    @SerializedName("documentType") val documentType: String,
+    @SerializedName("documentNumber") val documentNumber: String,
+    @SerializedName("firstName") val firstName: String?,
+    @SerializedName("lastName") val lastName: String?,
+    @SerializedName("fullName") val fullName: String?,
+    @SerializedName("businessName") val businessName: String?,
+    @SerializedName("valid") val valid: Boolean
 )

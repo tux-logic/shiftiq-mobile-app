@@ -5,6 +5,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.AppDatabase
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserDao
+import com.tuxlogic.shiftiq.mobile.features.home.infrastructure.local.HomeDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +23,7 @@ object AuthLocalModule {
         return Room
             .databaseBuilder<AppDatabase>(context, "shiftiq-database")
             .setDriver(AndroidSQLiteDriver())
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 
@@ -29,5 +31,11 @@ object AuthLocalModule {
     @Singleton
     fun provideUserDao(appDatabase: AppDatabase): UserDao {
         return appDatabase.userDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeDao(appDatabase: AppDatabase): HomeDao {
+        return appDatabase.homeDao()
     }
 }

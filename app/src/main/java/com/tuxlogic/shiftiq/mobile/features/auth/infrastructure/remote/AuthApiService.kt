@@ -2,17 +2,24 @@ package com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote
 
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.AuthenticatedUserDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.CustomerRegistrationRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.CustomerResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.IdentityLookupResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SendOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignUpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.UserResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VehicleRegistrationRequestDto
-import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VehicleResponseDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VehicleRegistrationResponseDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VerifyOtpRequestDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface AuthApiService {
 
@@ -22,6 +29,18 @@ interface AuthApiService {
     @POST("authentication/sessions/google")
     suspend fun googleSignIn(@Body request: GoogleSignInRequestDto): Response<AuthenticatedUserDto>
 
+    @POST("authentication/otp/send")
+    suspend fun sendOtp(@Body request: SendOtpRequestDto): Response<Unit>
+
+    @POST("authentication/otp/verify")
+    suspend fun verifyOtp(@Body request: VerifyOtpRequestDto): Response<Unit>
+
+    @POST("authentication/password-recoveries")
+    suspend fun requestPasswordRecovery(@Body request: PasswordRecoveryRequestDto): Response<Unit>
+
+    @POST("authentication/password-resets")
+    suspend fun resetPassword(@Body request: ResetPasswordRequestDto): Response<Unit>
+
     @POST("users")
     suspend fun signUp(@Body request: SignUpRequestDto): Response<AuthenticatedUserDto>
 
@@ -29,14 +48,20 @@ interface AuthApiService {
     suspend fun registerUser(@Body request: SignUpRequestDto): Response<UserResponseDto>
 
     @POST("customers")
-    suspend fun createCustomer(@Body request: CustomerRegistrationRequestDto): Response<Unit>
+    suspend fun createCustomer(
+        @Header("Authorization") authorization: String,
+        @Body request: CustomerRegistrationRequestDto
+    ): Response<CustomerResponseDto>
 
     @POST("vehicles")
-    suspend fun registerVehicle(@Body request: VehicleRegistrationRequestDto): Response<VehicleResponseDto>
+    suspend fun registerVehicle(
+        @Header("Authorization") authorization: String,
+        @Body request: VehicleRegistrationRequestDto
+    ): Response<VehicleRegistrationResponseDto>
 
-    @POST("authentication/password-recoveries")
-    suspend fun requestPasswordRecovery(@Body request: PasswordRecoveryRequestDto): Response<Unit>
-
-    @POST("authentication/password-resets")
-    suspend fun resetPassword(@Body request: ResetPasswordRequestDto): Response<Unit>
+    @GET("identity-validations/lookup")
+    suspend fun lookupIdentity(
+        @Query("type") type: String,
+        @Query("number") number: String
+    ): Response<IdentityLookupResponseDto>
 }
