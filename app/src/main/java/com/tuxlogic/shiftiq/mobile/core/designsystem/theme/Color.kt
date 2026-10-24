@@ -14,6 +14,7 @@ val TelematicsTeal = Color(0xFF06B6D4)
 val TelematicsGreen = Color(0xFF10B981)
 val TelematicsAmber = Color(0xFFF59E0B)
 val TelematicsRed = Color(0xFFEF4444)
+val SeverityCrimson = Color(0xFFDC2626)
 
 // Neutrals & Surfaces (Slate Palette)
 val Slate950 = Color(0xFF020617)

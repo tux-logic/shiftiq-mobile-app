@@ -75,6 +75,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIqTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -304,6 +305,7 @@ private fun Step1EmailContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
             OutlinedTextField(
                 value = state.email,
                 onValueChange = onEmailChange,
@@ -323,7 +325,7 @@ private fun Step1EmailContent(
                     Icon(
                         imageVector = mailOutline,
                         contentDescription = "Correo",
-                        tint = Slate500,
+                        tint = if (showEmailError) SeverityCrimson else Slate500,
                         modifier = Modifier.size(20.dp)
                     )
                 },
@@ -340,7 +342,23 @@ private fun Step1EmailContent(
                     }
                 },
                 singleLine = true,
-                isError = state.emailError != null,
+                isError = showEmailError,
+                supportingText = {
+                    if (showEmailError) {
+                        Text(
+                            text = state.emailError ?: "Ingresa un correo electrónico con formato válido",
+                            color = SeverityCrimson,
+                            fontSize = 11.sp
+                        )
+                    } else if (state.isEmailValid) {
+                        Text(
+                            text = "✓ Correo válido",
+                            color = TelematicsGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Slate900,
@@ -352,7 +370,7 @@ private fun Step1EmailContent(
                     errorContainerColor = Color.White,
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Slate200,
-                    errorBorderColor = Color(0xFFEF4444)
+                    errorBorderColor = SeverityCrimson
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -360,16 +378,6 @@ private fun Step1EmailContent(
                 ),
                 keyboardActions = KeyboardActions(onDone = { onRequestCode() })
             )
-
-            if (state.emailError != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = state.emailError,
-                    color = Color(0xFFEF4444),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -863,6 +871,7 @@ private fun Step3NewPasswordContent(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            val showNewPasswordError = (state.newPassword.isNotEmpty() && !state.isNewPasswordValid) || state.newPasswordError != null
             OutlinedTextField(
                 value = state.newPassword,
                 onValueChange = onNewPasswordChange,
@@ -878,7 +887,7 @@ private fun Step3NewPasswordContent(
                     Icon(
                         imageVector = lockOutline,
                         contentDescription = "Contraseña",
-                        tint = Slate500,
+                        tint = if (showNewPasswordError) SeverityCrimson else Slate500,
                         modifier = Modifier.size(20.dp)
                     )
                 },
@@ -893,7 +902,33 @@ private fun Step3NewPasswordContent(
                     }
                 },
                 singleLine = true,
-                isError = state.newPasswordError != null,
+                isError = showNewPasswordError,
+                supportingText = {
+                    if (showNewPasswordError) {
+                        val missing = mutableListOf<String>()
+                        if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
+                        if (!state.hasUppercase) missing.add("1 mayúscula")
+                        if (!state.hasNumber) missing.add("1 número")
+                        Text(
+                            text = state.newPasswordError ?: "Falta: ${missing.joinToString(", ")}",
+                            color = SeverityCrimson,
+                            fontSize = 11.sp
+                        )
+                    } else if (state.isNewPasswordValid) {
+                        Text(
+                            text = "✓ Contraseña segura",
+                            color = TelematicsGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Text(
+                            text = "Mínimo 8 caracteres, 1 mayúscula y 1 número",
+                            color = Slate500,
+                            fontSize = 11.sp
+                        )
+                    }
+                },
                 visualTransformation = if (state.isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -906,7 +941,7 @@ private fun Step3NewPasswordContent(
                     errorContainerColor = Color.White,
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Slate200,
-                    errorBorderColor = Color(0xFFEF4444)
+                    errorBorderColor = SeverityCrimson
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -914,17 +949,7 @@ private fun Step3NewPasswordContent(
                 )
             )
 
-            if (state.newPasswordError != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = state.newPasswordError,
-                    color = Color(0xFFEF4444),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Confirmar Contraseña header
             Row(
@@ -950,6 +975,7 @@ private fun Step3NewPasswordContent(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            val showConfirmError = (state.confirmPassword.isNotEmpty() && !state.doPasswordsMatch) || state.confirmPasswordError != null
             OutlinedTextField(
                 value = state.confirmPassword,
                 onValueChange = onConfirmPasswordChange,
@@ -965,7 +991,7 @@ private fun Step3NewPasswordContent(
                     Icon(
                         imageVector = syncIcon,
                         contentDescription = "Confirmar",
-                        tint = Slate500,
+                        tint = if (showConfirmError) SeverityCrimson else Slate500,
                         modifier = Modifier.size(20.dp)
                     )
                 },
@@ -997,7 +1023,23 @@ private fun Step3NewPasswordContent(
                     }
                 },
                 singleLine = true,
-                isError = state.confirmPasswordError != null,
+                isError = showConfirmError,
+                supportingText = {
+                    if (showConfirmError) {
+                        Text(
+                            text = state.confirmPasswordError ?: "Las contraseñas no coinciden",
+                            color = SeverityCrimson,
+                            fontSize = 11.sp
+                        )
+                    } else if (state.doPasswordsMatch) {
+                        Text(
+                            text = "✓ Las contraseñas coinciden",
+                            color = TelematicsGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                },
                 visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -1010,7 +1052,7 @@ private fun Step3NewPasswordContent(
                     errorContainerColor = Color.White,
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Slate200,
-                    errorBorderColor = Color(0xFFEF4444)
+                    errorBorderColor = SeverityCrimson
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -1018,16 +1060,6 @@ private fun Step3NewPasswordContent(
                 ),
                 keyboardActions = KeyboardActions(onDone = { onResetPassword() })
             )
-
-            if (state.confirmPasswordError != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = state.confirmPasswordError,
-                    color = Color(0xFFEF4444),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -1061,7 +1093,7 @@ private fun Step3NewPasswordContent(
 
                 RequirementItem(
                     isMet = state.isPasswordLengthValid,
-                    label = "Mínimo 8 caracteres alfanuméricos"
+                    label = "Mínimo 8 caracteres"
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 RequirementItem(
@@ -1070,8 +1102,8 @@ private fun Step3NewPasswordContent(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 RequirementItem(
-                    isMet = state.hasSpecialOrNumber,
-                    label = "Al menos un número o símbolo especial"
+                    isMet = state.hasNumber,
+                    label = "Al menos un número"
                 )
             }
         }
