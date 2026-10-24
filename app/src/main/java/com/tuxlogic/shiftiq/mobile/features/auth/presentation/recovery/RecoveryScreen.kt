@@ -34,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -307,6 +308,10 @@ private fun Step1EmailContent(
                 value = state.email,
                 onValueChange = onEmailChange,
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = LocalTextStyle.current.copy(
+                    color = Slate900,
+                    fontSize = 14.sp
+                ),
                 placeholder = {
                     Text(
                         text = "ejemplo@taller.pe",
@@ -338,6 +343,10 @@ private fun Step1EmailContent(
                 isError = state.emailError != null,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Slate900,
+                    unfocusedTextColor = Slate900,
+                    errorTextColor = Slate900,
+                    cursorColor = PrimaryBlue,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     errorContainerColor = Color.White,
@@ -522,7 +531,7 @@ private fun Step2OtpContent(
                 .background(PrimaryBlue)
         )
         Spacer(modifier = Modifier.width(6.dp))
-        Text(
+         Text(
             text = "Paso 2 de 3: Validación",
             color = PrimaryBlue,
             fontSize = 12.sp,
@@ -858,6 +867,10 @@ private fun Step3NewPasswordContent(
                 value = state.newPassword,
                 onValueChange = onNewPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = LocalTextStyle.current.copy(
+                    color = Slate900,
+                    fontSize = 14.sp
+                ),
                 placeholder = {
                     Text(text = "ShiftSafe2024!", color = Slate400, fontSize = 14.sp)
                 },
@@ -884,6 +897,10 @@ private fun Step3NewPasswordContent(
                 visualTransformation = if (state.isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Slate900,
+                    unfocusedTextColor = Slate900,
+                    errorTextColor = Slate900,
+                    cursorColor = PrimaryBlue,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     errorContainerColor = Color.White,
@@ -937,6 +954,10 @@ private fun Step3NewPasswordContent(
                 value = state.confirmPassword,
                 onValueChange = onConfirmPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = LocalTextStyle.current.copy(
+                    color = Slate900,
+                    fontSize = 14.sp
+                ),
                 placeholder = {
                     Text(text = "ShiftSafe2024!", color = Slate400, fontSize = 14.sp)
                 },
@@ -980,6 +1001,10 @@ private fun Step3NewPasswordContent(
                 visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Slate900,
+                    unfocusedTextColor = Slate900,
+                    errorTextColor = Slate900,
+                    cursorColor = PrimaryBlue,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     errorContainerColor = Color.White,
@@ -1194,6 +1219,12 @@ private fun OtpInputBoxes(
     BasicTextField(
         value = otpValue,
         onValueChange = onOtpChange,
+        textStyle = LocalTextStyle.current.copy(
+            color = Slate900,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        ),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.NumberPassword,
             imeAction = ImeAction.Done

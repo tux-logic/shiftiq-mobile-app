@@ -34,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -236,6 +237,10 @@ fun LoginContent(
                         value = state.email,
                         onValueChange = onEmailChange,
                         modifier = Modifier.fillMaxWidth(),
+                        textStyle = LocalTextStyle.current.copy(
+                            color = Slate900,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "rodrigo.alarcon@email.com",
@@ -255,6 +260,10 @@ fun LoginContent(
                         isError = state.emailError != null,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Slate900,
+                            unfocusedTextColor = Slate900,
+                            errorTextColor = Slate900,
+                            cursorColor = PrimaryBlue,
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             errorContainerColor = Color.White,
@@ -309,6 +318,10 @@ fun LoginContent(
                         value = state.password,
                         onValueChange = onPasswordChange,
                         modifier = Modifier.fillMaxWidth(),
+                        textStyle = LocalTextStyle.current.copy(
+                            color = Slate900,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "mot0r#Diag2024!",
@@ -339,6 +352,10 @@ fun LoginContent(
                         visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Slate900,
+                            unfocusedTextColor = Slate900,
+                            errorTextColor = Slate900,
+                            cursorColor = PrimaryBlue,
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             errorContainerColor = Color.White,
@@ -367,7 +384,7 @@ fun LoginContent(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Remember Me Checkbox & Forgot Password Link
+                    // Remember Me Checkbox & Forgot Password Link (Responsive for compact screens e.g. 360dp)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -390,19 +407,26 @@ fun LoginContent(
                                 )
                             )
                             Text(
-                                text = "Recordar mi cuenta",
+                                text = "Recordar",
                                 color = Slate800,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
 
+                        Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = "¿Olvidaste tu contraseña?",
                             color = Slate800,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.clickable(onClick = onForgotPasswordClick)
+                            textAlign = TextAlign.End,
+                            maxLines = 2,
+                            lineHeight = 17.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(onClick = onForgotPasswordClick)
                         )
                     }
                 }

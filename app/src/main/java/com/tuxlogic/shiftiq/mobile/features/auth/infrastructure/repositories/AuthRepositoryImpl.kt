@@ -41,10 +41,15 @@ class AuthRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                Result.failure(Exception("Error al iniciar sesión: ${response.code()}"))
+                val msg = when (response.code()) {
+                    401 -> "Credenciales incorrectas. Verifica tu correo y contraseña."
+                    404 -> "Usuario no encontrado."
+                    else -> "Error al iniciar sesión (${response.code()})."
+                }
+                Result.failure(Exception(msg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(resolveErrorMessage(e)))
         }
     }
 
@@ -75,7 +80,7 @@ class AuthRepositoryImpl @Inject constructor(
                 Result.failure(Exception("Error en Google Sign-In: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(resolveErrorMessage(e)))
         }
     }
 
@@ -103,10 +108,14 @@ class AuthRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                Result.failure(Exception("Error al registrar usuario: ${response.code()}"))
+                val msg = when (response.code()) {
+                    409 -> "Ya existe una cuenta registrada con este correo."
+                    else -> "Error al registrar usuario (${response.code()})."
+                }
+                Result.failure(Exception(msg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(resolveErrorMessage(e)))
         }
     }
 
@@ -116,10 +125,15 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Error al solicitar código: ${response.code()}"))
+                val msg = when (response.code()) {
+                    404 -> "No se encontró ninguna cuenta registrada con este correo electrónico."
+                    400 -> "Solicitud inválida. Revisa el correo ingresado."
+                    else -> "No se pudo procesar la solicitud de recuperación (${response.code()})."
+                }
+                Result.failure(Exception(msg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(resolveErrorMessage(e)))
         }
     }
 
@@ -129,10 +143,30 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Error al restablecer contraseña: ${response.code()}"))
+                val msg = when (response.code()) {
+                    400, 404 -> "El código de seguridad es inválido o ha expirado. Solicita uno nuevo."
+                    else -> "No se pudo restablecer la contraseña (${response.code()})."
+                }
+                Result.failure(Exception(msg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(resolveErrorMessage(e)))
+        }
+    }
+
+    private fun resolveErrorMessage(e: Exception): String {
+        return when (e) {
+            is java.net.ConnectException -> "No se pudo conectar con el servidor local. Verifica que el backend esté ejecutándose."
+            is java.net.SocketTimeoutException -> "El servidor tardó demasiado en responder. Inténtalo nuevamente."
+            is java.net.UnknownHostException -> "No se pudo encontrar el servidor. Revisa tu conexión de red."
+            else -> {
+                val msg = e.message ?: ""
+                if (msg.contains("CLEARTEXT", ignoreCase = true)) {
+                    "Error de política de red: Tráfico HTTP no cifrado no permitido."
+                } else {
+                    msg.ifBlank { "Error de conexión. Inténtalo nuevamente." }
+                }
+            }
         }
     }
 
