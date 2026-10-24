@@ -73,6 +73,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIqTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -233,6 +234,7 @@ fun LoginContent(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     // Input Correo
+                    val showEmailError = (state.email.isNotEmpty() && !state.isEmailFormatValid) || state.emailError != null
                     OutlinedTextField(
                         value = state.email,
                         onValueChange = onEmailChange,
@@ -252,12 +254,28 @@ fun LoginContent(
                             Icon(
                                 imageVector = mailOutline,
                                 contentDescription = "Email",
-                                tint = Slate500,
+                                tint = if (showEmailError) SeverityCrimson else Slate500,
                                 modifier = Modifier.size(20.dp)
                             )
                         },
                         singleLine = true,
-                        isError = state.emailError != null,
+                        isError = showEmailError,
+                        supportingText = {
+                            if (showEmailError) {
+                                Text(
+                                    text = state.emailError ?: "Ingresa un correo electrónico con formato válido",
+                                    color = SeverityCrimson,
+                                    fontSize = 11.sp
+                                )
+                            } else if (state.isEmailFormatValid) {
+                                Text(
+                                    text = "✓ Correo válido",
+                                    color = TelematicsGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Slate900,
@@ -269,7 +287,7 @@ fun LoginContent(
                             errorContainerColor = Color.White,
                             focusedBorderColor = PrimaryBlue,
                             unfocusedBorderColor = Slate200,
-                            errorBorderColor = Color(0xFFEF4444)
+                            errorBorderColor = SeverityCrimson
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -277,17 +295,7 @@ fun LoginContent(
                         )
                     )
 
-                    if (state.emailError != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = state.emailError,
-                            color = Color(0xFFEF4444),
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Contraseña header
                     Row(
@@ -304,7 +312,7 @@ fun LoginContent(
                             )
                             Text(
                                 text = " *",
-                                color = Color(0xFFEF4444),
+                                color = SeverityCrimson,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -314,6 +322,7 @@ fun LoginContent(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     // Input Contraseña
+                    val showPasswordError = (state.password.isNotEmpty() && state.password.length < 8) || state.passwordError != null
                     OutlinedTextField(
                         value = state.password,
                         onValueChange = onPasswordChange,
@@ -333,7 +342,7 @@ fun LoginContent(
                             Icon(
                                 imageVector = lockOutline,
                                 contentDescription = "Password",
-                                tint = Slate500,
+                                tint = if (showPasswordError) SeverityCrimson else Slate500,
                                 modifier = Modifier.size(20.dp)
                             )
                         },
@@ -348,7 +357,23 @@ fun LoginContent(
                             }
                         },
                         singleLine = true,
-                        isError = state.passwordError != null,
+                        isError = showPasswordError,
+                        supportingText = {
+                            if (showPasswordError) {
+                                Text(
+                                    text = state.passwordError ?: "La contraseña debe tener al menos 8 caracteres (${state.password.length}/8)",
+                                    color = SeverityCrimson,
+                                    fontSize = 11.sp
+                                )
+                            } else if (state.password.length >= 8) {
+                                Text(
+                                    text = "✓ Longitud válida",
+                                    color = TelematicsGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        },
                         visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -361,7 +386,7 @@ fun LoginContent(
                             errorContainerColor = Color.White,
                             focusedBorderColor = PrimaryBlue,
                             unfocusedBorderColor = Slate200,
-                            errorBorderColor = Color(0xFFEF4444)
+                            errorBorderColor = SeverityCrimson
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -371,16 +396,6 @@ fun LoginContent(
                             onDone = { onLoginClick() }
                         )
                     )
-
-                    if (state.passwordError != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = state.passwordError,
-                            color = Color(0xFFEF4444),
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -402,7 +417,8 @@ fun LoginContent(
                                 checked = state.rememberMe,
                                 onCheckedChange = onRememberMeToggle,
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = Slate900,
+                                    checkedColor = PrimaryBlue,
+                                    uncheckedColor = Slate400,
                                     checkmarkColor = Color.White
                                 )
                             )

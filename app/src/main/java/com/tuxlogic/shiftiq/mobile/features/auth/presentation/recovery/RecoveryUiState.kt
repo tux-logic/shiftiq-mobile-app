@@ -46,11 +46,14 @@ data class RecoveryUiState(
     val hasUppercase: Boolean
         get() = newPassword.any { it.isUpperCase() }
 
+    val hasNumber: Boolean
+        get() = newPassword.any { it.isDigit() }
+
     val hasSpecialOrNumber: Boolean
-        get() = newPassword.any { it.isDigit() || !it.isLetterOrDigit() }
+        get() = hasNumber || newPassword.any { !it.isLetterOrDigit() }
 
     val isNewPasswordValid: Boolean
-        get() = isPasswordLengthValid && hasUppercase && hasSpecialOrNumber
+        get() = isPasswordLengthValid && hasUppercase && hasNumber
 
     val doPasswordsMatch: Boolean
         get() = newPassword.isNotBlank() && newPassword == confirmPassword

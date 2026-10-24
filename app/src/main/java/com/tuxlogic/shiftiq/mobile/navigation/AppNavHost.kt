@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.navigation.authNavGraph
+import com.tuxlogic.shiftiq.mobile.features.main.presentation.navigation.mainNavGraph
 import com.tuxlogic.shiftiq.mobile.features.onboarding.presentation.navigation.OnboardingNavGraphRoute
 import com.tuxlogic.shiftiq.mobile.features.onboarding.presentation.navigation.onboardingNavGraph
 
@@ -15,5 +16,6 @@ fun AppNavHost(navController: NavHostController) {
     ) {
         onboardingNavGraph(navController)
         authNavGraph(navController)
+        mainNavGraph(navController)
     }
 }

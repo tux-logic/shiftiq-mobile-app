@@ -12,6 +12,7 @@ import androidx.navigation.navigation
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.login.LoginScreen
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.recovery.RecoveryScreen
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.register.RegisterScreen
+import com.tuxlogic.shiftiq.mobile.features.main.presentation.navigation.MainRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -44,7 +45,9 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
             LoginScreen(
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    // Navigate to Driver Main/Dashboard
+                    navController.navigate(MainRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
                 onForgotPasswordClick = {
                     navController.navigate(RecoveryRoute)
@@ -58,7 +61,9 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
             LoginScreen(
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    // Navigate to Driver Main/Dashboard
+                    navController.navigate(MainRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
                 onForgotPasswordClick = {
                     navController.navigate(RecoveryRoute)
@@ -77,8 +82,8 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     navController.navigate(RecoveryRoute)
                 },
                 onRegistrationSuccess = {
-                    navController.navigate(LoginRoute) {
-                        popUpTo<RegisterRoute> { inclusive = true }
+                    navController.navigate(MainRoute) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
@@ -92,8 +97,8 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     navController.navigate(RecoveryRoute)
                 },
                 onRegistrationSuccess = {
-                    navController.navigate(LoginRoute) {
-                        popUpTo<SignUpRoute> { inclusive = true }
+                    navController.navigate(MainRoute) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

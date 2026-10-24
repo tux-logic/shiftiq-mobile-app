@@ -1283,3 +1283,137 @@ val badgeIcon: ImageVector
     }
 
 private var _badgeIcon: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val home: ImageVector
+    get() {
+        if (_home != null) return _home!!
+        _home = ImageVector.Builder(
+            name = "home",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(10f, 20f)
+                verticalLineToRelative(-6f)
+                horizontalLineToRelative(4f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(5f)
+                verticalLineToRelative(-8f)
+                horizontalLineToRelative(3f)
+                lineTo(12f, 3f)
+                lineTo(2f, 12f)
+                horizontalLineToRelative(3f)
+                verticalLineToRelative(8f)
+                close()
+            }
+        }.build()
+        return _home!!
+    }
+
+private var _home: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val warningAmber: ImageVector
+    get() {
+        if (_warningAmber != null) return _warningAmber!!
+        _warningAmber = ImageVector.Builder(
+            name = "warningAmber",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(12f, 5.99f)
+                lineTo(19.53f, 19f)
+                horizontalLineTo(4.47f)
+                lineTo(12f, 5.99f)
+                moveTo(12f, 2f)
+                lineTo(1f, 21f)
+                horizontalLineToRelative(22f)
+                lineTo(12f, 2f)
+                close()
+                moveTo(13f, 16f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(-2f)
+                close()
+                moveTo(13f, 10f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(4f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(-4f)
+                close()
+            }
+        }.build()
+        return _warningAmber!!
+    }
+
+private var _warningAmber: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val build: ImageVector
+    get() {
+        if (_build != null) return _build!!
+        _build = ImageVector.Builder(
+            name = "build",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(22.7f, 19f)
+                lineToRelative(-9.1f, -9.1f)
+                curveToRelative(0.9f, -2.3f, 0.4f, -5f, -1.5f, -6.9f)
+                curveToRelative(-2f, -2f, -5f, -2.4f, -7.4f, -1.3f)
+                lineTo(9f, 6f)
+                lineTo(6f, 9f)
+                lineTo(1.6f, 4.7f)
+                curveTo(0.4f, 7.1f, 0.9f, 10.1f, 2.9f, 12.1f)
+                curveToRelative(1.9f, 1.9f, 4.6f, 2.4f, 6.9f, 1.5f)
+                lineToRelative(9.1f, 9.1f)
+                curveToRelative(0.4f, 0.4f, 1f, 0.4f, 1.4f, 0f)
+                lineToRelative(2.3f, -2.3f)
+                curveToRelative(0.5f, -0.4f, 0.5f, -1.1f, 0.1f, -1.4f)
+                close()
+            }
+        }.build()
+        return _build!!
+    }
+
+private var _build: ImageVector? = null

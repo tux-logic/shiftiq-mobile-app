@@ -81,6 +81,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIqTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -111,6 +112,7 @@ fun RegisterScreen(
         onSubmit = { viewModel.onSubmitRegistration(onSuccess = onRegistrationSuccess) },
         onNavigateToLogin = onBackToLogin,
         onNavigateToRecovery = onNavigateToRecovery,
+        onRegistrationSuccess = onRegistrationSuccess,
         // Step 1
         onFullNameChange = viewModel::onFullNameChange,
         onDocumentNumberChange = viewModel::onDocumentNumberChange,
@@ -144,6 +146,7 @@ fun RegisterContent(
     onSubmit: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRecovery: () -> Unit,
+    onRegistrationSuccess: () -> Unit = onNavigateToLogin,
     onFullNameChange: (String) -> Unit,
     onDocumentNumberChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
@@ -276,14 +279,14 @@ fun RegisterContent(
 
                     RegisterStep.SUCCESS -> {
                         StepSuccessContent(
-                            onGoToDashboard = onNavigateToLogin
+                            onGoToDashboard = onRegistrationSuccess
                         )
                     }
 
                     RegisterStep.OTP -> {
                         // Reutilización directa para validación OTP si backend lo requiere
                         StepSuccessContent(
-                            onGoToDashboard = onNavigateToLogin
+                            onGoToDashboard = onRegistrationSuccess
                         )
                     }
                 }
@@ -427,12 +430,12 @@ private fun Step1OwnerContent(
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("Rodrigo Alarcón Flores", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = if (showNameError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = if (showNameError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
         isError = showNameError,
         supportingText = {
             state.fullNameError?.let { errorText ->
-                Text(text = errorText, color = Color(0xFFDC2626), fontSize = 11.sp)
+                Text(text = errorText, color = SeverityCrimson, fontSize = 11.sp)
             }
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
@@ -440,7 +443,7 @@ private fun Step1OwnerContent(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
             focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
 
@@ -459,14 +462,14 @@ private fun Step1OwnerContent(
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("47891234", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = if (showDniError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = if (showDniError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
         isError = showDniError,
         supportingText = {
             if (showDniError) {
                 Text(
                     text = state.documentError ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
-                    color = Color(0xFFDC2626),
+                    color = SeverityCrimson,
                     fontSize = 11.sp
                 )
             } else if (state.isDniValid) {
@@ -480,7 +483,7 @@ private fun Step1OwnerContent(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
             focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
 
@@ -509,14 +512,14 @@ private fun Step1OwnerContent(
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
             placeholder = { Text("987654321", color = Slate400, fontSize = 14.sp) },
-            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = if (showPhoneError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = if (showPhoneError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
             singleLine = true,
             isError = showPhoneError,
             supportingText = {
                 if (showPhoneError) {
                     Text(
                         text = state.phoneError ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
-                        color = Color(0xFFDC2626),
+                        color = SeverityCrimson,
                         fontSize = 11.sp
                     )
                 } else if (state.isPhoneValid) {
@@ -530,7 +533,7 @@ private fun Step1OwnerContent(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
                 focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-                errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+                errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
             )
         )
     }
@@ -547,14 +550,14 @@ private fun Step1OwnerContent(
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("usuario@ejemplo.com", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = if (showEmailError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = if (showEmailError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
         isError = showEmailError,
         supportingText = {
             if (showEmailError) {
                 Text(
                     text = state.emailError ?: "Ingresa un correo electrónico válido",
-                    color = Color(0xFFDC2626),
+                    color = SeverityCrimson,
                     fontSize = 11.sp
                 )
             } else if (state.isEmailValid) {
@@ -566,7 +569,7 @@ private fun Step1OwnerContent(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
             focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
 
@@ -582,7 +585,7 @@ private fun Step1OwnerContent(
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("Mínimo 8 caracteres", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = if (showPasswordError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = if (showPasswordError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
         trailingIcon = {
             IconButton(onClick = onTogglePasswordVisibility) {
                 Icon(imageVector = if (state.isPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
@@ -599,7 +602,7 @@ private fun Step1OwnerContent(
                 if (!state.hasNumber) missing.add("1 número")
                 Text(
                     text = state.passwordError ?: "Falta: ${missing.joinToString(", ")}",
-                    color = Color(0xFFDC2626),
+                    color = SeverityCrimson,
                     fontSize = 11.sp
                 )
             } else if (state.isPasswordValid) {
@@ -613,7 +616,7 @@ private fun Step1OwnerContent(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
             focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
 
@@ -634,7 +637,7 @@ private fun Step1OwnerContent(
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("Repite tu contraseña", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = if (showConfirmError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = if (showConfirmError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
         trailingIcon = {
             IconButton(onClick = onToggleConfirmPasswordVisibility) {
                 Icon(imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
@@ -647,7 +650,7 @@ private fun Step1OwnerContent(
             if (showConfirmError) {
                 Text(
                     text = state.confirmPasswordError ?: "Las contraseñas no coinciden",
-                    color = Color(0xFFDC2626),
+                    color = SeverityCrimson,
                     fontSize = 11.sp
                 )
             } else if (state.doPasswordsMatch) {
@@ -659,7 +662,7 @@ private fun Step1OwnerContent(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
             focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
-            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
+            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
 
@@ -762,7 +765,7 @@ private fun Step1OwnerContent(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = errorOutline, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
             }
@@ -1245,7 +1248,7 @@ private fun StepErrorContent(
                 .border(BorderStroke(1.5.dp, Color(0xFFFCA5A5)), RoundedCornerShape(22.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = errorOutline, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(40.dp))
+            Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(40.dp))
         }
 
         Spacer(modifier = Modifier.height(22.dp))
