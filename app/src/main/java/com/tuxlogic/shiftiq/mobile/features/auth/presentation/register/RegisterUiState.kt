@@ -27,8 +27,8 @@ data class RegisterUiState(
     val confirmPasswordError: String? = null,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
-    val acceptsNotifications: Boolean = true,
-    val acceptsTerms: Boolean = true,
+    val termsAccepted: Boolean = false,
+    val notificationsAccepted: Boolean = false,
 
     // Paso 2: Especificaciones del Vehículo y Dongle IoT
     val brand: String = "Kia",
@@ -53,14 +53,26 @@ data class RegisterUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 ) {
+    // Compatibilidad y accesos directos
+    val acceptsTerms: Boolean get() = termsAccepted
+    val acceptsNotifications: Boolean get() = notificationsAccepted
+
     val isDniValid: Boolean
         get() = documentNumber.trim().length == 8 && documentNumber.trim().all { it.isDigit() }
 
     val isPhoneValid: Boolean
-        get() = phone.filter { it.isDigit() }.length >= 9
+        get() = phone.filter { it.isDigit() }.length == 9
 
     val isEmailValid: Boolean
-        get() = email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+        get() {
+            val trimmed = email.trim()
+            if (trimmed.isBlank()) return false
+            return try {
+                android.util.Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()
+            } catch (_: Exception) {
+                trimmed.contains("@") && trimmed.contains(".")
+            }
+        }
 
     val isPasswordLengthValid: Boolean
         get() = password.length >= 8
@@ -68,17 +80,27 @@ data class RegisterUiState(
     val hasUppercase: Boolean
         get() = password.any { it.isUpperCase() }
 
+    val hasNumber: Boolean
+        get() = password.any { it.isDigit() }
+
     val hasSpecialOrNumber: Boolean
-        get() = password.any { it.isDigit() || !it.isLetterOrDigit() }
+        get() = hasNumber || password.any { !it.isLetterOrDigit() }
 
     val isPasswordValid: Boolean
-        get() = isPasswordLengthValid && hasUppercase && hasSpecialOrNumber
+        get() = isPasswordLengthValid && hasUppercase && hasNumber
 
     val doPasswordsMatch: Boolean
         get() = password.isNotBlank() && password == confirmPassword
 
     val isStep1Valid: Boolean
-        get() = fullName.isNotBlank() && isDniValid && isPhoneValid && isEmailValid && isPasswordValid && doPasswordsMatch && acceptsTerms
+        get() = fullName.trim().length >= 3 &&
+                isDniValid &&
+                isPhoneValid &&
+                isEmailValid &&
+                isPasswordValid &&
+                doPasswordsMatch &&
+                termsAccepted &&
+                notificationsAccepted
 
     val isPlateValid: Boolean
         get() = plateNumber.trim().isNotBlank() && plateNumber.trim().length in 6..8

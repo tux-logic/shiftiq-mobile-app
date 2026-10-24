@@ -420,22 +420,31 @@ private fun Step1OwnerContent(
     // Form inputs
     Text(text = "Nombre Completo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(4.dp))
+    val showNameError = state.fullNameError != null
     OutlinedTextField(
         value = state.fullName,
         onValueChange = onFullNameChange,
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("Rodrigo Alarcón Flores", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = if (showNameError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
+        isError = showNameError,
+        supportingText = {
+            state.fullNameError?.let { errorText ->
+                Text(text = errorText, color = Color(0xFFDC2626), fontSize = 11.sp)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
         )
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Documento de Identidad (DNI)
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -443,28 +452,45 @@ private fun Step1OwnerContent(
         Text(text = "8 dígitos", color = Slate500, fontSize = 11.sp)
     }
     Spacer(modifier = Modifier.height(4.dp))
+    val showDniError = (state.documentNumber.isNotEmpty() && !state.isDniValid) || state.documentError != null
     OutlinedTextField(
         value = state.documentNumber,
         onValueChange = onDocumentNumberChange,
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("47891234", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = if (showDniError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        isError = showDniError,
+        supportingText = {
+            if (showDniError) {
+                Text(
+                    text = state.documentError ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
+                    color = Color(0xFFDC2626),
+                    fontSize = 11.sp
+                )
+            } else if (state.isDniValid) {
+                Text(text = "✓ DNI válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            } else {
+                Text(text = "8 dígitos numéricos", color = Slate500, fontSize = 11.sp)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
         )
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Teléfono Celular WhatsApp
     Text(text = "Teléfono Celular WhatsApp *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(4.dp))
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    val showPhoneError = (state.phone.isNotEmpty() && !state.isPhoneValid) || state.phoneError != null
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Box(
             modifier = Modifier
                 .height(56.dp)
@@ -482,51 +508,81 @@ private fun Step1OwnerContent(
             onValueChange = onPhoneChange,
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-            placeholder = { Text("987 654 321", color = Slate400, fontSize = 14.sp) },
-            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+            placeholder = { Text("987654321", color = Slate400, fontSize = 14.sp) },
+            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = if (showPhoneError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            isError = showPhoneError,
+            supportingText = {
+                if (showPhoneError) {
+                    Text(
+                        text = state.phoneError ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
+                        color = Color(0xFFDC2626),
+                        fontSize = 11.sp
+                    )
+                } else if (state.isPhoneValid) {
+                    Text(text = "✓ Celular válido para alertas", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                } else {
+                    Text(text = "9 dígitos sin código de país", color = Slate500, fontSize = 11.sp)
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+                errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
             )
         )
     }
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Correo Electrónico
     Text(text = "Correo Electrónico *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(4.dp))
+    val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
     OutlinedTextField(
         value = state.email,
         onValueChange = onEmailChange,
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("usuario@ejemplo.com", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = if (showEmailError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        isError = showEmailError,
+        supportingText = {
+            if (showEmailError) {
+                Text(
+                    text = state.emailError ?: "Ingresa un correo electrónico válido",
+                    color = Color(0xFFDC2626),
+                    fontSize = 11.sp
+                )
+            } else if (state.isEmailValid) {
+                Text(text = "✓ Correo válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
         )
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Contraseña
     Text(text = "Contraseña *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(4.dp))
+    val showPasswordError = (state.password.isNotEmpty() && !state.isPasswordValid) || state.passwordError != null
     OutlinedTextField(
         value = state.password,
         onValueChange = onPasswordChange,
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Crea una contraseña segura", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+        placeholder = { Text("Mínimo 8 caracteres", color = Slate400, fontSize = 14.sp) },
+        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = if (showPasswordError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
         trailingIcon = {
             IconButton(onClick = onTogglePasswordVisibility) {
                 Icon(imageVector = if (state.isPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
@@ -534,14 +590,34 @@ private fun Step1OwnerContent(
         },
         singleLine = true,
         visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        isError = showPasswordError,
+        supportingText = {
+            if (showPasswordError) {
+                val missing = mutableListOf<String>()
+                if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
+                if (!state.hasUppercase) missing.add("1 mayúscula")
+                if (!state.hasNumber) missing.add("1 número")
+                Text(
+                    text = state.passwordError ?: "Falta: ${missing.joinToString(", ")}",
+                    color = Color(0xFFDC2626),
+                    fontSize = 11.sp
+                )
+            } else if (state.isPasswordValid) {
+                Text(text = "✓ Contraseña segura", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            } else {
+                Text(text = "Mínimo 8 caracteres, 1 mayúscula y 1 número", color = Slate500, fontSize = 11.sp)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
         )
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Confirmar Contraseña
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -551,13 +627,14 @@ private fun Step1OwnerContent(
         }
     }
     Spacer(modifier = Modifier.height(4.dp))
+    val showConfirmError = (state.confirmPassword.isNotEmpty() && !state.doPasswordsMatch) || state.confirmPasswordError != null
     OutlinedTextField(
         value = state.confirmPassword,
         onValueChange = onConfirmPasswordChange,
         modifier = Modifier.fillMaxWidth(),
         textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
         placeholder = { Text("Repite tu contraseña", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp)) },
+        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = if (showConfirmError) Color(0xFFDC2626) else Slate500, modifier = Modifier.size(20.dp)) },
         trailingIcon = {
             IconButton(onClick = onToggleConfirmPasswordVisibility) {
                 Icon(imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
@@ -565,22 +642,48 @@ private fun Step1OwnerContent(
         },
         singleLine = true,
         visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        isError = showConfirmError,
+        supportingText = {
+            if (showConfirmError) {
+                Text(
+                    text = state.confirmPasswordError ?: "Las contraseñas no coinciden",
+                    color = Color(0xFFDC2626),
+                    fontSize = 11.sp
+                )
+            } else if (state.doPasswordsMatch) {
+                Text(text = "✓ Las contraseñas coinciden", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = PrimaryBlue,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Slate200,
+            errorBorderColor = Color(0xFFDC2626), errorContainerColor = Color.White
         )
     )
 
     Spacer(modifier = Modifier.height(14.dp))
 
-    // Checkboxes de Notificaciones y Términos
+    // Checkboxes de Notificaciones y Términos (Material 3 con alto contraste y desmarcados por defecto)
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onToggleAcceptsNotifications(!state.acceptsNotifications) }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onToggleAcceptsNotifications(!state.notificationsAccepted) }
+            .padding(vertical = 4.dp)
     ) {
-        Checkbox(checked = state.acceptsNotifications, onCheckedChange = onToggleAcceptsNotifications, colors = CheckboxDefaults.colors(checkedColor = Slate900))
-        Spacer(modifier = Modifier.width(6.dp))
+        Checkbox(
+            checked = state.notificationsAccepted,
+            onCheckedChange = null,
+            colors = CheckboxDefaults.colors(
+                checkedColor = PrimaryBlue,
+                uncheckedColor = Slate400,
+                checkmarkColor = Color.White
+            )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "Acepto recibir notificaciones automáticas de fallas (DTC) y telemetría diagnóstica vía WhatsApp.",
             color = Slate700,
@@ -591,16 +694,79 @@ private fun Step1OwnerContent(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onToggleAcceptsTerms(!state.acceptsTerms) }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onToggleAcceptsTerms(!state.termsAccepted) }
+            .padding(vertical = 4.dp)
     ) {
-        Checkbox(checked = state.acceptsTerms, onCheckedChange = onToggleAcceptsTerms, colors = CheckboxDefaults.colors(checkedColor = Slate900))
-        Spacer(modifier = Modifier.width(6.dp))
+        Checkbox(
+            checked = state.termsAccepted,
+            onCheckedChange = null,
+            colors = CheckboxDefaults.colors(
+                checkedColor = PrimaryBlue,
+                uncheckedColor = Slate400,
+                checkmarkColor = Color.White
+            )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "Acepto los Términos de Servicio y el Tratamiento de Datos Telemáticos del Vehículo.",
             color = Slate700,
             fontSize = 12.sp,
             lineHeight = 16.sp
         )
+    }
+
+    // Feedback visual si faltan marcar los checkboxes
+    if (state.fullName.isNotBlank() && state.isDniValid && state.isPhoneValid && state.isEmailValid && state.isPasswordValid && state.doPasswordsMatch && (!state.termsAccepted || !state.notificationsAccepted)) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+            border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+        ) {
+            Row(
+                modifier = Modifier.padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(imageVector = errorOutline, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (!state.termsAccepted && !state.notificationsAccepted) {
+                        "Marca ambas casillas (Términos y Notificaciones) para habilitar el botón."
+                    } else if (!state.termsAccepted) {
+                        "Debes aceptar los Términos de Servicio para continuar."
+                    } else {
+                        "Debes aceptar las Notificaciones de telemetría para continuar."
+                    },
+                    color = PrimaryBlue,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+
+    // Mensaje de error general si aplica
+    if (!state.errorMessage.isNullOrBlank()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+            border = BorderStroke(1.dp, Color(0xFFFECACA))
+        ) {
+            Row(
+                modifier = Modifier.padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(imageVector = errorOutline, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
+            }
+        }
     }
 
     Spacer(modifier = Modifier.height(14.dp))
@@ -629,19 +795,30 @@ private fun Step1OwnerContent(
     Spacer(modifier = Modifier.height(20.dp))
 
     // CTA Button
+    val isStep1Ready = state.isStep1Valid
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (state.isStep1Valid) Primary else Primary.copy(alpha = 0.6f))
-            .scaleOnPress(enabled = state.isStep1Valid, onClick = onNext),
+            .background(if (isStep1Ready) Primary else Slate200)
+            .scaleOnPress(onClick = onNext),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Continuar a Datos del Vehículo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Continuar a Datos del Vehículo",
+                color = if (isStep1Ready) Color.White else Slate500,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(imageVector = arrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp).offset(x = 2.dp))
+            Icon(
+                imageVector = arrowForward,
+                contentDescription = null,
+                tint = if (isStep1Ready) Color.White else Slate500,
+                modifier = Modifier.size(16.dp).offset(x = 2.dp)
+            )
         }
     }
 

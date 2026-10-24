@@ -62,11 +62,11 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onToggleAcceptsNotifications(value: Boolean) {
-        _uiState.update { it.copy(acceptsNotifications = value) }
+        _uiState.update { it.copy(notificationsAccepted = value, errorMessage = null) }
     }
 
     fun onToggleAcceptsTerms(value: Boolean) {
-        _uiState.update { it.copy(acceptsTerms = value) }
+        _uiState.update { it.copy(termsAccepted = value, errorMessage = null) }
     }
 
     // ==========================================
@@ -140,12 +140,12 @@ class RegisterViewModel @Inject constructor(
         val state = _uiState.value
         when (state.step) {
             RegisterStep.STEP_1_USER -> {
-                if (state.fullName.isBlank()) {
-                    _uiState.update { it.copy(fullNameError = "El nombre completo es obligatorio.") }
+                if (state.fullName.trim().length < 3) {
+                    _uiState.update { it.copy(fullNameError = "Ingresa tu nombre y apellido completo.") }
                     return
                 }
                 if (!state.isDniValid) {
-                    _uiState.update { it.copy(documentError = "El DNI debe contener 8 dígitos.") }
+                    _uiState.update { it.copy(documentError = "El DNI debe contener 8 dígitos numéricos.") }
                     return
                 }
                 if (!state.isPhoneValid) {
@@ -157,15 +157,23 @@ class RegisterViewModel @Inject constructor(
                     return
                 }
                 if (!state.isPasswordValid) {
-                    _uiState.update { it.copy(passwordError = "Mínimo 8 caracteres, una mayúscula y un número.") }
+                    val missing = mutableListOf<String>()
+                    if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
+                    if (!state.hasUppercase) missing.add("1 mayúscula")
+                    if (!state.hasNumber) missing.add("1 número")
+                    _uiState.update { it.copy(passwordError = "Contraseña débil. Requiere: ${missing.joinToString(", ")}.") }
                     return
                 }
                 if (!state.doPasswordsMatch) {
                     _uiState.update { it.copy(confirmPasswordError = "Las contraseñas no coinciden.") }
                     return
                 }
-                if (!state.acceptsTerms) {
+                if (!state.termsAccepted) {
                     _uiState.update { it.copy(errorMessage = "Debes aceptar los Términos de Servicio para continuar.") }
+                    return
+                }
+                if (!state.notificationsAccepted) {
+                    _uiState.update { it.copy(errorMessage = "Debes aceptar las Notificaciones de telemetría para continuar.") }
                     return
                 }
 
