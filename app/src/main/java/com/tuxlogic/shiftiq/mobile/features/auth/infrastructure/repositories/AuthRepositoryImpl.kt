@@ -5,11 +5,13 @@ import com.tuxlogic.shiftiq.mobile.features.auth.domain.User
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserDao
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserEntity
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.AuthApiService
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.CustomerRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignUpRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.VehicleRegistrationRequestDto
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -111,6 +113,87 @@ class AuthRepositoryImpl @Inject constructor(
                 val msg = when (response.code()) {
                     409 -> "Ya existe una cuenta registrada con este correo."
                     else -> "Error al registrar usuario (${response.code()})."
+                }
+                Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(resolveErrorMessage(e)))
+        }
+    }
+
+    override suspend fun registerUserWithVehicle(
+        fullName: String,
+        documentNumber: String,
+        phone: String,
+        email: String,
+        password: String,
+        plateNumber: String,
+        brand: String,
+        model: String,
+        year: Int,
+        vin: String,
+        dongleId: String?
+    ): Result<User> {
+        return try {
+            val userResponse = authApiService.registerUser(SignUpRequestDto(email.trim(), password))
+            if (userResponse.isSuccessful && userResponse.body() != null) {
+                val userDto = userResponse.body()!!
+                val nameParts = fullName.trim().split(" ")
+                val firstName = nameParts.firstOrNull() ?: fullName.trim()
+                val lastName = if (nameParts.size > 1) nameParts.drop(1).joinToString(" ") else ""
+
+                // 2. Register customer profile (best effort)
+                try {
+                    authApiService.createCustomer(
+                        CustomerRegistrationRequestDto(
+                            userId = userDto.id,
+                            isCorporate = false,
+                            firstName = firstName,
+                            lastName = lastName,
+                            documentType = "DNI",
+                            documentNumber = documentNumber.trim(),
+                            phone = phone.trim()
+                        )
+                    )
+                } catch (_: Exception) { }
+
+                // 3. Register vehicle profile (best effort)
+                try {
+                    authApiService.registerVehicle(
+                        VehicleRegistrationRequestDto(
+                            plateNumber = plateNumber.trim().uppercase(),
+                            brand = brand.trim(),
+                            model = model.trim(),
+                            year = year,
+                            vin = vin.trim().uppercase()
+                        )
+                    )
+                } catch (_: Exception) { }
+
+                // 4. Authenticate or store active user session
+                val entity = UserEntity(
+                    id = userDto.id,
+                    email = userDto.email,
+                    role = userDto.role,
+                    token = "token-${userDto.id}",
+                    refreshToken = "refresh-${userDto.id}"
+                )
+                userDao.clearUsers()
+                userDao.insertUser(entity)
+
+                Result.success(
+                    User(
+                        id = entity.id,
+                        email = entity.email,
+                        role = entity.role,
+                        token = entity.token,
+                        refreshToken = entity.refreshToken
+                    )
+                )
+            } else {
+                val msg = when (userResponse.code()) {
+                    409, 400 -> "El correo electrónico o DNI ya está registrado en ShiftIQ."
+                    else -> "No se pudo completar el registro (${userResponse.code()}). Verifica tus datos."
                 }
                 Result.failure(Exception(msg))
             }

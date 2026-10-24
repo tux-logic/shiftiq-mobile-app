@@ -1058,3 +1058,228 @@ val errorOutline: ImageVector
     }
 
 private var _errorOutline: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val person: ImageVector
+    get() {
+        if (_person != null) {
+            return _person!!
+        }
+        _person = ImageVector.Builder(
+            name = "person",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(12f, 12f)
+                curveToRelative(2.21f, 0f, 4f, -1.79f, 4f, -4f)
+                reflectiveCurveToRelative(-1.79f, -4f, -4f, -4f)
+                reflectiveCurveToRelative(-4f, 1.79f, -4f, 4f)
+                reflectiveCurveToRelative(1.79f, 4f, 4f, 4f)
+                close()
+                moveToRelative(0f, 2f)
+                curveToRelative(-2.67f, 0f, -8f, 1.34f, -8f, 4f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(16f)
+                verticalLineToRelative(-2f)
+                curveToRelative(0f, -2.66f, -5.33f, -4f, -8f, -4f)
+                close()
+            }
+        }.build()
+        return _person!!
+    }
+
+private var _person: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val bluetooth: ImageVector
+    get() {
+        if (_bluetooth != null) {
+            return _bluetooth!!
+        }
+        _bluetooth = ImageVector.Builder(
+            name = "bluetooth",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(17.71f, 7.71f)
+                lineTo(12f, 2f)
+                horizontalLineToRelative(-1f)
+                verticalLineToRelative(7.59f)
+                lineTo(6.41f, 5f)
+                lineTo(5f, 6.41f)
+                lineTo(10.59f, 12f)
+                lineTo(5f, 17.59f)
+                lineTo(6.41f, 19f)
+                lineTo(11f, 14.41f)
+                verticalLineTo(22f)
+                horizontalLineToRelative(1f)
+                lineToRelative(5.71f, -5.71f)
+                lineToRelative(-4.3f, -4.29f)
+                lineToRelative(4.3f, -4.29f)
+                close()
+                moveTo(13f, 5.83f)
+                lineToRelative(1.88f, 1.88f)
+                lineTo(13f, 9.59f)
+                verticalLineTo(5.83f)
+                close()
+                moveToRelative(1.88f, 10.46f)
+                lineTo(13f, 18.17f)
+                verticalLineToRelative(-3.76f)
+                lineToRelative(1.88f, 1.88f)
+                close()
+            }
+        }.build()
+        return _bluetooth!!
+    }
+
+private var _bluetooth: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val photoCamera: ImageVector
+    get() {
+        if (_photoCamera != null) {
+            return _photoCamera!!
+        }
+        _photoCamera = ImageVector.Builder(
+            name = "photoCamera",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(12f, 15f)
+                curveToRelative(1.66f, 0f, 3f, -1.34f, 3f, -3f)
+                reflectiveCurveToRelative(-1.34f, -3f, -3f, -3f)
+                reflectiveCurveToRelative(-3f, 1.34f, -3f, 3f)
+                reflectiveCurveToRelative(1.34f, 3f, 3f, 3f)
+                close()
+                moveToRelative(9f, -8f)
+                horizontalLineToRelative(-3.17f)
+                lineTo(16f, 4.83f)
+                horizontalLineTo(8f)
+                lineTo(6.17f, 7f)
+                horizontalLineTo(3f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                verticalLineToRelative(12f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(18f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                verticalLineTo(9f)
+                curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+                close()
+                moveToRelative(0f, 14f)
+                horizontalLineTo(3f)
+                verticalLineTo(9f)
+                horizontalLineToRelative(3.91f)
+                lineToRelative(1.83f, -2f)
+                horizontalLineToRelative(6.52f)
+                lineToRelative(1.83f, 2f)
+                horizontalLineTo(21f)
+                verticalLineToRelative(12f)
+                close()
+            }
+        }.build()
+        return _photoCamera!!
+    }
+
+private var _photoCamera: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val badgeIcon: ImageVector
+    get() {
+        if (_badgeIcon != null) {
+            return _badgeIcon!!
+        }
+        _badgeIcon = ImageVector.Builder(
+            name = "badgeIcon",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(20f, 7f)
+                horizontalLineToRelative(-5f)
+                verticalLineTo(4f)
+                curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+                horizontalLineToRelative(-2f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                verticalLineToRelative(3f)
+                horizontalLineTo(4f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                verticalLineToRelative(11f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(16f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                verticalLineTo(9f)
+                curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+                close()
+                moveTo(11f, 4f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(5f)
+                horizontalLineToRelative(-2f)
+                verticalLineTo(4f)
+                close()
+                moveToRelative(9f, 16f)
+                horizontalLineTo(4f)
+                verticalLineTo(9f)
+                horizontalLineToRelative(5f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(2f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                horizontalLineToRelative(5f)
+                verticalLineToRelative(11f)
+                close()
+            }
+        }.build()
+        return _badgeIcon!!
+    }
+
+private var _badgeIcon: ImageVector? = null

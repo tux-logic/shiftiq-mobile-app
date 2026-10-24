@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.login.LoginScreen
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.recovery.RecoveryScreen
+import com.tuxlogic.shiftiq.mobile.features.auth.presentation.register.RegisterScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -24,6 +25,9 @@ data object SignInRoute
 
 @Serializable
 data object SignUpRoute
+
+@Serializable
+data object RegisterRoute
 
 @Serializable
 data object RecoveryRoute
@@ -46,7 +50,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     navController.navigate(RecoveryRoute)
                 },
                 onRegisterClick = {
-                    navController.navigate(SignUpRoute)
+                    navController.navigate(RegisterRoute)
                 }
             )
         }
@@ -60,7 +64,37 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     navController.navigate(RecoveryRoute)
                 },
                 onRegisterClick = {
-                    navController.navigate(SignUpRoute)
+                    navController.navigate(RegisterRoute)
+                }
+            )
+        }
+        composable<RegisterRoute> {
+            RegisterScreen(
+                onBackToLogin = {
+                    navController.popBackStack()
+                },
+                onNavigateToRecovery = {
+                    navController.navigate(RecoveryRoute)
+                },
+                onRegistrationSuccess = {
+                    navController.navigate(LoginRoute) {
+                        popUpTo<RegisterRoute> { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable<SignUpRoute> {
+            RegisterScreen(
+                onBackToLogin = {
+                    navController.popBackStack()
+                },
+                onNavigateToRecovery = {
+                    navController.navigate(RecoveryRoute)
+                },
+                onRegistrationSuccess = {
+                    navController.navigate(LoginRoute) {
+                        popUpTo<SignUpRoute> { inclusive = true }
+                    }
                 }
             )
         }
@@ -77,11 +111,6 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     navController.popBackStack()
                 }
             )
-        }
-        composable<SignUpRoute> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Pantalla de Registro B2C")
-            }
         }
         composable<WorkshopRegisterRoute> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

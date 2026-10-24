@@ -20,6 +20,38 @@ class SignUpUseCase @Inject constructor(
     }
 }
 
+class RegisterUserUseCase @Inject constructor(
+    private val repository: AuthRepository
+) {
+    suspend operator fun invoke(
+        fullName: String,
+        documentNumber: String,
+        phone: String,
+        email: String,
+        password: String,
+        plateNumber: String,
+        brand: String,
+        model: String,
+        year: Int,
+        vin: String,
+        dongleId: String? = null
+    ): Result<User> {
+        return repository.registerUserWithVehicle(
+            fullName = fullName,
+            documentNumber = documentNumber,
+            phone = phone,
+            email = email,
+            password = password,
+            plateNumber = plateNumber,
+            brand = brand,
+            model = model,
+            year = year,
+            vin = vin,
+            dongleId = dongleId
+        )
+    }
+}
+
 class GoogleSignInUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
