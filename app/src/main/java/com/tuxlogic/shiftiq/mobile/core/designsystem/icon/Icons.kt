@@ -746,3 +746,315 @@ val storefront: ImageVector
     }
 
 private var _storefront: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val shieldIcon: ImageVector
+    get() {
+        if (_shieldIcon != null) {
+            return _shieldIcon!!
+        }
+        _shieldIcon = ImageVector.Builder(
+            name = "shieldIcon",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(12f, 1f)
+                lineTo(3f, 5f)
+                verticalLineToRelative(6f)
+                curveToRelative(0f, 5.55f, 3.84f, 10.74f, 9f, 12f)
+                curveToRelative(5.16f, -1.26f, 9f, -6.45f, 9f, -12f)
+                verticalLineTo(5f)
+                lineToRelative(-9f, -4f)
+                close()
+                moveToRelative(-2f, 16f)
+                lineToRelative(-4f, -4f)
+                lineToRelative(1.41f, -1.41f)
+                lineTo(10f, 14.17f)
+                lineToRelative(6.59f, -6.59f)
+                lineTo(18f, 9f)
+                lineToRelative(-8f, 8f)
+                close()
+            }
+        }.build()
+        return _shieldIcon!!
+    }
+
+private var _shieldIcon: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val accessTime: ImageVector
+    get() {
+        if (_accessTime != null) {
+            return _accessTime!!
+        }
+        _accessTime = ImageVector.Builder(
+            name = "accessTime",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(11.99f, 2f)
+                curveTo(6.47f, 2f, 2f, 6.48f, 2f, 12f)
+                reflectiveCurveToRelative(4.47f, 10f, 9.99f, 10f)
+                curveTo(17.52f, 22f, 22f, 17.52f, 22f, 12f)
+                reflectiveCurveTo(17.52f, 2f, 11.99f, 2f)
+                close()
+                moveTo(12f, 20f)
+                curveToRelative(-4.42f, 0f, -8f, -3.58f, -8f, -8f)
+                reflectiveCurveToRelative(3.58f, -8f, 8f, -8f)
+                reflectiveCurveToRelative(8f, 3.58f, 8f, 8f)
+                reflectiveCurveToRelative(-3.58f, 8f, -8f, 8f)
+                close()
+                moveToRelative(0.5f, -13f)
+                horizontalLineTo(11f)
+                verticalLineToRelative(6f)
+                lineToRelative(5.25f, 3.15f)
+                lineToRelative(0.75f, -1.23f)
+                lineToRelative(-4.5f, -2.67f)
+                close()
+            }
+        }.build()
+        return _accessTime!!
+    }
+
+private var _accessTime: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val hourglassEmpty: ImageVector
+    get() {
+        if (_hourglassEmpty != null) {
+            return _hourglassEmpty!!
+        }
+        _hourglassEmpty = ImageVector.Builder(
+            name = "hourglassEmpty",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(6f, 2f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(0.01f)
+                lineTo(6f, 8.01f)
+                lineTo(10f, 12f)
+                lineToRelative(-4f, 4f)
+                lineToRelative(0.01f, 0.01f)
+                horizontalLineTo(6f)
+                verticalLineTo(22f)
+                horizontalLineToRelative(12f)
+                verticalLineToRelative(-5.99f)
+                horizontalLineToRelative(-0.01f)
+                lineTo(18f, 16f)
+                lineToRelative(-4f, -4f)
+                lineToRelative(4f, -3.99f)
+                lineToRelative(-0.01f, -0.01f)
+                horizontalLineTo(18f)
+                verticalLineTo(2f)
+                horizontalLineTo(6f)
+                close()
+                moveToRelative(10f, 14.5f)
+                verticalLineTo(20f)
+                horizontalLineTo(8f)
+                verticalLineToRelative(-3.5f)
+                lineToRelative(4f, -4f)
+                lineToRelative(4f, 4f)
+                close()
+                moveToRelative(0f, -9f)
+                lineToRelative(-4f, 4f)
+                lineToRelative(-4f, -4f)
+                verticalLineTo(4f)
+                horizontalLineToRelative(8f)
+                verticalLineToRelative(3.5f)
+                close()
+            }
+        }.build()
+        return _hourglassEmpty!!
+    }
+
+private var _hourglassEmpty: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val syncIcon: ImageVector
+    get() {
+        if (_syncIcon != null) {
+            return _syncIcon!!
+        }
+        _syncIcon = ImageVector.Builder(
+            name = "syncIcon",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(12f, 4f)
+                verticalLineTo(1f)
+                lineTo(8f, 5f)
+                lineToRelative(4f, 4f)
+                verticalLineTo(6f)
+                curveToRelative(3.31f, 0f, 6f, 2.69f, 6f, 6f)
+                curveToRelative(0f, 1.01f, -0.25f, 1.97f, -0.7f, 2.8f)
+                lineToRelative(1.46f, 1.46f)
+                curveTo(19.54f, 15.03f, 20f, 13.57f, 20f, 12f)
+                curveToRelative(0f, -4.42f, -3.58f, -8f, -8f, -8f)
+                close()
+                moveToRelative(0f, 14f)
+                curveToRelative(-3.31f, 0f, -6f, -2.69f, -6f, -6f)
+                curveToRelative(0f, -1.01f, 0.25f, -1.97f, 0.7f, -2.8f)
+                lineTo(5.24f, 7.74f)
+                curveTo(4.46f, 8.97f, 4f, 10.43f, 4f, 12f)
+                curveToRelative(0f, 4.42f, 3.58f, 8f, 8f, 8f)
+                verticalLineToRelative(3f)
+                lineToRelative(4f, -4f)
+                lineToRelative(-4f, -4f)
+                verticalLineToRelative(3f)
+                close()
+            }
+        }.build()
+        return _syncIcon!!
+    }
+
+private var _syncIcon: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val closeIcon: ImageVector
+    get() {
+        if (_closeIcon != null) {
+            return _closeIcon!!
+        }
+        _closeIcon = ImageVector.Builder(
+            name = "closeIcon",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(19f, 6.41f)
+                lineTo(17.59f, 5f)
+                lineTo(12f, 10.59f)
+                lineTo(6.41f, 5f)
+                lineTo(5f, 6.41f)
+                lineTo(10.59f, 12f)
+                lineTo(5f, 17.59f)
+                lineTo(6.41f, 19f)
+                lineTo(12f, 13.41f)
+                lineTo(17.59f, 19f)
+                lineTo(19f, 17.59f)
+                lineTo(13.41f, 12f)
+                close()
+            }
+        }.build()
+        return _closeIcon!!
+    }
+
+private var _closeIcon: ImageVector? = null
+
+@Suppress("CheckReturnValue")
+val errorOutline: ImageVector
+    get() {
+        if (_errorOutline != null) {
+            return _errorOutline!!
+        }
+        _errorOutline = ImageVector.Builder(
+            name = "errorOutline",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Bevel,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(11f, 15f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(-2f)
+                close()
+                moveToRelative(0f, -8f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(-2f)
+                close()
+                moveToRelative(0.99f, -5f)
+                curveTo(6.47f, 2f, 2f, 6.48f, 2f, 12f)
+                reflectiveCurveToRelative(4.47f, 10f, 9.99f, 10f)
+                curveTo(17.52f, 22f, 22f, 17.52f, 22f, 12f)
+                reflectiveCurveTo(17.52f, 2f, 11.99f, 2f)
+                close()
+                moveTo(12f, 20f)
+                curveToRelative(-4.42f, 0f, -8f, -3.58f, -8f, -8f)
+                reflectiveCurveToRelative(3.58f, -8f, 8f, -8f)
+                reflectiveCurveToRelative(8f, 3.58f, 8f, 8f)
+                reflectiveCurveToRelative(-3.58f, 8f, -8f, 8f)
+                close()
+            }
+        }.build()
+        return _errorOutline!!
+    }
+
+private var _errorOutline: ImageVector? = null

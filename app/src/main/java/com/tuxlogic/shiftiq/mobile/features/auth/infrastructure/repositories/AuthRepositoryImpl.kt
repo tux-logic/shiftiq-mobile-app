@@ -6,6 +6,8 @@ import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserDao
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.local.UserEntity
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.AuthApiService
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignUpRequestDto
 import javax.inject.Inject
@@ -102,6 +104,32 @@ class AuthRepositoryImpl @Inject constructor(
                 )
             } else {
                 Result.failure(Exception("Error al registrar usuario: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun requestPasswordRecovery(email: String): Result<Unit> {
+        return try {
+            val response = authApiService.requestPasswordRecovery(PasswordRecoveryRequestDto(email))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al solicitar código: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resetPassword(token: String, newPassword: String): Result<Unit> {
+        return try {
+            val response = authApiService.resetPassword(ResetPasswordRequestDto(token, newPassword))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al restablecer contraseña: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

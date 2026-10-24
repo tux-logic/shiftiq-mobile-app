@@ -10,6 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tuxlogic.shiftiq.mobile.features.auth.presentation.login.LoginScreen
+import com.tuxlogic.shiftiq.mobile.features.auth.presentation.recovery.RecoveryScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -23,6 +24,9 @@ data object SignInRoute
 
 @Serializable
 data object SignUpRoute
+
+@Serializable
+data object RecoveryRoute
 
 @Serializable
 data object ForgotPasswordRoute
@@ -39,7 +43,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     // Navigate to Driver Main/Dashboard
                 },
                 onForgotPasswordClick = {
-                    navController.navigate(ForgotPasswordRoute)
+                    navController.navigate(RecoveryRoute)
                 },
                 onRegisterClick = {
                     navController.navigate(SignUpRoute)
@@ -53,17 +57,26 @@ fun NavGraphBuilder.authNavGraph(navController: NavController) {
                     // Navigate to Driver Main/Dashboard
                 },
                 onForgotPasswordClick = {
-                    navController.navigate(ForgotPasswordRoute)
+                    navController.navigate(RecoveryRoute)
                 },
                 onRegisterClick = {
                     navController.navigate(SignUpRoute)
                 }
             )
         }
+        composable<RecoveryRoute> {
+            RecoveryScreen(
+                onBackToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
         composable<ForgotPasswordRoute> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Recuperar Contraseña (US004)")
-            }
+            RecoveryScreen(
+                onBackToLogin = {
+                    navController.popBackStack()
+                }
+            )
         }
         composable<SignUpRoute> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

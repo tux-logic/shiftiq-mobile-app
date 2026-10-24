@@ -22,3 +22,12 @@ data class AuthenticatedUserDto(
     val refreshToken: String,
     val accessTokenExpiresInSeconds: Long
 )
+
+data class PasswordRecoveryRequestDto(
+    val email: String
+)
+
+data class ResetPasswordRequestDto(
+    val token: String,
+    val newPassword: String
+)
