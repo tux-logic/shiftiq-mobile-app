@@ -157,32 +157,6 @@ fun LoginContent(
                 .padding(horizontal = 22.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            // 1. Tag / Pill: [car icon] OBD-II FLEET V2.4
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(Slate100)
-                    .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(50))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = directionsCar,
-                    contentDescription = null,
-                    tint = Slate700,
-                    modifier = Modifier.size(15.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "OBD-II FLEET V2.4",
-                    color = Slate700,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.8.sp
-                )
-            }
-
             Spacer(modifier = Modifier.height(14.dp))
 
             // 2. Headings
@@ -326,13 +300,6 @@ fun LoginContent(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-
-                        Text(
-                            text = "Cifrada",
-                            color = Slate500,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
