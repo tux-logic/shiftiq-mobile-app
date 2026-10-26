@@ -19,3 +19,12 @@ data class DtcAlertResponseDto(
     @SerializedName("severity") val severity: String? = null,
     @SerializedName("createdAt") val createdAt: String? = null
 )
+
+data class WorkOrderResponseDto(
+    @SerializedName("id") val id: String,
+    @SerializedName("formattedNumber") val formattedNumber: String? = null,
+    @SerializedName("status") val status: String,
+    @SerializedName("diagnosticSummary") val diagnosticSummary: String? = null,
+    @SerializedName("mileageIn") val mileageIn: Int? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)

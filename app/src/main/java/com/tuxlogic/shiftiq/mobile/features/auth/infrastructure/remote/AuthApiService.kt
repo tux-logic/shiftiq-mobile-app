@@ -6,6 +6,7 @@ import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.Custo
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.IdentityLookupResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.RefreshTokenRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SendOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
@@ -17,6 +18,7 @@ import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.Verif
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -28,6 +30,12 @@ interface AuthApiService {
 
     @POST("authentication/sessions/google")
     suspend fun googleSignIn(@Body request: GoogleSignInRequestDto): Response<AuthenticatedUserDto>
+
+    @POST("authentication/sessions/refresh")
+    suspend fun refreshToken(@Body request: RefreshTokenRequestDto): Response<AuthenticatedUserDto>
+
+    @HTTP(method = "DELETE", path = "authentication/sessions", hasBody = true)
+    suspend fun revokeSession(@Body request: RefreshTokenRequestDto): Response<Unit>
 
     @POST("authentication/otp/send")
     suspend fun sendOtp(@Body request: SendOtpRequestDto): Response<Unit>
