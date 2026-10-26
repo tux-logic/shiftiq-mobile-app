@@ -143,13 +143,38 @@ class HomeRepositoryImpl @Inject constructor(
                 )
             }
 
+            // Consultar órdenes de trabajo activas en vivo (Work Orders)
+            var activeService: ActiveServiceInfo? = null
+            try {
+                val woResponse = homeApiService.getWorkOrdersByVehicle(authHeader, vehicle.id)
+                if (woResponse.isSuccessful && !woResponse.body().isNullOrEmpty()) {
+                    val activeWo = woResponse.body()!!.firstOrNull {
+                        it.status.equals("OPEN", ignoreCase = true) || it.status.equals("IN_PROGRESS", ignoreCase = true)
+                    }
+                    if (activeWo != null) {
+                        activeService = ActiveServiceInfo(
+                            workshopName = "Taller Central",
+                            statusText = "OT: ${activeWo.formattedNumber ?: activeWo.id.take(8)} • En Progreso",
+                            taskDescription = activeWo.diagnosticSummary ?: "Trabajo técnico en ejecución",
+                            startedAt = "08:30 AM",
+                            completedSteps = 3,
+                            totalSteps = 4
+                        )
+                    }
+                }
+            } catch (_: Exception) { }
+
+            if (activeService == null) {
+                activeService = ActiveServiceInfo()
+            }
+
             val dashboardData = HomeDashboardData(
                 customerName = customerName,
                 isDongleConnected = true,
                 vehicle = vehicle,
                 metrics = metrics,
                 activeAlerts = alerts,
-                activeService = ActiveServiceInfo(),
+                activeService = activeService,
                 isOffline = false
             )
 

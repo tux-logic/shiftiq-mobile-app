@@ -34,6 +34,10 @@ data class ResetPasswordRequestDto(
     @SerializedName("newPassword") val newPassword: String
 )
 
+data class RefreshTokenRequestDto(
+    @SerializedName("refreshToken") val refreshToken: String
+)
+
 data class SendOtpRequestDto(
     @SerializedName("email") val email: String
 )

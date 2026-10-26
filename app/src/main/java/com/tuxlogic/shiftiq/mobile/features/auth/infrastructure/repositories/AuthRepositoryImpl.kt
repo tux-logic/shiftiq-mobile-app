@@ -9,6 +9,7 @@ import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.Custo
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.GoogleSignInRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.IdentityLookupResponseDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.PasswordRecoveryRequestDto
+import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.RefreshTokenRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.ResetPasswordRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SendOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.features.auth.infrastructure.remote.dto.SignInRequestDto
@@ -330,6 +331,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun signOut() {
+        val user = userDao.getActiveUser()
+        if (user != null && user.refreshToken.isNotBlank()) {
+            try {
+                authApiService.revokeSession(RefreshTokenRequestDto(user.refreshToken))
+            } catch (_: Exception) { }
+        }
         userDao.clearUsers()
     }
 }
