@@ -574,34 +574,6 @@ fun LoginContent(
                         )
                     }
                 }
-
-                // Apple Social Button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
-                        .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(14.dp))
-                        .scaleOnPress(onClick = { /* Simulated OAuth */ }),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = appleLogo,
-                            contentDescription = "Apple",
-                            tint = Color.Black,
-                            modifier = Modifier.size(19.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Continuar con Apple ID",
-                            color = Slate800,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
