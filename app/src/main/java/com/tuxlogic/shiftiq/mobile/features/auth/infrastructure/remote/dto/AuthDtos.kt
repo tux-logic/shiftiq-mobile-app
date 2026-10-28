@@ -105,3 +105,13 @@ data class IdentityLookupResponseDto(
     @SerializedName("businessName") val businessName: String?,
     @SerializedName("valid") val valid: Boolean
 )
+
+data class ApiErrorResponseDto(
+    @SerializedName("code") val code: String? = null,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("details") val details: String? = null,
+    @SerializedName("detail") val detail: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("error") val error: String? = null,
+    @SerializedName("status") val status: Int? = null
+)

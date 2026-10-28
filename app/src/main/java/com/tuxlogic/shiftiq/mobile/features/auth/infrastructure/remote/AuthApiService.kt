@@ -50,7 +50,7 @@ interface AuthApiService {
     suspend fun resetPassword(@Body request: ResetPasswordRequestDto): Response<Unit>
 
     @POST("users")
-    suspend fun signUp(@Body request: SignUpRequestDto): Response<AuthenticatedUserDto>
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<UserResponseDto>
 
     @POST("users")
     suspend fun registerUser(@Body request: SignUpRequestDto): Response<UserResponseDto>

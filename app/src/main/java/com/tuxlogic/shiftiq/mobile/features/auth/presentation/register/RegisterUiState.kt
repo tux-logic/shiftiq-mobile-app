@@ -17,6 +17,8 @@ data class RegisterUiState(
     val fullNameError: String? = null,
     val documentNumber: String = "",
     val documentError: String? = null,
+    val isLookingUpDni: Boolean = false,
+    val dniVerified: Boolean = false,
     val phone: String = "",
     val phoneError: String? = null,
     val email: String = "",
@@ -33,10 +35,10 @@ data class RegisterUiState(
     // Paso 2: Especificaciones del Vehículo y Dongle IoT
     val brand: String = "Kia",
     val model: String = "Rio",
-    val year: String = "2019",
-    val plateNumber: String = "ABC-123",
+    val year: String = "2020",
+    val plateNumber: String = "",
     val plateError: String? = null,
-    val vin: String = "3KPA24AB1KE129841",
+    val vin: String = "",
     val vinError: String? = null,
     val isScanningBle: Boolean = false,
     val selectedDongleId: String = "OBD2-BT-9821",
@@ -95,6 +97,7 @@ data class RegisterUiState(
     val isStep1Valid: Boolean
         get() = fullName.trim().length >= 3 &&
                 isDniValid &&
+                documentError == null &&
                 isPhoneValid &&
                 isEmailValid &&
                 isPasswordValid &&
