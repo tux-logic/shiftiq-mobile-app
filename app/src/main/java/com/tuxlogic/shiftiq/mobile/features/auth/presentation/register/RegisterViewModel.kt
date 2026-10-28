@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.features.auth.presentation.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuxlogic.shiftiq.mobile.features.auth.application.LookupIdentityUseCase
 import com.tuxlogic.shiftiq.mobile.features.auth.application.RegisterUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -15,13 +16,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val registerUserUseCase: RegisterUserUseCase
+    private val registerUserUseCase: RegisterUserUseCase,
+    private val lookupIdentityUseCase: LookupIdentityUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+    private var dniLookupJob: Job? = null
 
     // ==========================================
     // Modificadores de Datos del Propietario (Paso 1)
@@ -33,7 +36,55 @@ class RegisterViewModel @Inject constructor(
 
     fun onDocumentNumberChange(value: String) {
         val filtered = value.filter { it.isDigit() }.take(8)
-        _uiState.update { it.copy(documentNumber = filtered, documentError = null, errorMessage = null) }
+        _uiState.update {
+            it.copy(
+                documentNumber = filtered,
+                documentError = null,
+                errorMessage = null,
+                dniVerified = false
+            )
+        }
+        if (filtered.length == 8) {
+            validateDniWithReniec(filtered)
+        }
+    }
+
+    private fun validateDniWithReniec(dni: String) {
+        dniLookupJob?.cancel()
+        dniLookupJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLookingUpDni = true, documentError = null) }
+            val result = lookupIdentityUseCase("DNI", dni)
+            result.fold(
+                onSuccess = { lookup ->
+                    if (lookup.valid && !lookup.fullName.isNullOrBlank()) {
+                        _uiState.update { current ->
+                            current.copy(
+                                isLookingUpDni = false,
+                                dniVerified = true,
+                                fullName = if (current.fullName.isBlank()) lookup.fullName else current.fullName,
+                                documentError = null
+                            )
+                        }
+                    } else {
+                        _uiState.update { current ->
+                            current.copy(
+                                isLookingUpDni = false,
+                                dniVerified = false,
+                                documentError = "El DNI no fue encontrado en el padrón oficial (RENIEC)."
+                            )
+                        }
+                    }
+                },
+                onFailure = {
+                    _uiState.update { current ->
+                        current.copy(
+                            isLookingUpDni = false,
+                            dniVerified = false
+                        )
+                    }
+                }
+            )
+        }
     }
 
     fun onPhoneChange(value: String) {
@@ -148,6 +199,9 @@ class RegisterViewModel @Inject constructor(
                     _uiState.update { it.copy(documentError = "El DNI debe contener 8 dígitos numéricos.") }
                     return
                 }
+                if (state.documentError != null) {
+                    return
+                }
                 if (!state.isPhoneValid) {
                     _uiState.update { it.copy(phoneError = "Ingresa un número de celular válido (9 dígitos).") }
                     return
@@ -181,6 +235,14 @@ class RegisterViewModel @Inject constructor(
             }
 
             RegisterStep.STEP_2_VEHICLE -> {
+                if (state.brand.trim().isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa la marca del vehículo.") }
+                    return
+                }
+                if (state.model.trim().isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa el modelo del vehículo.") }
+                    return
+                }
                 if (!state.isYearValid) {
                     _uiState.update { it.copy(errorMessage = "Ingresa un año de fabricación válido (1980 - 2026).") }
                     return
@@ -204,7 +266,7 @@ class RegisterViewModel @Inject constructor(
             RegisterStep.OTP -> onVerifyOtp()
             RegisterStep.SUCCESS -> { /* Navegación a login / dashboard */ }
             RegisterStep.ERROR -> {
-                _uiState.update { it.copy(step = RegisterStep.STEP_1_USER, errorMessage = null) }
+                onCorrectData()
             }
         }
     }
@@ -215,13 +277,26 @@ class RegisterViewModel @Inject constructor(
             RegisterStep.STEP_2_VEHICLE -> _uiState.update { it.copy(step = RegisterStep.STEP_1_USER, errorMessage = null) }
             RegisterStep.STEP_3_CONFIRM -> _uiState.update { it.copy(step = RegisterStep.STEP_2_VEHICLE, errorMessage = null) }
             RegisterStep.OTP -> _uiState.update { it.copy(step = RegisterStep.STEP_3_CONFIRM, errorMessage = null) }
-            RegisterStep.ERROR -> _uiState.update { it.copy(step = RegisterStep.STEP_1_USER, errorMessage = null) }
+            RegisterStep.ERROR -> onCorrectData()
             RegisterStep.SUCCESS -> onExit()
         }
     }
 
     fun onCorrectData() {
-        _uiState.update { it.copy(step = RegisterStep.STEP_1_USER, errorMessage = null) }
+        val state = _uiState.value
+        val isVehicleError = state.errorMessage?.let { msg ->
+            msg.contains("placa", ignoreCase = true) ||
+            msg.contains("vin", ignoreCase = true) ||
+            msg.contains("vehículo", ignoreCase = true) ||
+            msg.contains("vehicular", ignoreCase = true)
+        } ?: false
+
+        val targetStep = if (isVehicleError) {
+            RegisterStep.STEP_2_VEHICLE
+        } else {
+            RegisterStep.STEP_1_USER
+        }
+        _uiState.update { it.copy(step = targetStep, errorMessage = null) }
     }
 
     fun onSubmitRegistration(onSuccess: () -> Unit = {}) {
@@ -251,7 +326,6 @@ class RegisterViewModel @Inject constructor(
                             errorMessage = null
                         )
                     }
-                    onSuccess()
                 },
                 onFailure = { error ->
                     _uiState.update {
@@ -269,5 +343,6 @@ class RegisterViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        dniLookupJob?.cancel()
     }
 }

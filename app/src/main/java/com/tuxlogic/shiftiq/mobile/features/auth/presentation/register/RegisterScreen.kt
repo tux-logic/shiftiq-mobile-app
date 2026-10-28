@@ -109,7 +109,7 @@ fun RegisterScreen(
         onNextStep = viewModel::onNextStep,
         onPreviousStep = { viewModel.onPreviousStep(onExit = onBackToLogin) },
         onCorrectData = viewModel::onCorrectData,
-        onSubmit = { viewModel.onSubmitRegistration(onSuccess = onRegistrationSuccess) },
+        onSubmit = { viewModel.onSubmitRegistration(onSuccess = {}) },
         onNavigateToLogin = onBackToLogin,
         onNavigateToRecovery = onNavigateToRecovery,
         onRegistrationSuccess = onRegistrationSuccess,
@@ -472,6 +472,10 @@ private fun Step1OwnerContent(
                     color = SeverityCrimson,
                     fontSize = 11.sp
                 )
+            } else if (state.isLookingUpDni) {
+                Text(text = "Consultando en RENIEC...", color = Slate500, fontSize = 11.sp)
+            } else if (state.dniVerified) {
+                Text(text = "✓ DNI verificado en RENIEC", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             } else if (state.isDniValid) {
                 Text(text = "✓ DNI válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             } else {
