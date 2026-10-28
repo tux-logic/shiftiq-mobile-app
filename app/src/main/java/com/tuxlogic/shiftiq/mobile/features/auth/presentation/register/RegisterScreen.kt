@@ -395,31 +395,6 @@ private fun Step1OwnerContent(
 
     Spacer(modifier = Modifier.height(14.dp))
 
-    // Callout box OBD-II
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFEFF6FF))
-            .border(BorderStroke(1.dp, Color(0xFFDBEAFE)), RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = badgeIcon, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(18.dp))
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        Column {
-            Text(text = "Asociación de Protocolo OBD-II", color = PrimaryBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Text(text = "Los datos coincidirán con la tarjeta de propiedad", color = Slate600, fontSize = 11.sp)
-        }
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
-
     // Form inputs
     Text(text = "Nombre Completo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(4.dp))
@@ -773,29 +748,6 @@ private fun Step1OwnerContent(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
             }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(14.dp))
-
-    // Security badge card
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate50)
-            .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = shieldIcon, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Cifrado de Telemetría", color = Slate900, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Text(text = "Conexión ISO 15765-4 CAN encriptada", color = Slate500, fontSize = 11.sp)
-        }
-        Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color.White).border(BorderStroke(1.dp, Slate200), RoundedCornerShape(6.dp)).padding(horizontal = 8.dp, vertical = 2.dp)) {
-            Text(text = "v4.8", color = Slate700, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
         }
     }
 
