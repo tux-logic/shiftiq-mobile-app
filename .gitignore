@@ -17,3 +17,12 @@ local.properties
 **/build/
 
 .idea/
+
+### VS Code Tasks Protection ###
+.vscode/tasks.json
+.vscode/settings.json
+
+### Environment & Secrets ###
+.env
+.env.*
+!.env.example
