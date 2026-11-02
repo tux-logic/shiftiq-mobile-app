@@ -19,13 +19,8 @@ local.properties
 .idea/
 
 ### VS Code Tasks Protection ###
-.vscode/tasks.json
-.vscode/settings.json
 
 ### Environment & Secrets ###
-.env
-.env.*
 !.env.example
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
+config.bat
+node_modules
