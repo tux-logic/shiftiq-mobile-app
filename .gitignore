@@ -13,7 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-temp_auto_push.bat
 
 **/build/
 
@@ -28,7 +27,8 @@ docs/MIGRATION-FOUNDATION-APP.md
 !.env.example
 
 ### VS Code Protection ###
-.gitignore
-branch_structure.json
-config.bat
 node_modules
+
+### VS Code Protection ###
+.vscode/tasks.json
+.vscode/settings.json
