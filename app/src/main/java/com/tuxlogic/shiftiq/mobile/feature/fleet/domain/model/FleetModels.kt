@@ -2,13 +2,10 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model
 
 import java.util.UUID
 
-/**
- * Estado del ciclo de vida de una cita en el taller.
- */
 enum class AppointmentStatus(val label: String) {
-    PENDING("Pendiente"),
-    COMPLETED("Completada"),
-    CANCELED("Cancelada");
+    PENDING("Pending"),
+    COMPLETED("Completed"),
+    CANCELED("Canceled");
 
     companion object {
         fun fromString(value: String?): AppointmentStatus {
@@ -21,42 +18,49 @@ enum class AppointmentStatus(val label: String) {
     }
 }
 
-/**
- * Entidad de dominio que representa una cita agendada en una sede del taller.
- */
 data class Appointment(
     val id: UUID,
     val branchId: UUID,
     val customerId: UUID,
     val vehicleId: UUID,
     val scheduledStart: String,
+    val scheduledEnd: String? = null,
     val status: AppointmentStatus,
-    val notes: String?
+    val notes: String? = null
 )
 
-/**
- * Entidad de dominio para la vinculación o postulación de un empleado técnico a una sede.
- */
 data class EmployeeRegistration(
     val id: UUID,
     val employeeId: UUID,
     val branchId: UUID,
     val speciality: String,
-    val specialityName: String?,
+    val specialityName: String? = null,
     val salary: Double,
-    val role: String?,
+    val role: String? = null,
     val status: String
 ) {
     val isPending: Boolean get() = status.equals("PENDING_APPROVAL", ignoreCase = true)
     val isActive: Boolean get() = status.equals("ACTIVE", ignoreCase = true)
 }
 
-/**
- * Entidad de dominio para la vinculación de un cliente a una sede del taller.
- */
+data class StaffCareerHistory(
+    val id: String,
+    val employeeId: UUID,
+    val branchId: UUID,
+    val speciality: String,
+    val specialityName: String? = null,
+    val salary: Double,
+    val role: String? = null,
+    val status: String,
+    val changedAt: String,
+    val changeReason: String? = null
+)
+
 data class CustomerRegistration(
     val id: UUID,
     val customerId: UUID,
     val branchId: UUID,
     val status: String
-)
+) {
+    val isActive: Boolean get() = status.equals("ACTIVE", ignoreCase = true)
+}

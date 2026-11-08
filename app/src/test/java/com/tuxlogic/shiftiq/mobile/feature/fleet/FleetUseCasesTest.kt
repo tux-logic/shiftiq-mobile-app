@@ -1,16 +1,30 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet
 
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.CustomerRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.repository.FleetRepository
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.ApproveEmployeeRegistrationUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.CreateAppointmentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.CreateCustomerRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.CreateEmployeeRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.DeleteCustomerRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.DeleteEmployeeRegistrationUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetAppointmentsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetCustomerRegistrationByIdUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetCustomerRegistrationsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetEmployeeRegistrationByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetEmployeeRegistrationsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetStaffCareerHistoryUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.RejectEmployeeRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.RequestEmployeeJoinUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.UpdateAppointmentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.UpdateCustomerRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.UpdateEmployeeRegistrationUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -28,19 +42,47 @@ class FleetUseCasesTest {
     private lateinit var getAppointmentsUseCase: GetAppointmentsUseCase
     private lateinit var createAppointmentUseCase: CreateAppointmentUseCase
     private lateinit var updateAppointmentUseCase: UpdateAppointmentUseCase
+
     private lateinit var getEmployeeRegistrationsUseCase: GetEmployeeRegistrationsUseCase
+    private lateinit var getEmployeeRegistrationByIdUseCase: GetEmployeeRegistrationByIdUseCase
+    private lateinit var createEmployeeRegistrationUseCase: CreateEmployeeRegistrationUseCase
+    private lateinit var requestEmployeeJoinUseCase: RequestEmployeeJoinUseCase
     private lateinit var approveEmployeeRegistrationUseCase: ApproveEmployeeRegistrationUseCase
     private lateinit var rejectEmployeeRegistrationUseCase: RejectEmployeeRegistrationUseCase
+    private lateinit var updateEmployeeRegistrationUseCase: UpdateEmployeeRegistrationUseCase
+    private lateinit var deleteEmployeeRegistrationUseCase: DeleteEmployeeRegistrationUseCase
+    private lateinit var getStaffCareerHistoryUseCase: GetStaffCareerHistoryUseCase
+
+    private lateinit var getCustomerRegistrationsUseCase: GetCustomerRegistrationsUseCase
+    private lateinit var getCustomerRegistrationByIdUseCase: GetCustomerRegistrationByIdUseCase
+    private lateinit var createCustomerRegistrationUseCase: CreateCustomerRegistrationUseCase
+    private lateinit var updateCustomerRegistrationUseCase: UpdateCustomerRegistrationUseCase
+    private lateinit var deleteCustomerRegistrationUseCase: DeleteCustomerRegistrationUseCase
 
     @Before
     fun setUp() {
         getAppointmentsUseCase = GetAppointmentsUseCase(fleetRepository)
         createAppointmentUseCase = CreateAppointmentUseCase(fleetRepository)
         updateAppointmentUseCase = UpdateAppointmentUseCase(fleetRepository)
+
         getEmployeeRegistrationsUseCase = GetEmployeeRegistrationsUseCase(fleetRepository)
+        getEmployeeRegistrationByIdUseCase = GetEmployeeRegistrationByIdUseCase(fleetRepository)
+        createEmployeeRegistrationUseCase = CreateEmployeeRegistrationUseCase(fleetRepository)
+        requestEmployeeJoinUseCase = RequestEmployeeJoinUseCase(fleetRepository)
         approveEmployeeRegistrationUseCase = ApproveEmployeeRegistrationUseCase(fleetRepository)
         rejectEmployeeRegistrationUseCase = RejectEmployeeRegistrationUseCase(fleetRepository)
+        updateEmployeeRegistrationUseCase = UpdateEmployeeRegistrationUseCase(fleetRepository)
+        deleteEmployeeRegistrationUseCase = DeleteEmployeeRegistrationUseCase(fleetRepository)
+        getStaffCareerHistoryUseCase = GetStaffCareerHistoryUseCase(fleetRepository)
+
+        getCustomerRegistrationsUseCase = GetCustomerRegistrationsUseCase(fleetRepository)
+        getCustomerRegistrationByIdUseCase = GetCustomerRegistrationByIdUseCase(fleetRepository)
+        createCustomerRegistrationUseCase = CreateCustomerRegistrationUseCase(fleetRepository)
+        updateCustomerRegistrationUseCase = UpdateCustomerRegistrationUseCase(fleetRepository)
+        deleteCustomerRegistrationUseCase = DeleteCustomerRegistrationUseCase(fleetRepository)
     }
+
+    // === Appointments ===
 
     @Test
     fun `getAppointments returns list of appointments from repository`() = runTest {
@@ -145,74 +187,113 @@ class FleetUseCasesTest {
         assertEquals(AppointmentStatus.COMPLETED, (result as AppResult.Success).data.status)
     }
 
+    // === Staff Registrations ===
+
     @Test
-    fun `getEmployeeRegistrations returns staff registrations filtered by branch`() = runTest {
-        val branchId = UUID.randomUUID()
-        val mockRegistrations = listOf(
-            EmployeeRegistration(
-                id = UUID.randomUUID(),
-                employeeId = UUID.randomUUID(),
-                branchId = branchId,
-                speciality = "Mecánica",
-                specialityName = "Mecánica",
-                salary = 2500.0,
-                role = "ROLE_TECHNICIAN",
-                status = "ACTIVE"
-            )
+    fun `createEmployeeRegistration with negative salary returns validation error`() = runTest {
+        val result = createEmployeeRegistrationUseCase(
+            employeeId = UUID.randomUUID(),
+            branchId = UUID.randomUUID(),
+            speciality = "GENERAL_MECHANIC",
+            specialityName = "Mecanica General",
+            salary = -100.0,
+            role = "ROLE_EMPLOYEE"
         )
-
-        coEvery { fleetRepository.getEmployeeRegistrations(branchId = branchId) } returns AppResult.Success(mockRegistrations)
-
-        val result = getEmployeeRegistrationsUseCase(branchId = branchId)
-
-        assertTrue(result is AppResult.Success)
-        assertEquals(1, (result as AppResult.Success).data.size)
-        assertTrue(result.data.first().isActive)
+        assertTrue(result is AppResult.Failure)
+        assertTrue((result as AppResult.Failure).error is AppError.Validation)
     }
 
     @Test
-    fun `approveEmployeeRegistration calls approve on repository and returns active registration`() = runTest {
-        val registrationId = UUID.randomUUID()
-        val approved = EmployeeRegistration(
-            id = registrationId,
+    fun `updateEmployeeRegistration with valid terms calls repository`() = runTest {
+        val id = UUID.randomUUID()
+        val expected = EmployeeRegistration(
+            id = id,
             employeeId = UUID.randomUUID(),
             branchId = UUID.randomUUID(),
-            speciality = "Frenos",
-            specialityName = "Frenos",
-            salary = 3000.0,
-            role = "ROLE_TECHNICIAN",
+            speciality = "DIAGNOSTIC",
+            specialityName = "Diagnostico",
+            salary = 4000.0,
+            role = "ROLE_EMPLOYEE",
             status = "ACTIVE"
         )
+        coEvery { fleetRepository.updateEmployeeRegistration(id, "DIAGNOSTIC", "Diagnostico", 4000.0) } returns AppResult.Success(expected)
 
-        coEvery { fleetRepository.approveEmployeeRegistration(registrationId) } returns AppResult.Success(approved)
-
-        val result = approveEmployeeRegistrationUseCase(registrationId)
-
+        val result = updateEmployeeRegistrationUseCase(id, "DIAGNOSTIC", "Diagnostico", 4000.0)
         assertTrue(result is AppResult.Success)
-        assertEquals("ACTIVE", (result as AppResult.Success).data.status)
-        coVerify(exactly = 1) { fleetRepository.approveEmployeeRegistration(registrationId) }
+        assertEquals(4000.0, (result as AppResult.Success).data.salary, 0.001)
     }
 
     @Test
-    fun `rejectEmployeeRegistration calls reject on repository with reason`() = runTest {
-        val registrationId = UUID.randomUUID()
-        val rejected = EmployeeRegistration(
-            id = registrationId,
-            employeeId = UUID.randomUUID(),
-            branchId = UUID.randomUUID(),
-            speciality = "Frenos",
-            specialityName = "Frenos",
-            salary = 3000.0,
-            role = "ROLE_TECHNICIAN",
-            status = "REJECTED"
-        )
+    fun `deleteEmployeeRegistration calls repository`() = runTest {
+        val id = UUID.randomUUID()
+        coEvery { fleetRepository.deleteEmployeeRegistration(id) } returns AppResult.Success(Unit)
 
-        coEvery { fleetRepository.rejectEmployeeRegistration(registrationId, "No vacantes") } returns AppResult.Success(rejected)
-
-        val result = rejectEmployeeRegistrationUseCase(registrationId, "No vacantes")
-
+        val result = deleteEmployeeRegistrationUseCase(id)
         assertTrue(result is AppResult.Success)
-        assertEquals("REJECTED", (result as AppResult.Success).data.status)
-        coVerify(exactly = 1) { fleetRepository.rejectEmployeeRegistration(registrationId, "No vacantes") }
+        coVerify(exactly = 1) { fleetRepository.deleteEmployeeRegistration(id) }
+    }
+
+    @Test
+    fun `getStaffCareerHistory returns career snapshots`() = runTest {
+        val branchId = UUID.randomUUID()
+        val employeeId = UUID.randomUUID()
+        val expected = listOf(
+            StaffCareerHistory(
+                id = "hist-1",
+                employeeId = employeeId,
+                branchId = branchId,
+                speciality = "GENERAL_MECHANIC",
+                salary = 3000.0,
+                status = "ACTIVE",
+                changedAt = "2026-10-15T10:00:00Z"
+            )
+        )
+        coEvery { fleetRepository.getStaffCareerHistory(branchId, employeeId) } returns AppResult.Success(expected)
+
+        val result = getStaffCareerHistoryUseCase(branchId, employeeId)
+        assertTrue(result is AppResult.Success)
+        assertEquals(1, (result as AppResult.Success).data.size)
+    }
+
+    // === Customer Registrations ===
+
+    @Test
+    fun `getCustomerRegistrations with no filters returns validation error`() = runTest {
+        val result = getCustomerRegistrationsUseCase(null, null, null)
+        assertTrue(result is AppResult.Failure)
+        assertTrue((result as AppResult.Failure).error is AppError.Validation)
+    }
+
+    @Test
+    fun `updateCustomerRegistration with invalid status returns validation error`() = runTest {
+        val result = updateCustomerRegistrationUseCase(UUID.randomUUID(), "SUSPENDED")
+        assertTrue(result is AppResult.Failure)
+        assertTrue((result as AppResult.Failure).error is AppError.Validation)
+    }
+
+    @Test
+    fun `updateCustomerRegistration with ACTIVE calls repository`() = runTest {
+        val id = UUID.randomUUID()
+        val expected = CustomerRegistration(
+            id = id,
+            customerId = UUID.randomUUID(),
+            branchId = UUID.randomUUID(),
+            status = "ACTIVE"
+        )
+        coEvery { fleetRepository.updateCustomerRegistration(id, "ACTIVE") } returns AppResult.Success(expected)
+
+        val result = updateCustomerRegistrationUseCase(id, "ACTIVE")
+        assertTrue(result is AppResult.Success)
+        assertEquals("ACTIVE", (result as AppResult.Success).data.status)
+    }
+
+    @Test
+    fun `deleteCustomerRegistration calls repository`() = runTest {
+        val id = UUID.randomUUID()
+        coEvery { fleetRepository.deleteCustomerRegistration(id) } returns AppResult.Success(Unit)
+
+        val result = deleteCustomerRegistrationUseCase(id)
+        assertTrue(result is AppResult.Success)
+        coVerify(exactly = 1) { fleetRepository.deleteCustomerRegistration(id) }
     }
 }

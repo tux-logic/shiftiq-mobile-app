@@ -4,14 +4,13 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.CustomerRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
 import java.util.UUID
 
-/**
- * Contrato de repositorio para el Bounded Context Fleet (Citas, Personal y Clientes vinculados).
- */
 interface FleetRepository {
 
-    // === Citas (Appointments) ===
+    // === Appointments ===
+
     suspend fun getAppointments(
         branchId: UUID? = null,
         status: String? = null,
@@ -26,7 +25,7 @@ interface FleetRepository {
         customerId: UUID,
         vehicleId: UUID,
         scheduledStart: String,
-        notes: String?
+        notes: String? = null
     ): AppResult<Appointment>
 
     suspend fun updateAppointment(
@@ -36,12 +35,13 @@ interface FleetRepository {
         vehicleId: UUID,
         scheduledStart: String,
         status: String,
-        notes: String?
+        notes: String? = null
     ): AppResult<Appointment>
 
     suspend fun deleteAppointment(appointmentId: UUID): AppResult<Unit>
 
-    // === Personal Técnico (Employee Registrations) ===
+    // === Technical Staff (Employee Registrations) ===
+
     suspend fun getEmployeeRegistrations(
         branchId: UUID? = null,
         status: String? = null,
@@ -71,15 +71,36 @@ interface FleetRepository {
 
     suspend fun rejectEmployeeRegistration(id: UUID, reason: String?): AppResult<EmployeeRegistration>
 
-    // === Clientes Vinculados (Customer Registrations) ===
+    suspend fun updateEmployeeRegistration(
+        id: UUID,
+        speciality: String,
+        specialityName: String?,
+        salary: Double
+    ): AppResult<EmployeeRegistration>
+
+    suspend fun deleteEmployeeRegistration(id: UUID): AppResult<Unit>
+
+    suspend fun getStaffCareerHistory(branchId: UUID, employeeId: UUID): AppResult<List<StaffCareerHistory>>
+
+    // === Linked Customers (Customer Registrations) ===
+
     suspend fun getCustomerRegistrations(
         branchId: UUID? = null,
         status: String? = null,
         customerId: UUID? = null
     ): AppResult<List<CustomerRegistration>>
 
+    suspend fun getCustomerRegistrationById(id: UUID): AppResult<CustomerRegistration>
+
     suspend fun createCustomerRegistration(
         customerId: UUID,
         branchId: UUID
     ): AppResult<CustomerRegistration>
+
+    suspend fun updateCustomerRegistration(
+        id: UUID,
+        status: String
+    ): AppResult<CustomerRegistration>
+
+    suspend fun deleteCustomerRegistration(id: UUID): AppResult<Unit>
 }

@@ -4,6 +4,7 @@ import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.mapper.toDomain
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.api.FleetApiService
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CreateAppointmentRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CreateCustomerRegistrationRequestDto
@@ -11,9 +12,12 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CreateEmployeeR
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.RejectEmployeeRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.RequestEmployeeJoinRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateAppointmentRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateCustomerRegistrationRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateEmployeeRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.CustomerRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.repository.FleetRepository
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -23,6 +27,8 @@ class FleetRepositoryImpl @Inject constructor(
     private val fleetApiService: FleetApiService,
     private val dispatchers: DispatcherProvider
 ) : FleetRepository {
+
+    // === Appointments ===
 
     override suspend fun getAppointments(
         branchId: UUID?,
@@ -89,6 +95,8 @@ class FleetRepositoryImpl @Inject constructor(
         withContext(dispatchers.io) {
             safeApiCall { fleetApiService.deleteAppointment(appointmentId.toString()) }
         }
+
+    // === Technical Staff (Employee Registrations) ===
 
     override suspend fun getEmployeeRegistrations(
         branchId: UUID?,
@@ -163,6 +171,40 @@ class FleetRepositoryImpl @Inject constructor(
             .map { it.toDomain() }
     }
 
+    override suspend fun updateEmployeeRegistration(
+        id: UUID,
+        speciality: String,
+        specialityName: String?,
+        salary: Double
+    ): AppResult<EmployeeRegistration> = withContext(dispatchers.io) {
+        val request = UpdateEmployeeRegistrationRequestDto(
+            speciality = speciality,
+            specialityName = specialityName,
+            salary = salary
+        )
+        safeApiCall { fleetApiService.updateEmployeeRegistration(id.toString(), request) }
+            .map { it.toDomain() }
+    }
+
+    override suspend fun deleteEmployeeRegistration(id: UUID): AppResult<Unit> =
+        withContext(dispatchers.io) {
+            safeApiCall { fleetApiService.deleteEmployeeRegistration(id.toString()) }
+        }
+
+    override suspend fun getStaffCareerHistory(
+        branchId: UUID,
+        employeeId: UUID
+    ): AppResult<List<StaffCareerHistory>> = withContext(dispatchers.io) {
+        safeApiCall {
+            fleetApiService.getStaffCareerHistory(
+                branchId = branchId.toString(),
+                employeeId = employeeId.toString()
+            )
+        }.map { dtoList -> dtoList.map { it.toDomain() } }
+    }
+
+    // === Linked Customers (Customer Registrations) ===
+
     override suspend fun getCustomerRegistrations(
         branchId: UUID?,
         status: String?,
@@ -177,6 +219,12 @@ class FleetRepositoryImpl @Inject constructor(
         }.map { dtoList -> dtoList.map { it.toDomain() } }
     }
 
+    override suspend fun getCustomerRegistrationById(id: UUID): AppResult<CustomerRegistration> =
+        withContext(dispatchers.io) {
+            safeApiCall { fleetApiService.getCustomerRegistrationById(id.toString()) }
+                .map { it.toDomain() }
+        }
+
     override suspend fun createCustomerRegistration(
         customerId: UUID,
         branchId: UUID
@@ -188,4 +236,18 @@ class FleetRepositoryImpl @Inject constructor(
         safeApiCall { fleetApiService.createCustomerRegistration(request) }
             .map { it.toDomain() }
     }
+
+    override suspend fun updateCustomerRegistration(
+        id: UUID,
+        status: String
+    ): AppResult<CustomerRegistration> = withContext(dispatchers.io) {
+        val request = UpdateCustomerRegistrationRequestDto(status = status)
+        safeApiCall { fleetApiService.updateCustomerRegistration(id.toString(), request) }
+            .map { it.toDomain() }
+    }
+
+    override suspend fun deleteCustomerRegistration(id: UUID): AppResult<Unit> =
+        withContext(dispatchers.io) {
+            safeApiCall { fleetApiService.deleteCustomerRegistration(id.toString()) }
+        }
 }
