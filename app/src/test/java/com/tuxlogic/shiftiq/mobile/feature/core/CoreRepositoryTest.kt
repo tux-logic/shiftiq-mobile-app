@@ -12,6 +12,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.CustomerResource
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.DocumentProfileLookupDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.EmployeeResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.OwnerResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.SpecialtyRevisionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedProfileResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.WorkshopResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.WorkshopSpecialtyResourceDto
@@ -240,5 +241,30 @@ class CoreRepositoryTest {
         val result = repository.lookupProfileByDocumentNumber("71234567")
         assertTrue(result is AppResult.Success)
         assertEquals("EMPLOYEE", (result as AppResult.Success).data.profileType)
+    }
+
+    @Test
+    fun `getSpecialtyHistory returns list of domain SpecialtyRevision`() = runTest(testDispatcher) {
+        val dtos = listOf(
+            SpecialtyRevisionResourceDto(
+                id = "rev-1",
+                specialtyId = "spec-1",
+                fieldName = "name",
+                oldValue = "Old",
+                newValue = "New",
+                changedBy = "usr-1",
+                changedAt = "2026-11-01T10:00:00Z"
+            )
+        )
+        coEvery { apiService.getSpecialtyHistory("w-1", "spec-1") } returns Response.success(dtos)
+
+        val result = repository.getSpecialtyHistory("w-1", "spec-1")
+        assertTrue(result is AppResult.Success)
+        val data = (result as AppResult.Success).data
+        assertEquals(1, data.size)
+        assertEquals("rev-1", data[0].id)
+        assertEquals("name", data[0].fieldName)
+        assertEquals("Old", data[0].oldValue)
+        assertEquals("New", data[0].newValue)
     }
 }

@@ -11,6 +11,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.EmployeeResource
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.OwnerResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedEmployeeSummaryDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedProfileResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.SpecialtyRevisionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.WorkshopResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.WorkshopSpecialtyResourceDto
 import org.junit.Assert.assertEquals
@@ -200,5 +201,26 @@ class CoreMappersTest {
         assertEquals("EMPLOYEE", domain.profileType)
         assertEquals(UserId("u-1"), domain.userId)
         assertEquals("Luis Mendoza", domain.fullName)
+    }
+
+    @Test
+    fun `SpecialtyRevisionResourceDto maps correctly to domain SpecialtyRevision`() {
+        val dto = SpecialtyRevisionResourceDto(
+            id = "rev-1",
+            specialtyId = "spec-1",
+            fieldName = "name",
+            oldValue = "Frenos",
+            newValue = "Frenos ABS",
+            changedBy = "usr-1",
+            changedAt = "2026-11-01T10:00:00Z"
+        )
+        val domain = dto.toDomain()
+        assertEquals("rev-1", domain.id)
+        assertEquals("spec-1", domain.specialtyId)
+        assertEquals("name", domain.fieldName)
+        assertEquals("Frenos", domain.oldValue)
+        assertEquals("Frenos ABS", domain.newValue)
+        assertEquals("usr-1", domain.changedBy)
+        assertEquals("2026-11-01T10:00:00Z", domain.changedAt)
     }
 }

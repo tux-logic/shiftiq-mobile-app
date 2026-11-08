@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.SpecialtyRevision
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Workshop
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.WorkshopSpecialty
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
@@ -204,5 +205,22 @@ class DeleteSpecialtyUseCase @Inject constructor(
             return AppResult.Failure(AppError.Validation(details = "specialtyId", message = "Specialty ID is required"))
         }
         return coreRepository.deleteSpecialty(workshopId, specialtyId)
+    }
+}
+
+class GetSpecialtyRevisionHistoryUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(
+        workshopId: String,
+        specialtyId: String
+    ): AppResult<List<SpecialtyRevision>> {
+        if (workshopId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "workshopId", message = "Workshop ID is required"))
+        }
+        if (specialtyId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "specialtyId", message = "Specialty ID is required"))
+        }
+        return coreRepository.getSpecialtyHistory(workshopId.trim(), specialtyId.trim())
     }
 }

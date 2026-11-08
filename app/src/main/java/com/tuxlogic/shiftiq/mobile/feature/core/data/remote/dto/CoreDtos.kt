@@ -64,6 +64,23 @@ data class WorkshopSpecialtyResourceDto(
     val updatedAt: String? = null
 )
 
+data class SpecialtyRevisionResourceDto(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("specialtyId")
+    val specialtyId: String,
+    @SerializedName("fieldName")
+    val fieldName: String,
+    @SerializedName("oldValue")
+    val oldValue: String? = null,
+    @SerializedName("newValue")
+    val newValue: String? = null,
+    @SerializedName("changedBy")
+    val changedBy: String? = null,
+    @SerializedName("changedAt")
+    val changedAt: String? = null
+)
+
 data class CreateWorkshopSpecialtyRequestDto(
     @SerializedName("name")
     val name: String,

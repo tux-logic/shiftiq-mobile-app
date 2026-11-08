@@ -13,6 +13,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.CustomerResource
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.DocumentProfileLookupDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.EmployeeResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.OwnerResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.SpecialtyRevisionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedProfileResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UpdateBranchRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UpdateCustomerRequestDto
@@ -88,6 +89,12 @@ interface CoreApiService {
         @Path("workshopId") workshopId: String,
         @Path("specialtyId") specialtyId: String
     ): Response<Unit>
+
+    @GET("api/v1/workshops/{workshopId}/specialties/{specialtyId}/history")
+    suspend fun getSpecialtyHistory(
+        @Path("workshopId") workshopId: String,
+        @Path("specialtyId") specialtyId: String
+    ): Response<List<SpecialtyRevisionResourceDto>>
 
     // === Branches ===
 

@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.core
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.SpecialtyRevision
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Workshop
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.WorkshopSpecialty
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
@@ -10,6 +11,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.CreateWorkshopUse
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.DeleteSpecialtyUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetSpecialtiesUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetSpecialtyByIdUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetSpecialtyRevisionHistoryUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetWorkshopByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetWorkshopsUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.UpdateSpecialtyUseCase
@@ -35,6 +37,7 @@ class WorkshopUseCasesTest {
     private lateinit var createSpecialtyUseCase: CreateSpecialtyUseCase
     private lateinit var updateSpecialtyUseCase: UpdateSpecialtyUseCase
     private lateinit var deleteSpecialtyUseCase: DeleteSpecialtyUseCase
+    private lateinit var getSpecialtyRevisionHistoryUseCase: GetSpecialtyRevisionHistoryUseCase
 
     @Before
     fun setUp() {
@@ -47,6 +50,7 @@ class WorkshopUseCasesTest {
         createSpecialtyUseCase = CreateSpecialtyUseCase(coreRepository)
         updateSpecialtyUseCase = UpdateSpecialtyUseCase(coreRepository)
         deleteSpecialtyUseCase = DeleteSpecialtyUseCase(coreRepository)
+        getSpecialtyRevisionHistoryUseCase = GetSpecialtyRevisionHistoryUseCase(coreRepository)
     }
 
     @Test
@@ -148,5 +152,44 @@ class WorkshopUseCasesTest {
         val result = deleteSpecialtyUseCase("w1", "spec-1")
         assertTrue(result is AppResult.Success)
         coVerify(exactly = 1) { coreRepository.deleteSpecialty("w1", "spec-1") }
+    }
+
+    @Test
+    fun `getSpecialtyHistory with blank workshopId returns validation error`() = runTest {
+        val result = getSpecialtyRevisionHistoryUseCase("", "spec-1")
+        assertTrue(result is AppResult.Failure)
+        val error = (result as AppResult.Failure).error
+        assertTrue(error is AppError.Validation)
+        assertEquals("workshopId", (error as AppError.Validation).details)
+    }
+
+    @Test
+    fun `getSpecialtyHistory with blank specialtyId returns validation error`() = runTest {
+        val result = getSpecialtyRevisionHistoryUseCase("w1", "")
+        assertTrue(result is AppResult.Failure)
+        val error = (result as AppResult.Failure).error
+        assertTrue(error is AppError.Validation)
+        assertEquals("specialtyId", (error as AppError.Validation).details)
+    }
+
+    @Test
+    fun `getSpecialtyHistory with valid ids calls repository and returns revisions`() = runTest {
+        val revisions = listOf(
+            SpecialtyRevision(
+                id = "rev-1",
+                specialtyId = "spec-1",
+                fieldName = "name",
+                oldValue = "Old Name",
+                newValue = "New Name",
+                changedBy = "usr-1",
+                changedAt = "2026-11-01T10:00:00Z"
+            )
+        )
+        coEvery { coreRepository.getSpecialtyHistory("w1", "spec-1") } returns AppResult.Success(revisions)
+
+        val result = getSpecialtyRevisionHistoryUseCase("w1", "spec-1")
+        assertTrue(result is AppResult.Success)
+        assertEquals(revisions, (result as AppResult.Success).data)
+        coVerify(exactly = 1) { coreRepository.getSpecialtyHistory("w1", "spec-1") }
     }
 }

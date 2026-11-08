@@ -8,6 +8,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.CustomerResource
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.DocumentProfileLookupDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.EmployeeResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.OwnerResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.SpecialtyRevisionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedEmployeeSummaryDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.UnifiedProfileResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.dto.WorkshopResourceDto
@@ -18,6 +19,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.DocumentProfileLookup
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.EmployeeProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.OwnerProfile
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.SpecialtyRevision
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.UnifiedEmployeeSummary
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.UnifiedProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Workshop
@@ -39,6 +41,16 @@ fun WorkshopSpecialtyResourceDto.toDomain(): WorkshopSpecialty = WorkshopSpecial
     code = code,
     description = description,
     active = active ?: true
+)
+
+fun SpecialtyRevisionResourceDto.toDomain(): SpecialtyRevision = SpecialtyRevision(
+    id = id,
+    specialtyId = specialtyId,
+    fieldName = fieldName,
+    oldValue = oldValue,
+    newValue = newValue,
+    changedBy = changedBy,
+    changedAt = changedAt
 )
 
 fun BranchResourceDto.toDomain(): Branch = Branch(
