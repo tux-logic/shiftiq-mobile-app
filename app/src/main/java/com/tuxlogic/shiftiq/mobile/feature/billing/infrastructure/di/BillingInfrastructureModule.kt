@@ -1,8 +1,8 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.data.di
+package com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.api.BillingApiService
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.repository.BillingRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.repository.BillingRepository
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.api.BillingApiService
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.repository.BillingRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class BillingDataModule {
+abstract class BillingInfrastructureModule {
 
     @Binds
     @Singleton

@@ -14,11 +14,11 @@ import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherId
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherStatus
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherType
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.repository.BillingRepository
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers.DeletePaymentUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers.EmitVoucherUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers.GetVoucherByIdUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers.GetVouchersUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers.RegisterPaymentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers.DeletePaymentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers.EmitVoucherUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers.GetVoucherByIdUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers.GetVouchersUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers.RegisterPaymentUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

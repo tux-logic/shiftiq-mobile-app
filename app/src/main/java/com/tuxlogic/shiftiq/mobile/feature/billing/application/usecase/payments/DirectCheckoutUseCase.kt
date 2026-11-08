@@ -1,15 +1,16 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers
+package com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.payments
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.DocumentType
+import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.PaymentMethod
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.QuoteId
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.Voucher
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherType
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.repository.BillingRepository
 import javax.inject.Inject
 
-class EmitVoucherUseCase @Inject constructor(
+class DirectCheckoutUseCase @Inject constructor(
     private val billingRepository: BillingRepository
 ) {
     suspend operator fun invoke(
@@ -17,7 +18,8 @@ class EmitVoucherUseCase @Inject constructor(
         type: VoucherType,
         customerDocumentType: DocumentType,
         customerDocumentNumber: String,
-        customerName: String
+        customerName: String,
+        method: PaymentMethod
     ): AppResult<Voucher> {
         val trimmedName = customerName.trim()
         if (trimmedName.isBlank()) {
@@ -59,12 +61,13 @@ class EmitVoucherUseCase @Inject constructor(
             }
         }
 
-        return billingRepository.emitVoucher(
+        return billingRepository.directCheckout(
             quoteId = quoteId,
             type = type,
             customerDocumentType = customerDocumentType,
             customerDocumentNumber = trimmedDocNumber,
-            customerName = trimmedName
+            customerName = trimmedName,
+            method = method
         )
     }
 }
