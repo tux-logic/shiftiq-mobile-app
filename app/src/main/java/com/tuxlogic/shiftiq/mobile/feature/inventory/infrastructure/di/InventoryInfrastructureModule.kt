@@ -1,8 +1,8 @@
-package com.tuxlogic.shiftiq.mobile.feature.inventory.data.di
+package com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.api.InventoryApiService
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.repository.InventoryRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.repository.InventoryRepository
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.api.InventoryApiService
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.repository.InventoryRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class InventoryDataModule {
+abstract class InventoryInfrastructureModule {
 
     @Binds
     @Singleton

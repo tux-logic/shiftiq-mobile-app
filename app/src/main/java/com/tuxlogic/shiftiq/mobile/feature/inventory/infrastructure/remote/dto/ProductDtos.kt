@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto
+package com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

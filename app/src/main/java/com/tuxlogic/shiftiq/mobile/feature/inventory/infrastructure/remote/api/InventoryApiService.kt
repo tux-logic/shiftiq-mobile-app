@@ -1,11 +1,11 @@
-package com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.api
+package com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.api
 
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.AddBatchRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.BatchUpdateResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.CreateProductRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.ProductDetailResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.ProductResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.UpdateProductRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.AddBatchRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.BatchUpdateResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.CreateProductRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.ProductDetailResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.ProductResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.UpdateProductRequestDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
