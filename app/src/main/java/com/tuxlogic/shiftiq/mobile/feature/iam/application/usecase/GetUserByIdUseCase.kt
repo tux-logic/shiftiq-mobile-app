@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.iam.domain.usecase
+package com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.model.UserId

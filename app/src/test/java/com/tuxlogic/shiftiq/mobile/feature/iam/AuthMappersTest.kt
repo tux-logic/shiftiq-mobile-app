@@ -2,10 +2,10 @@ package com.tuxlogic.shiftiq.mobile.feature.iam
 
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.AuthenticatedUserResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SendOtpResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UserResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.AuthenticatedUserResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.SendOtpResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.UserResourceDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.UUID

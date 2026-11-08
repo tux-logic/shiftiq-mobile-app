@@ -7,7 +7,7 @@ import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
 import com.tuxlogic.shiftiq.mobile.core.testing.MainDispatcherRule
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.AuthenticatedUser
-import com.tuxlogic.shiftiq.mobile.feature.iam.domain.usecase.LoginUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LoginUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.login.LoginViewModel
 import io.mockk.coEvery
 import io.mockk.mockk

@@ -1,10 +1,10 @@
-package com.tuxlogic.shiftiq.mobile.feature.iam.data.mapper
+package com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.AuthenticatedUserResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SendOtpResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UserResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.AuthenticatedUserResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.SendOtpResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.dto.UserResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.AuthenticatedUser
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.OtpDispatchResult
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.User

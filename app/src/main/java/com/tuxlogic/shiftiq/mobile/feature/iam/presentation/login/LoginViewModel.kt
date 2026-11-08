@@ -6,7 +6,7 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.model.Role
-import com.tuxlogic.shiftiq.mobile.feature.iam.domain.usecase.LoginUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
