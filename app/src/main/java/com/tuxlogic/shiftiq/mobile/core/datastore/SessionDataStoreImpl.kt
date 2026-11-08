@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.tuxlogic.shiftiq.mobile.core.common.event.ActiveBranchChangedEvent
+import com.tuxlogic.shiftiq.mobile.core.common.event.DomainEventBus
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
@@ -17,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class SessionDataStoreImpl @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val domainEventBus: DomainEventBus
 ) : SessionDataStore {
 
     private object Keys {
@@ -97,12 +100,22 @@ class SessionDataStoreImpl @Inject constructor(
     }
 
     override suspend fun setActiveBranchId(branchId: BranchId?) {
+        var previousId: BranchId? = null
         dataStore.edit { prefs ->
+            previousId = prefs[Keys.ACTIVE_BRANCH_ID]?.let { runCatching { BranchId(it) }.getOrNull() }
             if (branchId == null) {
                 prefs.remove(Keys.ACTIVE_BRANCH_ID)
             } else {
                 prefs[Keys.ACTIVE_BRANCH_ID] = branchId.toString()
             }
+        }
+        if (branchId != null && previousId != branchId) {
+            domainEventBus.emit(
+                ActiveBranchChangedEvent(
+                    previousBranchId = previousId,
+                    newBranchId = branchId
+                )
+            )
         }
     }
 
