@@ -1,7 +1,7 @@
-package com.tuxlogic.shiftiq.mobile.feature.core.data.di
+package com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.core.data.remote.api.CoreApiService
-import com.tuxlogic.shiftiq.mobile.feature.core.data.repository.CoreRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.api.CoreApiService
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.repository.CoreRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
 import dagger.Binds
 import dagger.Module
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class CoreDataModule {
+abstract class CoreInfrastructureModule {
 
     @Binds
     @Singleton

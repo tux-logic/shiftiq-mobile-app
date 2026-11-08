@@ -7,8 +7,8 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetBranchesUseCase
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.SetActiveBranchUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchesUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.SetActiveBranchUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
