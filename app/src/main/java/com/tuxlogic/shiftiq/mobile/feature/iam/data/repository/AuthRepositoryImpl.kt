@@ -6,14 +6,23 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionState
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
-import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.mapper.toDomain
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.api.AuthApiService
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.GoogleSignInRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.PasswordRecoveryRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.PasswordResetRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.RefreshTokenRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SendOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignInRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UserResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignUpRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UpdateEmailRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UpdatePasswordRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.VerifyOtpRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.AuthenticatedUser
+import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.OtpDispatchResult
+import com.tuxlogic.shiftiq.mobile.feature.iam.domain.model.User
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -32,38 +41,48 @@ class AuthRepositoryImpl @Inject constructor(
                 authApiService.login(SignInRequestDto(email = email, password = password))
             }
             result.map { dto ->
-                val role = Role.fromName(dto.role) ?: Role.ROLE_USER
-                val userId = UserId(dto.id)
+                val authenticatedUser = dto.toDomain()
                 sessionDataStore.saveSession(
-                    accessToken = dto.accessToken,
-                    refreshToken = dto.refreshToken,
-                    userId = userId,
-                    email = dto.email,
-                    role = role
+                    accessToken = authenticatedUser.accessToken,
+                    refreshToken = authenticatedUser.refreshToken,
+                    userId = authenticatedUser.id,
+                    email = authenticatedUser.email,
+                    role = authenticatedUser.role
                 )
-                AuthenticatedUser(
-                    id = userId,
-                    email = dto.email,
-                    role = role,
-                    accessToken = dto.accessToken,
-                    refreshToken = dto.refreshToken
+                authenticatedUser
+            }
+        }
+
+    override suspend fun loginWithGoogle(idToken: String): AppResult<AuthenticatedUser> =
+        withContext(dispatchers.io) {
+            val result = safeApiCall {
+                authApiService.loginWithGoogle(GoogleSignInRequestDto(idToken = idToken))
+            }
+            result.map { dto ->
+                val authenticatedUser = dto.toDomain()
+                sessionDataStore.saveSession(
+                    accessToken = authenticatedUser.accessToken,
+                    refreshToken = authenticatedUser.refreshToken,
+                    userId = authenticatedUser.id,
+                    email = authenticatedUser.email,
+                    role = authenticatedUser.role
                 )
+                authenticatedUser
             }
         }
 
     override suspend fun register(
         email: String,
-        password: String,
-        roles: List<String>
-    ): AppResult<UserResourceDto> = withContext(dispatchers.io) {
+        password: String
+    ): AppResult<User> = withContext(dispatchers.io) {
         safeApiCall {
             authApiService.register(
-                com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignUpRequestDto(
+                SignUpRequestDto(
                     email = email,
                     password = password
                 )
             )
-        }
+        }.map { it.toDomain() }
     }
 
     override suspend fun logout(): AppResult<Unit> = withContext(dispatchers.io) {
@@ -76,6 +95,82 @@ class AuthRepositoryImpl @Inject constructor(
         }
         sessionDataStore.clearSession()
         AppResult.Success(Unit)
+    }
+
+    override suspend fun sendOtp(email: String): AppResult<OtpDispatchResult> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.sendOtp(SendOtpRequestDto(email = email))
+            }.map { it.toDomain() }
+        }
+
+    override suspend fun verifyOtp(email: String, code: String): AppResult<Boolean> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.verifyOtp(VerifyOtpRequestDto(email = email, code = code))
+            }.map { it.verified }
+        }
+
+    override suspend fun requestPasswordRecovery(email: String): AppResult<Unit> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.requestPasswordRecovery(PasswordRecoveryRequestDto(email = email))
+            }
+        }
+
+    override suspend fun resetPassword(token: String, newPassword: String): AppResult<Unit> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.resetPassword(PasswordResetRequestDto(token = token, newPassword = newPassword))
+            }.map { }
+        }
+
+    override suspend fun getUserById(userId: UserId): AppResult<User> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.getUserById(userId.toString())
+            }.map { it.toDomain() }
+        }
+
+    override suspend fun getUserByEmail(email: String): AppResult<User> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                authApiService.getUserByEmail(email)
+            }.map { it.toDomain() }
+        }
+
+    override suspend fun updateEmail(userId: UserId, newEmail: String): AppResult<AuthenticatedUser> =
+        withContext(dispatchers.io) {
+            val result = safeApiCall {
+                authApiService.updateEmail(userId.toString(), UpdateEmailRequestDto(email = newEmail))
+            }
+            result.map { dto ->
+                val authenticatedUser = dto.toDomain()
+                sessionDataStore.saveSession(
+                    accessToken = authenticatedUser.accessToken,
+                    refreshToken = authenticatedUser.refreshToken,
+                    userId = authenticatedUser.id,
+                    email = authenticatedUser.email,
+                    role = authenticatedUser.role
+                )
+                authenticatedUser
+            }
+        }
+
+    override suspend fun updatePassword(
+        userId: UserId,
+        currentPassword: String,
+        newPassword: String
+    ): AppResult<Unit> = withContext(dispatchers.io) {
+        safeApiCall {
+            authApiService.updatePassword(
+                userId = userId.toString(),
+                request = UpdatePasswordRequestDto(
+                    currentPassword = currentPassword,
+                    newPassword = newPassword
+                )
+            )
+        }.map { }
     }
 
     override fun observeSession(): Flow<SessionState> = sessionDataStore.sessionState
