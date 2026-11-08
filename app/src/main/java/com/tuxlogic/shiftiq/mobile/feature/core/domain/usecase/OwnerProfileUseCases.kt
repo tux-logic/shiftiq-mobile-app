@@ -11,9 +11,20 @@ class GetOwnerProfileUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(userId: String): AppResult<OwnerProfile> {
         if (userId.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "userId", message = "ID de usuario requerido"))
+            return AppResult.Failure(AppError.Validation(details = "userId", message = "User ID is required"))
         }
         return coreRepository.getOwnerProfile(userId)
+    }
+}
+
+class GetOwnerByIdUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(ownerId: String): AppResult<OwnerProfile> {
+        if (ownerId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "ownerId", message = "Owner ID is required"))
+        }
+        return coreRepository.getOwnerById(ownerId)
     }
 }
 
@@ -35,19 +46,19 @@ class CreateOwnerProfileUseCase @Inject constructor(
         val trimmedPhone = phone.trim()
 
         if (userId.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "userId", message = "ID de usuario requerido"))
+            return AppResult.Failure(AppError.Validation(details = "userId", message = "User ID is required"))
         }
         if (trimmedFirst.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "firstName", message = "Nombres requeridos"))
+            return AppResult.Failure(AppError.Validation(details = "firstName", message = "First name is required"))
         }
         if (trimmedLast.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "lastName", message = "Apellidos requeridos"))
+            return AppResult.Failure(AppError.Validation(details = "lastName", message = "Last name is required"))
         }
         if (trimmedDocNum.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "documentNumber", message = "Número de documento requerido"))
+            return AppResult.Failure(AppError.Validation(details = "documentNumber", message = "Document number is required"))
         }
         if (trimmedPhone.isBlank()) {
-            return AppResult.Failure(AppError.Validation(details = "phone", message = "Teléfono requerido"))
+            return AppResult.Failure(AppError.Validation(details = "phone", message = "Phone number is required"))
         }
 
         return coreRepository.createOwnerProfile(
@@ -58,5 +69,60 @@ class CreateOwnerProfileUseCase @Inject constructor(
             documentNumber = trimmedDocNum,
             phone = trimmedPhone
         )
+    }
+}
+
+class UpdateOwnerProfileUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(
+        ownerId: String,
+        firstName: String,
+        lastName: String,
+        documentType: String,
+        documentNumber: String,
+        phone: String
+    ): AppResult<OwnerProfile> {
+        val trimmedFirst = firstName.trim()
+        val trimmedLast = lastName.trim()
+        val trimmedDocType = documentType.trim().uppercase()
+        val trimmedDocNum = documentNumber.trim()
+        val trimmedPhone = phone.trim()
+
+        if (ownerId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "ownerId", message = "Owner ID is required"))
+        }
+        if (trimmedFirst.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "firstName", message = "First name is required"))
+        }
+        if (trimmedLast.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "lastName", message = "Last name is required"))
+        }
+        if (trimmedDocNum.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "documentNumber", message = "Document number is required"))
+        }
+        if (trimmedPhone.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "phone", message = "Phone number is required"))
+        }
+
+        return coreRepository.updateOwnerProfile(
+            ownerId = ownerId,
+            firstName = trimmedFirst,
+            lastName = trimmedLast,
+            documentType = trimmedDocType,
+            documentNumber = trimmedDocNum,
+            phone = trimmedPhone
+        )
+    }
+}
+
+class DeleteOwnerProfileUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(ownerId: String): AppResult<Unit> {
+        if (ownerId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "ownerId", message = "Owner ID is required"))
+        }
+        return coreRepository.deleteOwnerProfile(ownerId)
     }
 }

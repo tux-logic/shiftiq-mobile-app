@@ -30,6 +30,16 @@ data class WorkshopSpecialty(
     val active: Boolean = true
 )
 
+data class BranchSubscription(
+    val id: String,
+    val branchId: BranchId,
+    val planId: String,
+    val billingCycle: String,
+    val status: String,
+    val startDate: String,
+    val endDate: String
+)
+
 data class OwnerProfile(
     val id: String,
     val userId: UserId,
@@ -38,6 +48,71 @@ data class OwnerProfile(
     val documentType: String,
     val documentNumber: String,
     val phone: String
+) {
+    val fullName: String get() = "$firstName $lastName".trim()
+}
+
+data class EmployeeProfile(
+    val id: String,
+    val userId: UserId,
+    val firstName: String,
+    val lastName: String,
+    val documentType: String,
+    val documentNumber: String,
+    val phone: String
+) {
+    val fullName: String get() = "$firstName $lastName".trim()
+}
+
+data class CustomerProfile(
+    val id: String,
+    val userId: UserId,
+    val isCorporate: Boolean = false,
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val businessName: String? = null,
+    val documentType: String,
+    val documentNumber: String,
+    val phone: String
+) {
+    val displayName: String
+        get() = if (isCorporate && !businessName.isNullOrBlank()) {
+            businessName
+        } else {
+            "${firstName.orEmpty()} ${lastName.orEmpty()}".trim()
+        }
+}
+
+data class UnifiedProfile(
+    val userId: UserId,
+    val roles: List<String>,
+    val owner: OwnerProfile? = null,
+    val employee: UnifiedEmployeeSummary? = null,
+    val customer: CustomerProfile? = null
+)
+
+data class UnifiedEmployeeSummary(
+    val employeeId: String,
+    val workshopId: String? = null,
+    val firstName: String,
+    val lastName: String,
+    val documentType: String,
+    val documentNumber: String,
+    val phone: String
+) {
+    val fullName: String get() = "$firstName $lastName".trim()
+}
+
+data class DocumentProfileLookup(
+    val profileType: String,
+    val userId: UserId,
+    val firstName: String,
+    val lastName: String,
+    val documentType: String,
+    val documentNumber: String,
+    val phone: String,
+    val employeeId: String? = null,
+    val roles: List<String> = emptyList()
 ) {
     val fullName: String get() = "$firstName $lastName".trim()
 }
