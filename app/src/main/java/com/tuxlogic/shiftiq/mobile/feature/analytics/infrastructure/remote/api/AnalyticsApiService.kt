@@ -1,8 +1,8 @@
-package com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.api
+package com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.api
 
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySnapshotResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySummaryResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.NetworkSummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySnapshotResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.NetworkSummaryResourceDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
