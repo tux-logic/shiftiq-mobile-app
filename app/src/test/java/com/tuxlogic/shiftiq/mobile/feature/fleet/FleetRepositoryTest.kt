@@ -2,12 +2,12 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.api.FleetApiService
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.AppointmentDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CustomerRegistrationDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.EmployeeRegistrationDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.StaffCareerHistoryDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.repository.FleetRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.api.FleetApiService
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.AppointmentDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CustomerRegistrationDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.EmployeeRegistrationDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.StaffCareerHistoryDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.repository.FleetRepositoryImpl
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

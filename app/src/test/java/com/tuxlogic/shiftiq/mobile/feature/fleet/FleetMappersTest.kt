@@ -1,10 +1,10 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet
 
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.AppointmentDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CustomerRegistrationDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.EmployeeRegistrationDto
-import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.StaffCareerHistoryDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.AppointmentDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CustomerRegistrationDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.EmployeeRegistrationDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.StaffCareerHistoryDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

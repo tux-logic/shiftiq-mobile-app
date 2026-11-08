@@ -7,9 +7,9 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.DeleteAppointmentUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetAppointmentsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.UpdateAppointmentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.DeleteAppointmentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetAppointmentsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.UpdateAppointmentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

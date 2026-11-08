@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase
+package com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
