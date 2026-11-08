@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.CreateWorkshopUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateWorkshopUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

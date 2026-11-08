@@ -7,8 +7,8 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.OwnerProfile
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.CreateOwnerProfileUseCase
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase.GetOwnerProfileUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateOwnerProfileUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetOwnerProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

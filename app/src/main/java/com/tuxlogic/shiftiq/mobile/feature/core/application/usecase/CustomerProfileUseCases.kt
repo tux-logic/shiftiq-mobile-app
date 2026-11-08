@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.core.domain.usecase
+package com.tuxlogic.shiftiq.mobile.feature.core.application.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
