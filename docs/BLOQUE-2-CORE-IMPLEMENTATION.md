@@ -39,18 +39,21 @@ app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/core/
 ├── domain/
 │   ├── model/
 │   │   └── CoreModels.kt           # Workshop, Branch, WorkshopSpecialty, OwnerProfile
-│   ├── repository/
-│   │   └── CoreRepository.kt       # Contrato de repositorio
+│   └── repository/
+│       └── CoreRepository.kt       # Contrato puro de repositorio
+├── application/
 │   └── usecase/
 │       ├── WorkshopUseCases.kt     # GetWorkshopsUseCase, CreateWorkshopUseCase
 │       ├── BranchUseCases.kt       # GetBranchesUseCase, CreateBranchUseCase, SetActiveBranchUseCase
 │       └── OwnerProfileUseCases.kt # GetOwnerProfileUseCase, CreateOwnerProfileUseCase
-├── data/
+├── infrastructure/
 │   ├── remote/
 │   │   ├── dto/
-│   │   │   └── CoreDtos.kt         # DTOs y mappers a dominio
+│   │   │   └── CoreDtos.kt         # DTOs
 │   │   └── api/
 │   │       └── CoreApiService.kt   # Interfaz Retrofit
+│   ├── mapper/
+│   │   └── CoreMappers.kt          # Mappers bidireccionales DTO <-> Dominio
 │   ├── repository/
 │   │   └── CoreRepositoryImpl.kt   # Implementación con safeApiCall y corrutinas
 │   └── di/

@@ -19,19 +19,20 @@ Un hito no es más que "los bloques que ya puedes mostrar juntos"; por eso casi 
 
 ---
 
-## 2. Los 9 bloques (construcción)
+## 2. Los bloques de construcción (Bounded Contexts)
 
-| # | Bloque | Contexto backend | Módulo(s) | Depende de |
-| :---: | :--- | :--- | :--- | :--- |
-| 0 | Fundación | `shared` | `:core:*`, `:app`, `build-logic` | — |
-| 1 | IAM | `iam` | `:feature:iam` | 0 |
-| 2 | Core | `core` | `:feature:core` | 1 |
-| 3 | Fleet | `fleet` | `:feature:fleet` | 2 |
-| 4 | Operations | `operations` | `:feature:operations` | 3 |
-| 5 | Inventory | `inventory` | `:feature:inventory` | 4 |
-| 6 | Billing | `billing` | `:feature:billing` | 4 |
-| 7 | IoT | `iot` | `:feature:iot` | 2 |
-| 8 | Analytics | `analytics` | `:feature:analytics` | 2–7 |
+| # | Bloque | Contexto backend | Módulo(s) | Tipo DDD | Depende de |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| 0 | Fundación | `shared` | `:core:*`, `:app`, `build-logic` | Shared Kernel | — |
+| 1 | IAM | `iam` | `:feature:iam` | Soporte | 0 |
+| 2 | Core | `core` | `:feature:core` | Core Domain | 1 |
+| 3 | Fleet | `fleet` | `:feature:fleet` | Core Domain | 2 |
+| 4 | Operations | `operations` | `:feature:operations` | Core Domain | 3 |
+| 5 | Inventory | `inventory` | `:feature:inventory` | Core Domain | 4 |
+| 6 | Billing | `billing` | `:feature:billing` | Soporte | 4 |
+| 7 | IoT | `iot` | `:feature:iot` | Soporte | 2 |
+| 8 | Analytics | `analytics` | `:feature:analytics` | Soporte | 2–7 |
+| 9 | Shared Services | `shared` | `:feature:shared` | Subdominio Genérico | 0 |
 
 ---
 
@@ -44,42 +45,45 @@ Un hito no es más que "los bloques que ya puedes mostrar juntos"; por eso casi 
 | **H3 — "Atiendo vehículos"** | 4 + 5 | Operations + Inventory | H2 | Orden de trabajo con tareas y repuestos |
 | **H4 — "Cobro"** | 6 | Billing | H3 | Cotización → comprobante → pago |
 | **H5 — "Conecto IoT"** | 7 | IoT | H2 | Vehículo, telemetría y alertas DTC |
-| **H6 — "Mido y libero"** | 8 | Analytics + polish/release | H2–H5 | Dashboards, offline, E2E, firma/Play |
+| **H6 — "Mido y libero"** | 8 + 9 | Analytics + Shared + polish/release | H2–H5 | Dashboards, offline, validaciones RENIEC/SUNAT, firma/Play |
 
 ---
 
-## 4. Matriz de trazabilidad (bloque ⇄ hito ⇄ estado)
+## 4. Matriz de trazabilidad (bloque / hito / estado)
 
-Sirve para marcar el avance durante el desarrollo.
+Sirve para registrar el avance de implementación técnica de la aplicación.
 
-| # | Bloque | Hito | Estado |
-| :---: | :--- | :--- | :--- |
-| 0 | Fundación | H1 | ✅ Completado |
-| 1 | IAM | H1 | ✅ Completado |
-| 2 | Core | H2 | ✅ Completado |
-| 3 | Fleet | H2 | ✅ Completado |
-| 4 | Operations | H3 | ⬜ Pendiente |
-| 5 | Inventory | H3 | ⬜ Pendiente |
-| 6 | Billing | H4 | ⬜ Pendiente |
-| 7 | IoT | H5 | ⬜ Pendiente |
-| 8 | Analytics | H6 | ⬜ Pendiente |
+| # | Bloque | Hito | Estado | Arquitectura |
+| :---: | :--- | :--- | :--- | :--- |
+| 0 | Fundación | H1 | [Completado] | Shared Kernel, SessionDataStore, DomainEventBus en :core:common |
+| 1 | IAM | H1 | [Completado] | Clean DDD 4 capas (domain, application, infrastructure, presentation) |
+| 2 | Core | H2 | [Completado] | Clean DDD 4 capas (domain, application, infrastructure, presentation) |
+| 3 | Fleet | H2 | [Completado] | Clean DDD 4 capas (domain, application, infrastructure, presentation) |
+| 4 | Operations | H3 | [Estructurado] | Clean DDD 4 capas base y tests de scaffolding completados |
+| 5 | Inventory | H3 | [Estructurado] | Clean DDD 4 capas base y tests de scaffolding completados |
+| 6 | Billing | H4 | [Estructurado] | Clean DDD 4 capas base y tests de scaffolding completados |
+| 7 | IoT | H5 | [Estructurado] | Clean DDD 4 capas base y tests de scaffolding completados |
+| 8 | Analytics | H6 | [Estructurado] | Clean DDD 4 capas base y tests de scaffolding completados |
+| 9 | Shared | H6 | [Estructurado] | Subdominio genérico con 4 capas (RENIEC/SUNAT, Cloudinary, Health) |
 
-Leyenda: ⬜ Pendiente · 🟡 En curso · ✅ Hecho.
+Leyenda de estado: [Pendiente] · [En curso] · [Estructurado] · [Completado].
 
 ---
 
-## 5. Patrón interno de cada bloque de contexto (1–8)
+## 5. Patrón interno de cada bounded context (Clean Architecture + DDD)
 
-Cada bloque se construye como **rebanada vertical Clean Architecture** y esto define sus sub-partes,
-en este orden:
+Cada bounded context se organiza en cuatro capas concéntricas con estricta inversión de dependencias:
 
-1. **`domain/`** — modelos, VOs, interfaces de repositorio y casos de uso (Kotlin puro, sin Android).
-2. **`data/`** — Api Retrofit + DTOs + mappers + `RepositoryImpl`.
-3. **`presentation/`** — Compose + ViewModel + `UiState` + rutas del feature.
-4. **Pruebas** — unit de casos de uso/ViewModel (y MockWebServer donde aplique).
+1. **`domain/`** — Entidades de negocio, Value Objects inmutables e interfaces de repositorio (`repository/`). Kotlin puro sin dependencias de Android, Room o Retrofit.
+2. **`application/`** — Casos de uso e interactores orquestadores (`usecase/`) que implementan las reglas de interacción del usuario.
+3. **`infrastructure/`** — Adaptadores técnicos concretos: API Retrofit (`remote/api/`), DTOs (`remote/dto/`), mappers bidireccionales (`mapper/`), implementaciones de repositorio (`repository/`) y módulos Hilt (`di/`).
+4. **`presentation/`** — Vistas declarativas en Jetpack Compose, ViewModels (`StateFlow<UiState>`) y destinos de navegación.
+5. **Pruebas unitarias** — Tests JVM puros para `domain/`, `application/` e `infrastructure/mapper`, y MockWebServer para endpoints.
 
-Se respeta el orden **domain → data → presentation** para fijar el contrato antes de acoplar la UI;
-el bloque se cierra con sus tests y su integración en `:app`.
+Se respeta la regla de dependencias:
+`presentation -> application -> domain <- infrastructure`
+
+Ningún feature depende de otro feature hermano (principio de aislamiento estricto). La comunicación cross-context se efectúa mediante el `DomainEventBus` en memoria (`:core:common:event`) o mediante el Shared Kernel (`:core:model`).
 
 ---
 

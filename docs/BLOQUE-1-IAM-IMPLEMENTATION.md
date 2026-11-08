@@ -26,18 +26,19 @@ Se integró la fuente moderna **Inter** desde Google Fonts descargable de forma 
 
 ```
 app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/
-├── data/
+├── domain/
+│   ├── model/AuthenticatedUser.kt             # Entidad de dominio (id, email, role, tokens)
+│   └── repository/AuthRepository.kt           # Contrato puro de repositorio
+├── application/
+│   └── usecase/
+│       ├── LoginUseCase.kt                    # Validación de formato y autenticación
+│       └── SessionUseCases.kt                 # LogoutUseCase, ObserveSessionUseCase, SelectBranchUseCase
+├── infrastructure/
 │   ├── remote/
 │   │   ├── dto/AuthDtos.kt                    # SignInRequestDto, RefreshTokenRequestDto, AuthenticatedUserResponseDto
 │   │   └── api/AuthApiService.kt              # Endpoints Retrofit (login, refresh, logout con hasBody=true)
 │   ├── repository/AuthRepositoryImpl.kt       # Implementación con safeApiCall y SessionDataStore
 │   └── di/IamDataModule.kt                    # Módulos Hilt (AuthApiService y AuthRepository)
-├── domain/
-│   ├── model/AuthenticatedUser.kt             # Entidad de dominio (id, email, role, tokens)
-│   ├── repository/AuthRepository.kt           # Contrato de repositorio
-│   └── usecase/
-│       ├── LoginUseCase.kt                    # Validación de formato y autenticación
-│       └── SessionUseCases.kt                 # LogoutUseCase, ObserveSessionUseCase, SelectBranchUseCase
 └── presentation/
     ├── login/
     │   ├── LoginViewModel.kt                  # StateFlow<LoginUiState>
@@ -91,7 +92,7 @@ Con el Bloque 1 se implementaron **4 pantallas interactivas reales**:
 ### Método 1: En el Emulador con Device Manager
 
 1. Abre **Device Manager** en la barra lateral derecha de Android Studio y enciende tu dispositivo virtual (ej. Pixel 7 / 8).
-2. Haz clic en **Run 'app' ▶** (`Shift + F10`).
+2. Haz clic en **Run 'app'** (`Shift + F10`).
 3. **Prueba Interactiva 1 (Validación de Formulario):**
    - Deja el campo de correo vacío y pulsa *"Entrar al Sistema"*: verás el mensaje `"El correo electrónico es requerido"`.
    - Escribe un correo inválido como `usuario` y pulsa entrar: verás `"Formato de correo inválido"`.

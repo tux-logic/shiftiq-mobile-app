@@ -34,13 +34,27 @@ seguridad **JWT**, construido con **DDD + Arquitectura Hexagonal (puertos/adapta
 | `analytics` | KPIs por sede y red | `BranchAnalyticsSnapshot` |
 | `shared` | Kernel compartido, seguridad, VO, eventos cross-context | — |
 
-### Eventos de dominio cross-context (EDA)
+### Eventos de dominio cross-context en backend (EDA Global)
 
 - `ProductReservedEvent` (Operations → Inventory): descuenta stock.
 - `PaymentProcessedEvent` (Billing → Operations): marca la orden como `PAID`.
 - `DtcAlertTriggeredEvent` (IoT → Fleet).
 - `EmployeeRegistrationApprovedEvent` (Fleet → IAM): otorga acceso a la sede.
-- Los eventos cross-context viven en `shared.domain.model.events` con **UUIDs planos**.
+- Los eventos cross-context del backend viven en `shared.domain.model.events` con UUIDs planos y se despachan de forma transaccional mediante `@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)`.
+
+### Eventos de dominio: Distinción entre backend (global) y mobile (local)
+
+Es fundamental distinguir entre dos ámbitos de eventos de dominio dentro del ecosistema de ShiftIQ:
+
+1. **Eventos de dominio globales (Backend EDA):**
+   - Corren en el servidor Spring Boot y dependen de persistencia transaccional en base de datos.
+   - Comunican agregados y bounded contexts corporativos tras confirmarse una transacción ACID en PostgreSQL.
+   - Utilizan mecanismos de mensajería asíncrona / eventos transaccionales de Spring o colas distribuidas.
+
+2. **Eventos de dominio locales (Mobile In-Memory EDA):**
+   - Corren exclusivamente en la memoria de la aplicación Android (`com.tuxlogic.shiftiq.mobile`).
+   - No viajan por la red ni tocan el servidor; son gestionados por el `DomainEventBus` centralizado en `:core:common:event`.
+   - Permiten que los Bounded Contexts independientes de la app móvil reaccionen ante ocurrencias de negocio o de ciclo de vida (como el cambio de sede activa, cierre de sesión o expiración de tokens) manteniendo un desacoplamiento estricto entre módulos (principio de aislamiento entre features hermanas).
 
 ---
 
@@ -243,9 +257,7 @@ Todos bajo `/api/v1` salvo los de sistema. `§` = requiere Bearer JWT.
 
 ## 4. Arquitectura mobile (DDD + Clean Architecture)
 
-**Decisión:** multi-módulo Gradle desde el inicio. **1 bounded context del backend = 1 módulo Gradle
-`feature`**, con las capas de Clean Architecture como paquetes internos
-(`domain / data / presentation`). La infraestructura transversal vive en módulos `core`.
+**Decisión:** multi-módulo Gradle desde el inicio. **1 bounded context del backend = 1 módulo Gradle `feature`**, con arquitectura concéntrica Clean Architecture + DDD organizada internamente en cuatro capas estandarizadas (`domain`, `application`, `infrastructure`, `presentation`). La infraestructura transversal vive en módulos `:core:*`.
 
 ### 4.1 Mapa de módulos
 
@@ -253,156 +265,300 @@ Todos bajo `/api/v1` salvo los de sistema. `§` = requiere Bearer JWT.
 :app                       # @HiltAndroidApp, MainActivity, NavHost raíz, agregación DI
 build-logic/               # convention plugins: shiftiq.android.application|library|feature, shiftiq.kotlin.library
 
-:core:common               # AppResult, DispatcherProvider, mappers base, extensiones (Kotlin puro)
-:core:model                # Value objects compartidos: UserId, BranchId, Money, Role (Kotlin puro)
+:core:common               # AppResult, DispatcherProvider, EventBus reactivo en memoria (DomainEventBus)
+:core:model                # Shared Kernel: Value Objects compartidos (UserId, BranchId, Money, Role)
 :core:network              # Retrofit3 + Gson, OkHttp, AuthInterceptor, TokenAuthenticator, ApiError
 :core:datastore            # SessionDataStore (token, refreshToken, userId, role, activeBranchId)
 :core:database             # Room3 (caché local)
 :core:designsystem         # Tema Material3, color, tipografía, componentes reutilizables
 :core:navigation           # Contratos de rutas y navegación (route keys)
 
-:feature:iam               # Auth, sesión, perfil/roles
-:feature:core              # Talleres, sedes, empleados, clientes
-:feature:fleet             # Citas, registros de cliente/personal
-:feature:operations        # Órdenes de trabajo, servicios
-:feature:inventory         # Productos y lotes
-:feature:billing           # Cotizaciones, comprobantes, checkout
-:feature:iot               # Vehículos, dispositivos, telemetría
-:feature:analytics         # Dashboards y KPIs
+:feature:iam               # Identidad y acceso (login, Google, refresh, logout, roles)
+:feature:core              # Organización (talleres, sedes, personal, clientes, suscripciones)
+:feature:fleet             # Citas de taller, vinculación de clientes y postulaciones de personal
+:feature:operations        # Órdenes de trabajo, servicios del taller, tareas y repuestos
+:feature:inventory         # Catálogo de repuestos, stock por sede y lotes FIFO
+:feature:billing           # Cotizaciones, comprobantes electrónicos, pagos y checkout
+:feature:iot               # Vehículos, dongles OBD-II, telemetría y diagnósticos DTC
+:feature:analytics         # Resúmenes ejecutivos y KPIs financieros por sede y red
+:feature:shared            # Subdominio genérico: validación DNI/RUC (RENIEC/SUNAT), Cloudinary, salud
 ```
 
-### 4.2 Regla de dependencias
+### 4.2 Regla de dependencias y aislamiento entre features (Sibling Feature Isolation)
 
 - `:app` → todos los `:feature:*` + `:core:designsystem` + `:core:navigation`.
-- `:feature:*` → `:core:network`, `:core:datastore`, `:core:database`, `:core:model`,
-  `:core:common`, `:core:designsystem`, `:core:navigation`.
-- `:core:*` **nunca** depende de `:feature:*`.
-- Un `:feature:*` **no** importa código de otro `:feature:*`: se comunican por `:core:model` o por
-  rutas de navegación en `:core:navigation`.
+- `:feature:*` → `:core:network`, `:core:datastore`, `:core:database`, `:core:model`, `:core:common`, `:core:designsystem`, `:core:navigation`.
+- `:core:*` **nunca** depende de `:feature:*` ni de `:app`.
+- **Aislamiento estricto entre features hermanas (Sibling Feature Dependency Isolation):** Un módulo `:feature:A` **nunca** importa clases, paquetes ni artefactos de un `:feature:B`. No existen dependencias horizontales entre features.
 
-Analogía con el backend: `:core:*` ≈ `shared`; cada `:feature:*` ≈ un bounded context; la regla
-"`shared` nunca depende de otros contextos" se refleja en la dirección de dependencias de Gradle.
+Los bounded contexts se comunican exclusivamente a través de tres vías desacopladas:
+1. **Shared Kernel (`:core:model`):** Tipos de identidad y Value Objects universales (`UserId`, `BranchId`, `Role`, `Money`).
+2. **Navegación (`:core:navigation`):** Rutas y destinos fuertemente tipados sin exponer detalles internos de pantalla.
+3. **Eventos de dominio en memoria (`:core:common:event`):** El bus reactivo `DomainEventBus` permite publicar y escuchar cambios de estado del negocio en tiempo de ejecución sin acoplamiento en tiempo de compilación.
 
-### 4.3 Features vs. módulos core (no-feature)
+### 4.3 Features vs. módulos core: Shared Kernel vs. Subdominio Genérico
 
-Los **features** representan el *qué* del negocio (un bounded context cada uno). Todo lo demás es
-plomería transversal que existe para que los features no se repitan y no se acoplen entre sí; es el
-equivalente móvil del `shared` del backend más el *host* de la app.
+Los **features** representan los Bounded Contexts del negocio. Los módulos **core** proveen plomería transversal y capacidades técnicas compartidas.
 
-**Por qué existen módulos no-feature:**
+**Distinción entre Shared Kernel y Subdominio Genérico:**
 
-1. **Reutilización sin copiar:** red, sesión, tema y rutas los usan los 8 features; sin core, cada
-   feature duplicaría Retrofit e interceptors.
-2. **Aislamiento (DDD):** un feature no debe importar código de otro; lo realmente común sube a core.
-3. **Enforcement del build:** Gradle hace cumplir la regla de dependencias; importar algo prohibido
-   **no compila**, así la arquitectura deja de ser una convención y pasa a ser ejecutable.
+1. **Shared Kernel (`:core:model` y `:core:common`):**
+   - Es una biblioteca transversal técnica y de conceptos ubicuos mínimos compartidos.
+   - No implementa servicios externos, no realiza llamadas de red ni expone pantallas.
+   - `:core:model` define el Lenguaje Ubicuo común (`UserId`, `BranchId`, `Role`, `Money`).
+   - `:core:common` define infraestructura funcional (`AppResult`, `AppError`, `DispatcherProvider`) y el despachador de eventos (`DomainEventBus`).
+
+2. **Subdominio Genérico (`:feature:shared`):**
+   - Es un Bounded Context funcional completo con sus 4 capas concéntricas (`domain`, `application`, `infrastructure`, `presentation`).
+   - Encapsula capacidades auxiliares requeridas por la plataforma que no forman parte de la ventaja competitiva esencial del taller mecánico: validación de identidad ante entidades gubernamentales (RENIEC para DNI, SUNAT para RUC), subida de archivos multimedia a Cloudinary y comprobación de salud del backend (`/health`).
 
 **Infraestructura de build (no produce APK):**
 
 | Módulo | Rol | Por qué / cómo |
 | :--- | :--- | :--- |
-| `build-logic` | *Included build* con plugins de convención | Centraliza los bloques `android {}`, Kotlin, Compose y Hilt para no repetirlos en ~14 módulos. Se engancha con `pluginManagement { includeBuild("build-logic") }`. |
-| `:app` | Aplicación host / composición raíz | `@HiltAndroidApp`, `MainActivity`, `NavHost`, agregación de DI. **Depende de todos** los features; **nadie depende de él**. Es el `main()`/bootstrap. |
+| `build-logic` | Included build con plugins de convención | Centraliza los bloques `android {}`, Kotlin, Compose y Hilt para no repetirlos en los módulos. Se engancha con `pluginManagement { includeBuild("build-logic") }`. |
+| `:app` | Aplicación host / composición raíz | `@HiltAndroidApp`, `MainActivity`, `NavHost`, agregación de DI. Depende de todos los features; nadie depende de él. |
 
 **Kernel compartido (`:core:*`):**
 
 | Módulo | Contenido | Tipo | Depende de |
 | :--- | :--- | :--- | :--- |
-| `:core:common` | `AppResult`, `DispatcherProvider`, extensiones, `safeApiCall` | Kotlin puro (JVM) | — |
-| `:core:model` | VOs compartidos: `UserId`, `BranchId`, `Money`, `Role` | Kotlin puro (JVM) | — |
+| `:core:common` | `AppResult`, `DispatcherProvider`, `DomainEventBus`, extensiones, `safeApiCall` | Kotlin puro (JVM) | — |
+| `:core:model` | Shared Kernel VOs: `UserId`, `BranchId`, `Money`, `Role` | Kotlin puro (JVM) | — |
 | `:core:network` | Retrofit3 + Gson, OkHttp, `AuthInterceptor`, `TokenAuthenticator`, `ApiError`, DTO base | Android library | `common`, `model` |
 | `:core:datastore` | `SessionDataStore` (token, refresh, userId, role, `activeBranchId`) | Android library | `common`, `model` |
-| `:core:database` | Room3, DAOs, caché offline (opcional) | Android library | `common`, `model` |
+| `:core:database` | Room3, DAOs, caché local | Android library | `common`, `model` |
 | `:core:designsystem` | Tema Material3, color, tipografía, componentes reutilizables | Android + Compose | `common` |
-| `:core:navigation` | Contratos de rutas / destinos | Android + Compose | `model` |
-| `:core:testing` | `MainDispatcherRule`, fakes, helpers | Android library (`testImplementation`) | `common` |
+| `:core:navigation` | Contratos de rutas y destinos | Android + Compose | `model` |
+| `:core:testing` | `MainDispatcherRule`, fakes, helpers de prueba | Android library (test) | `common` |
 
-Distinción clave entre los dos Kotlin puros: **`:core:common` es técnico** (no sabe de negocio),
-**`:core:model` es lenguaje ubicuo compartido** (sí nombra conceptos del negocio). Es el *shared
-kernel* del backend, pero mínimo: si un tipo solo lo usa un feature, vive en ese feature, **no** aquí.
-
-**Cómo se organizan (a diferencia de los features):**
-
-- **Features → por dominio (DDD):** cada uno es una rebanada vertical con `domain/data/presentation`
-  adentro.
-- **Core → por capacidad técnica (Clean Architecture horizontal):** cada módulo es una sola
-  preocupación; *es* infraestructura/adaptador, por eso no tiene capas de dominio.
-
-**Grafo de dependencias (se hace cumplir por Gradle):**
+**Grafo de dependencias (enforced por Gradle):**
 
 ```
                          :app
                           │  (depende de todos los features + navigation + designsystem)
       ┌───────────────────┼───────────────────────────────┐
       ▼                   ▼                               ▼
-:feature:iam   :feature:core  ... :feature:analytics   :core:navigation
-      │                   │                               │
-      └───────────────────┴───────────────┬───────────────┘
-                                          ▼
-                    :core:network   :core:datastore   :core:database
-                                          │
-                         :core:designsystem│
-                                          ▼
-                                   :core:model
-                                          │
-                                          ▼
-                                   :core:common
+:feature:iam   :feature:core  ... :feature:shared      :core:navigation
+      │                   │               │               │
+      └───────────────────┴───────┬───────┴───────────────┘
+                                  ▼
+            :core:network   :core:datastore   :core:database
+                                  │
+                         :core:designsystem
+                                  ▼
+                            :core:model
+                                  │
+                                  ▼
+                            :core:common
 ```
 
-**Reglas duras:**
+**Reglas duras de arquitectura:**
 
-1. `:core:*` **nunca** depende de `:feature:*` ni de `:app`.
-2. Un `:feature:*` **nunca** depende de otro `:feature:*`.
-3. `:core:common` y `:core:model` no dependen de nadie (son la base).
-4. `:app` no expone lógica: solo cablea.
+1. `:core:*` nunca depende de `:feature:*` ni de `:app`.
+2. Un `:feature:*` nunca depende de otro `:feature:*`.
+3. `:core:common` y `:core:model` no dependen de ningún otro módulo (base del sistema).
+4. `:app` no contiene lógica de negocio: solo compone, cablea inyección y monta navegación.
 
-Las flechas apuntan siempre "hacia dentro/hacia abajo": así `:core:model` y `:core:common` se testean
-en JVM puro, se puede reemplazar Retrofit sin tocar features, y un feature compila sin los demás.
+### 4.4 Capas dentro de un feature (Clean Architecture + DDD)
 
-**Ajustes opcionales:**
-
-- `:core:database` solo si se implementa caché offline; si no, se omite al inicio.
-- `:core:navigation` puede fusionarse en `:core:designsystem` para reducir módulos, pero separado
-  permite que un feature navegue a otro **sin** depender de él (solo de las rutas).
-- `:core:model` y `:core:common` pueden fusionarse al principio; separados dejan claro qué tipo es
-  "compartido de negocio" y cuál es "utilidad".
-
-### 4.4 Capas dentro de un feature
+Cada uno de los 9 bounded contexts se estructura estrictamente en 4 capas concéntricas:
 
 ```
 :feature:iam/src/main/java/com/tuxlogic/shiftiq/mobile/feature/iam/
 ├── domain/
-│   ├── model/            # Entidades y VOs propios (User, Session, Role)
-│   ├── repository/       # Interfaz AuthRepository
-│   └── usecase/          # SignInUseCase, RefreshSessionUseCase, SignOutUseCase
-├── data/
-│   ├── remote/           # AuthApi (Retrofit), DTOs (SignInRequest, AuthenticatedUserDto)
-│   ├── mapper/           # DTO <-> dominio
-│   └── repository/       # AuthRepositoryImpl
+│   ├── model/                  # Entidades de dominio, Value Objects propios y reglas de negocio
+│   └── repository/             # Interfaces de repositorio (contrato puro sin frameworks)
+├── application/
+│   └── usecase/                # Casos de uso / interactores que orquestan el negocio
+├── infrastructure/
+│   ├── remote/
+│   │   ├── api/                # Interfaces Retrofit (AuthApi)
+│   │   └── dto/                # Data Transfer Objects (request/response)
+│   ├── mapper/                 # Mappers bidireccionales DTO <-> Entidad de Dominio
+│   ├── repository/             # Implementaciones de repositorio (AuthRepositoryImpl)
+│   └── di/                     # Módulos Hilt (@Module, @InstallIn) para enlazar contratos
 └── presentation/
-    ├── login/            # LoginScreen, LoginViewModel, LoginUiState
-    └── navigation/       # Destinos que expone el feature
+    ├── login/                  # Pantallas Compose, ViewModels (StateFlow) y UiStates
+    └── navigation/             # Destinos de navegación expuestos por el feature
 ```
 
-- `presentation → domain ← data` (la capa `data` implementa interfaces de `domain`).
-- `domain` es **Kotlin puro** (sin Android, sin Retrofit, sin Room): testeable en JVM.
-- La inyección (Hilt) usa un `@Module` por feature que liga `RepositoryImpl` → interfaz de `domain`.
+**Responsabilidades y restricciones por capa:**
 
-> Si más adelante se requiere enforcement estricto, se puede subdividir cada feature en
-> `:feature:x:domain` / `:feature:x:data` / `:feature:x:presentation`. No es necesario al inicio.
+1. **`domain/` (Núcleo de Negocio):**
+   - Contiene las entidades, reglas de negocio e interfaces abstractas de persistencia (`repository/`).
+   - Es Kotlin puro. Prohibido importar paquetes de Android (`android.*`), Retrofit, OkHttp, Room, Compose o DataStore.
+   - Es completamente independiente y testeable en la JVM en milisegundos.
+
+2. **`application/` (Orquestación de Casos de Uso):**
+   - Contiene casos de uso individuales (`usecase/`) con un único método de entrada `operator fun invoke(...)`.
+   - Orquesta la ejecución de reglas de dominio llamando a interfaces de repositorio.
+   - No contiene lógica de presentación ni implementaciones de red.
+
+3. **`infrastructure/` (Adaptadores Técnicos):**
+   - Implementa los contratos definidos en `domain/repository/` mediante `repository/`.
+   - Gestiona el acceso remoto a través de `remote/api/` y `remote/dto/`.
+   - Convierte datos técnicos a entidades de negocio mediante `mapper/`.
+   - Expone la configuración de inyección de dependencias mediante `di/` usando `@InstallIn(SingletonComponent::class)`.
+
+4. **`presentation/` (Interfaz de Usuario):**
+   - Consume casos de uso de `application/` desde ViewModels que emiten estados inmutables `StateFlow<UiState>`.
+   - Vistas declarativas construidas en Jetpack Compose consumiendo componentes de `:core:designsystem`.
+   - En bounded contexts sin pantallas móviles activas al inicio, preserva un marcador `.gitkeep` manteniendo la uniformidad arquitectónica.
+
+**Regla de inversión de dependencias:**
+`presentation → application → domain ← infrastructure`
+
+El dominio no conoce a la infraestructura ni a la presentación. La infraestructura depende del dominio para implementar sus contratos.
 
 ### 4.5 Mapeo backend → feature mobile
 
-| Bounded context backend | Módulo mobile | Pantallas núcleo |
-| :--- | :--- | :--- |
-| `iam` | `:feature:iam` | Login, Google, recuperar contraseña, perfil/roles |
-| `core` | `:feature:core` | Talleres, sedes, empleados, clientes, especialidades, suscripciones |
-| `fleet` | `:feature:fleet` | Citas, vincular clientes, alta/aprobación de personal |
-| `operations` | `:feature:operations` | Servicios, órdenes de trabajo, tareas y repuestos |
-| `inventory` | `:feature:inventory` | Productos, lotes/stock |
-| `billing` | `:feature:billing` | Cotizaciones, comprobantes, checkout |
-| `iot` | `:feature:iot` | Vehículos, dispositivos OBD-II, telemetría y DTC |
-| `analytics` | `:feature:analytics` | Dashboards por sede y red |
+| Bounded context backend | Módulo mobile | Tipo DDD | Responsabilidad y pantallas núcleo |
+| :--- | :--- | :--- | :--- |
+| `iam` | `:feature:iam` | Contexto de soporte | Autenticación, Google Sign-In, renovación de sesión, logout y roles |
+| `core` | `:feature:core` | Dominio principal | Talleres, sedes, personal, clientes, especialidades y suscripciones |
+| `fleet` | `:feature:fleet` | Dominio principal | Agenda de citas, postulaciones de personal técnico y vinculaciones |
+| `operations` | `:feature:operations` | Dominio principal | Órdenes de trabajo, estados operativos, servicios del taller y tareas |
+| `inventory` | `:feature:inventory` | Dominio principal | Catálogo de productos/repuestos, stock por sede y lotes FIFO |
+| `billing` | `:feature:billing` | Dominio de soporte | Cotizaciones, comprobantes electrónicos, pagos y checkout |
+| `iot` | `:feature:iot` | Dominio genérico/soporte | Registro de vehículos, dongles OBD-II, telemetría y diagnósticos DTC |
+| `analytics` | `:feature:analytics` | Dominio de soporte | Dashboards ejecutivos, métricas financieras por sede y red |
+| `shared` | `:feature:shared` | Subdominio genérico | Validación DNI/RUC (RENIEC/SUNAT), subida multimedia a Cloudinary, health check |
+
+### 4.6 Sistema de Eventos de Dominio Locales en Memoria (DomainEventBus)
+
+Para mantener el principio de aislamiento estricto entre features hermanas (*Sibling Feature Dependency Isolation*), la comunicación reactiva entre diferentes Bounded Contexts dentro de la aplicación móvil se realiza a través de un bus de eventos de dominio local en memoria.
+
+#### 4.6.1 Contrato del evento (`DomainEvent`)
+
+Todo evento de dominio local implementa la interfaz marcadora `DomainEvent`:
+
+```kotlin
+package com.tuxlogic.shiftiq.mobile.core.common.event
+
+interface DomainEvent {
+    val occurredOn: Long
+        get() = System.currentTimeMillis()
+}
+```
+
+Cada evento representa un hecho consumado e inmutable que ocurrió en el dominio de la aplicación.
+
+#### 4.6.2 Contrato del bus (`DomainEventBus`)
+
+El contrato del bus expone un método suspendible para emitir y un método reactivo fuertemente tipado para suscribirse:
+
+```kotlin
+package com.tuxlogic.shiftiq.mobile.core.common.event
+
+import kotlinx.coroutines.flow.Flow
+
+interface DomainEventBus {
+    suspend fun emit(event: DomainEvent)
+    fun <T : DomainEvent> subscribe(eventType: Class<T>): Flow<T>
+}
+
+inline fun <reified T : DomainEvent> DomainEventBus.subscribe(): Flow<T> =
+    subscribe(T::class.java)
+```
+
+#### 4.6.3 Implementación concurrente (`DomainEventBusImpl`)
+
+La implementación se basa en un `MutableSharedFlow` de Kotlin Coroutines configurado para entrega reactiva caliente y prevención de bloqueos:
+
+```kotlin
+package com.tuxlogic.shiftiq.mobile.core.common.event
+
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class DomainEventBusImpl @Inject constructor() : DomainEventBus {
+
+    private val _events = MutableSharedFlow<DomainEvent>(
+        replay = 0,
+        extraBufferCapacity = 64,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    override suspend fun emit(event: DomainEvent) {
+        _events.emit(event)
+    }
+
+    override fun <T : DomainEvent> subscribe(eventType: Class<T>): Flow<T> {
+        return _events.filterIsInstance(eventType)
+    }
+}
+```
+
+**Decisiones de diseño del bus:**
+- `replay = 0`: Los suscriptores reciben únicamente eventos emitidos con posterioridad a su suscripción. Evita que un suscriptor nuevo procese eventos obsoletos del ciclo de vida anterior.
+- `extraBufferCapacity = 64`: Provee capacidad en buffer para absorber ráfagas concurrentes de eventos sin suspender inmediatamente a los emisores.
+- `onBufferOverflow = BufferOverflow.DROP_OLDEST`: Garantiza que una corrutina emisora jamás quede bloqueada indefinidamente si un suscriptor experimenta retrasos en el consumo.
+- Inyección Singleton: Se registra en Hilt como `@Singleton` dentro de `:core:common:di:EventModule`.
+
+#### 4.6.4 Catálogo de eventos de dominio locales
+
+Los eventos estándar de la aplicación residen en `core/common/event/Events.kt`:
+
+1. `ActiveBranchChangedEvent(val branchId: String)`:
+   - Emitido cuando el usuario selecciona o cambia la sede activa en `SessionDataStore`.
+   - Notifica a todos los contextos operativos para invalidar sus cachés en memoria y recargar datos contextualizados para la nueva sede.
+
+2. `SessionExpiredEvent`:
+   - Emitido cuando los tokens de sesión se invalidan o fallan en la renovación (401 en refresh).
+   - Notifica a la aplicación para invalidar datos en memoria sensibles, restablecer flujos y redirigir al login.
+
+3. `UserLoggedOutEvent`:
+   - Emitido cuando el usuario invoca explícitamente el cierre de sesión (`LogoutUseCase` o `SessionDataStore.clearSession()`).
+   - Notifica a todos los módulos para detener sondeos en segundo plano, limpiar datos de usuario y restablecer el estado inicial.
+
+#### 4.6.5 Matriz de Bounded Contexts: Productores, Consumidores y Contextos Excluidos
+
+| Bounded Context | Rol en Eventos Locales | Eventos Producidos | Eventos Consumidos | Reacción del Contexto |
+| :--- | :--- | :--- | :--- | :--- |
+| `iam` | Productor Principal | `UserLoggedOutEvent`, `SessionExpiredEvent` | — | Emite al revocar sesión o detectar token revocado. |
+| `core` | Productor Principal | `ActiveBranchChangedEvent` | `SessionExpiredEvent`, `UserLoggedOutEvent` | Emite al alternar sede activa; limpia datos de taller al cerrar sesión. |
+| `iot` | Productor Secundario | Alertas DTC en tiempo real, desconexión OBD-II | `ActiveBranchChangedEvent`, `UserLoggedOutEvent` | Filtra dispositivos y telemetría por sede activa; desconecta sockets al cerrar sesión. |
+| `operations` | Consumidor Reactivo | — | `ActiveBranchChangedEvent`, `SessionExpiredEvent`, `UserLoggedOutEvent` | Invalida órdenes de trabajo y tareas activas; recarga órdenes de la nueva sede. |
+| `fleet` | Consumidor Reactivo | — | `ActiveBranchChangedEvent`, `SessionExpiredEvent`, `UserLoggedOutEvent` | Invalida agenda de citas y registros de técnicos de la sede anterior. |
+| `inventory` | Consumidor Reactivo | — | `ActiveBranchChangedEvent`, `UserLoggedOutEvent` | Descarta catálogo y lotes en memoria; recarga inventario de la nueva sede. |
+| `billing` | Consumidor Reactivo | — | `ActiveBranchChangedEvent`, `SessionExpiredEvent`, `UserLoggedOutEvent` | Limpia borradores de cotizaciones, pagos en progreso y datos de comprobantes. |
+| `analytics` | Consumidor Reactivo | — | `ActiveBranchChangedEvent`, `UserLoggedOutEvent` | Solicita nuevos snapshots de métricas financieras del dashboard para la nueva sede. |
+| `shared` | Contexto Excluido | — | — | Subdominio genérico sin estado de negocio (validación DNI/RUC y uploads Cloudinary son operaciones transaccionales aisladas). |
+
+#### 4.6.6 Patrón de suscripción y prueba en código
+
+**Suscripción en un ViewModel o Caso de Uso consumidor:**
+
+```kotlin
+class WorkOrdersViewModel @Inject constructor(
+    private val eventBus: DomainEventBus,
+    private val getWorkOrdersUseCase: GetWorkOrdersUseCase
+) : ViewModel() {
+
+    init {
+        eventBus.subscribe<ActiveBranchChangedEvent>()
+            .onEach { event ->
+                reloadOrdersForBranch(event.branchId)
+            }
+            .launchIn(viewModelScope)
+
+        eventBus.subscribe<UserLoggedOutEvent>()
+            .onEach {
+                clearLocalWorkOrderCache()
+            }
+            .launchIn(viewModelScope)
+    }
+}
+```
+
+**Estrategia de prueba unitaria con Coroutines:**
+Al testear el bus con `replay = 0`, las corrutinas suscriptoras deben iniciarse antes de llamar a `emit(...)`. En entornos de prueba, se utiliza `launch(UnconfinedTestDispatcher(testScheduler))` para garantizar que el suscriptor comience la recolección inmediatamente hasta el primer punto de suspensión antes de emitir el evento.
 
 ---
 

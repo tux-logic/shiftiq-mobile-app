@@ -19,7 +19,11 @@ app/
 │   │       ├── di/
 │   │       │   └── NetworkConfigModule.kt     # Inyección de BaseUrl dinámica
 │   │       └── core/                          # <-- Paquete de Fundación
-│   │           ├── common/                    # Resultados funcionales y Dispatchers
+│   │           ├── common/                    # Resultados funcionales, Dispatchers y EventBus reactivo
+│   │           │   ├── di/                    # DispatchersModule y EventModule (@Singleton DomainEventBus)
+│   │           │   ├── dispatchers/           # DispatcherProvider y StandardDispatcherProvider
+│   │           │   ├── event/                 # DomainEvent, DomainEventBus, DomainEventBusImpl, Events
+│   │           │   └── result/                # AppResult y AppError
 │   │           ├── model/                     # Lenguaje Ubicuo (Role, Ids, Money)
 │   │           ├── datastore/                 # Sesión persistente reactiva (DataStore)
 │   │           ├── network/                   # Retrofit, OkHttp, AuthInterceptor, SafeApiCall
@@ -44,6 +48,10 @@ app/
 - [Role.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/model/Role.kt): Enum que refleja con exactitud el modelo RBAC del backend Spring Boot (`ROLE_SYSTEM_ADMIN`, `ROLE_WORKSHOP_OWNER`, `ROLE_BRANCH_MANAGER`, `ROLE_MECHANIC`, `ROLE_RECEPTIONIST`, `ROLE_CUSTOMER`).
 - [Ids.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/model/Ids.kt): Value Objects `@JvmInline value class` para identidades fuertemente tipadas (`UserId`, `WorkshopId`, `BranchId`, etc.).
 - [Money.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/model/Money.kt): Value Object inmutable para montos financieros con `BigDecimal` y código ISO-4217.
+- [DomainEvent.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/common/event/DomainEvent.kt), [DomainEventBus.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/common/event/DomainEventBus.kt), [DomainEventBusImpl.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/common/event/DomainEventBusImpl.kt), [Events.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/common/event/Events.kt) y [EventModule.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/common/di/EventModule.kt):
+  - Bus de eventos de dominio reactivo en memoria basado en Kotlin Coroutines `MutableSharedFlow(replay = 0, extraBufferCapacity = 64, DROP_OLDEST)`.
+  - Permite la comunicación asíncrona y desacoplada entre Bounded Contexts respetando el aislamiento estricto de features hermanas.
+  - Eventos nativos: `ActiveBranchChangedEvent`, `SessionExpiredEvent`, `UserLoggedOutEvent`. Inyección `@Singleton`.
 
 ### 2.2 Infraestructura y Persistencia (`core/datastore` & `core/network`)
 - [SessionDataStore.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/datastore/SessionDataStore.kt) y [SessionDataStoreImpl.kt](file:///c:/Users/alanj/Proyectos/shiftiq-mobile-app/app/src/main/java/com/tuxlogic/shiftiq/mobile/core/datastore/SessionDataStoreImpl.kt):
@@ -84,11 +92,11 @@ Para probar e interactuar con la app visualmente sin tocar código:
 1. **Abrir Android Studio:** Asegúrate de que el proyecto esté sincronizado (`Sync Project with Gradle Files`).
 2. **Abrir el Device Manager:**
    - En la barra lateral derecha de Android Studio, haz clic en el icono de **Device Manager** (parece un teléfono).
-   - Si ya tienes un dispositivo virtual creado (por ejemplo *Pixel 7 API 34*), haz clic en el botón **▶ (Play / Launch)** para encenderlo.
+   - Si ya tienes un dispositivo virtual creado (por ejemplo *Pixel 7 API 34*), haz clic en el botón **Play / Launch** para encenderlo.
    - Si no tienes uno, haz clic en **+ Create Virtual Device**, elige un dispositivo (ej. *Pixel 8*) y selecciona una imagen del sistema (*API 34 o 35*).
 3. **Seleccionar el Destino y Ejecutar:**
    - En la barra de herramientas superior, asegúrate de que el desplegable muestre el módulo `app` y a su lado el nombre de tu emulador en ejecución.
-   - Haz clic en el botón verde **Run 'app' ▶** (o presiona `Shift + F10`).
+   - Haz clic en el botón verde **Run 'app'** (o presiona `Shift + F10`).
 4. **Qué verás en la pantalla del teléfono:**
    - La aplicación abrirá automáticamente.
    - Verás el fondo claro/oscuro adaptativo de Material 3 con el texto centrado en azul primario:

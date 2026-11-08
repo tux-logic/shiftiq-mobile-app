@@ -43,18 +43,21 @@ app/src/main/java/com/tuxlogic/shiftiq/mobile/feature/fleet/
 ├── domain/
 │   ├── model/
 │   │   └── FleetModels.kt              # Appointment, AppointmentStatus, EmployeeRegistration, CustomerRegistration
-│   ├── repository/
-│   │   └── FleetRepository.kt          # Contrato de repositorio de dominio
+│   └── repository/
+│       └── FleetRepository.kt          # Contrato puro de repositorio de dominio
+├── application/
 │   └── usecase/
 │       ├── AppointmentUseCases.kt      # GetAppointments, CreateAppointment, UpdateAppointment, DeleteAppointment
 │       ├── StaffUseCases.kt            # GetEmployeeRegistrations, CreateEmployeeRegistration, Approve/Reject/RequestJoin
 │       └── CustomerRegistrationUseCases.kt # GetCustomerRegistrations, CreateCustomerRegistration
-├── data/
+├── infrastructure/
 │   ├── remote/
 │   │   ├── dto/
-│   │   │   └── FleetDtos.kt            # DTOs Retrofit con Gson y mappers .toDomain()
+│   │   │   └── FleetDtos.kt            # DTOs Retrofit con Gson
 │   │   └── api/
 │   │       └── FleetApiService.kt      # Contratos Retrofit con Bearer JWT automático
+│   ├── mapper/
+│   │   └── FleetMappers.kt             # Mappers bidireccionales DTO <-> Dominio
 │   ├── repository/
 │   │   └── FleetRepositoryImpl.kt      # Implementación con safeApiCall y DispatcherProvider
 │   └── di/
