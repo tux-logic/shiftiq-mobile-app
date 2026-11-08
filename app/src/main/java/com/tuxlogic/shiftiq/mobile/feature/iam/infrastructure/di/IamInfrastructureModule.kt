@@ -1,7 +1,7 @@
-package com.tuxlogic.shiftiq.mobile.feature.iam.data.di
+package com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.api.AuthApiService
-import com.tuxlogic.shiftiq.mobile.feature.iam.data.repository.AuthRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.remote.api.AuthApiService
+import com.tuxlogic.shiftiq.mobile.feature.iam.infrastructure.repository.AuthRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.iam.domain.repository.AuthRepository
 import dagger.Binds
 import dagger.Module

@@ -21,7 +21,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQLoadingSc
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.navigation.AppDestination
-import com.tuxlogic.shiftiq.mobile.feature.iam.domain.usecase.LogoutUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LogoutUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.branch.BranchSelectionScreen
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.branch.BranchSelectionViewModel
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.dashboard.RoleDashboardScreen
