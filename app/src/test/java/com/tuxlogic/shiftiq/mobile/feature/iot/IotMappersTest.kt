@@ -1,12 +1,12 @@
 package com.tuxlogic.shiftiq.mobile.feature.iot
 
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.mapper.toDto
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.remote.dto.DeviceRegistrationResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.remote.dto.DtcAlertResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.remote.dto.Obd2DeviceResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.remote.dto.TelemetrySnapshotResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.iot.data.remote.dto.VehicleResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.mapper.toDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.DeviceRegistrationResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.DtcAlertResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.Obd2DeviceResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.TelemetrySnapshotResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.VehicleResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.BatchDtcItem
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DeviceId
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DeviceStatus

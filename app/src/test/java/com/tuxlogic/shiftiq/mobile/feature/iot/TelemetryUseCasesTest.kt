@@ -14,11 +14,11 @@ import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.TelemetryBatch
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.TelemetryBatchItem
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.TelemetrySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.repository.IotRepository
-import com.tuxlogic.shiftiq.mobile.feature.iot.domain.usecase.telemetry.GetDeviceTelemetryHistoryUseCase
-import com.tuxlogic.shiftiq.mobile.feature.iot.domain.usecase.telemetry.GetLatestTelemetrySnapshotUseCase
-import com.tuxlogic.shiftiq.mobile.feature.iot.domain.usecase.telemetry.GetVehicleDtcAlertsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.iot.domain.usecase.telemetry.GetVehicleTelemetryHistoryUseCase
-import com.tuxlogic.shiftiq.mobile.feature.iot.domain.usecase.telemetry.IngestTelemetryBatchUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetDeviceTelemetryHistoryUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetLatestTelemetrySnapshotUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetVehicleDtcAlertsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetVehicleTelemetryHistoryUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.IngestTelemetryBatchUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
