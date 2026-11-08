@@ -1,11 +1,11 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.repository
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.IdentityValidationApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.IdentityValidationApiService
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentData
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentType
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.IdentityValidationRepository

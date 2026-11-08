@@ -1,11 +1,11 @@
 package com.tuxlogic.shiftiq.mobile.feature.shared
 
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.HealthResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.IdentityValidationResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.MediaUploadResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.RootPingResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentData
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.HealthResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.IdentityValidationResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.MediaUploadResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.RootPingResourceDto
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
