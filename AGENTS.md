@@ -35,3 +35,7 @@ All versions, plugins, and libraries live in `gradle/libs.versions.toml` and are
 - `MainActivity` is `@AndroidEntryPoint` with Material3 `ShiftIQTheme`.
 - Foundation packages implemented in `app/src/main/java/com/tuxlogic/shiftiq/mobile/core/` (`common`, `model`, `datastore`, `network`, `designsystem`, `navigation`).
 - R8 keep rules go in `app/src/main/keepRules/*.keep`.
+
+## Language Standard
+
+- All code, comments, KDocs/docstrings, validation/error messages, test suites, test fixtures, and git commits must be written in English by default. Do not use Spanish in code unless explicitly requested.
