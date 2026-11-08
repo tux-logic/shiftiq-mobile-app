@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.vouchers
+package com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.vouchers
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult

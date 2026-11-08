@@ -1,15 +1,15 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.api
+package com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.api
 
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.CreateQuoteRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.DirectCheckoutRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.EmitVoucherRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.MercadoPagoCheckoutRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.MercadoPagoPreferenceRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.MercadoPagoPreferenceResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.QuoteResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.RegisterPaymentRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.UpdateQuoteDiscountRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.VoucherResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.CreateQuoteRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.DirectCheckoutRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.EmitVoucherRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.MercadoPagoCheckoutRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.MercadoPagoPreferenceRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.MercadoPagoPreferenceResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.QuoteResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.RegisterPaymentRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.UpdateQuoteDiscountRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.VoucherResourceDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

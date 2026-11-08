@@ -12,9 +12,9 @@ import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherId
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherStatus
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherType
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.repository.BillingRepository
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.payments.ConfirmMercadoPagoCheckoutUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.payments.CreateMercadoPagoPreferenceUseCase
-import com.tuxlogic.shiftiq.mobile.feature.billing.domain.usecase.payments.DirectCheckoutUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.payments.ConfirmMercadoPagoCheckoutUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.payments.CreateMercadoPagoPreferenceUseCase
+import com.tuxlogic.shiftiq.mobile.feature.billing.application.usecase.payments.DirectCheckoutUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

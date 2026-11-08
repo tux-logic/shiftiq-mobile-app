@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto
+package com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

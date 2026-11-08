@@ -1,12 +1,12 @@
-package com.tuxlogic.shiftiq.mobile.feature.billing.data.mapper
+package com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Money
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.MercadoPagoPreferenceResponseDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.PaymentDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.QuoteItemDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.QuoteResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.billing.data.remote.dto.VoucherResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.MercadoPagoPreferenceResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.PaymentDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.QuoteItemDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.QuoteResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.billing.infrastructure.remote.dto.VoucherResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.DocumentType
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.Payment
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.PaymentId
