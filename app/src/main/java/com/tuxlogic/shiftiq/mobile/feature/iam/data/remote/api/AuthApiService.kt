@@ -1,21 +1,40 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.api
 
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.AuthenticatedUserResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.GoogleSignInRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.MessageResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.PasswordRecoveryRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.PasswordResetRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.RefreshTokenRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SendOtpRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SendOtpResponseDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignInRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.SignUpRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.TokenResponseDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UpdateEmailRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UpdatePasswordRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.UserResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.VerifyOtpRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iam.data.remote.dto.VerifyOtpResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface AuthApiService {
 
     @POST("api/v1/authentication/sessions")
     suspend fun login(
         @Body request: SignInRequestDto
+    ): Response<AuthenticatedUserResponseDto>
+
+    @POST("api/v1/authentication/sessions/google")
+    suspend fun loginWithGoogle(
+        @Body request: GoogleSignInRequestDto
     ): Response<AuthenticatedUserResponseDto>
 
     @POST("api/v1/authentication/sessions/refresh")
@@ -28,8 +47,50 @@ interface AuthApiService {
         @Body request: RefreshTokenRequestDto
     ): Response<Unit>
 
+    @POST("api/v1/authentication/otp/send")
+    suspend fun sendOtp(
+        @Body request: SendOtpRequestDto
+    ): Response<SendOtpResponseDto>
+
+    @POST("api/v1/authentication/otp/verify")
+    suspend fun verifyOtp(
+        @Body request: VerifyOtpRequestDto
+    ): Response<VerifyOtpResponseDto>
+
+    @POST("api/v1/authentication/password-recoveries")
+    suspend fun requestPasswordRecovery(
+        @Body request: PasswordRecoveryRequestDto
+    ): Response<Unit>
+
+    @POST("api/v1/authentication/password-resets")
+    suspend fun resetPassword(
+        @Body request: PasswordResetRequestDto
+    ): Response<MessageResponseDto>
+
     @POST("api/v1/users")
     suspend fun register(
         @Body request: SignUpRequestDto
     ): Response<UserResourceDto>
+
+    @GET("api/v1/users/{userId}")
+    suspend fun getUserById(
+        @Path("userId") userId: String
+    ): Response<UserResourceDto>
+
+    @GET("api/v1/users")
+    suspend fun getUserByEmail(
+        @Query("email") email: String
+    ): Response<UserResourceDto>
+
+    @PUT("api/v1/users/{userId}/email")
+    suspend fun updateEmail(
+        @Path("userId") userId: String,
+        @Body request: UpdateEmailRequestDto
+    ): Response<AuthenticatedUserResponseDto>
+
+    @PUT("api/v1/users/{userId}/password")
+    suspend fun updatePassword(
+        @Path("userId") userId: String,
+        @Body request: UpdatePasswordRequestDto
+    ): Response<MessageResponseDto>
 }
