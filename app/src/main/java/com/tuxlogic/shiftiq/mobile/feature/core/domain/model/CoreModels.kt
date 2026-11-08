@@ -30,6 +30,16 @@ data class WorkshopSpecialty(
     val active: Boolean = true
 )
 
+data class SpecialtyRevision(
+    val id: String,
+    val specialtyId: String,
+    val fieldName: String,
+    val oldValue: String? = null,
+    val newValue: String? = null,
+    val changedBy: String? = null,
+    val changedAt: String? = null
+)
+
 data class BranchSubscription(
     val id: String,
     val branchId: BranchId,

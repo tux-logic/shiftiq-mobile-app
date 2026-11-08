@@ -8,6 +8,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.DocumentProfileLookup
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.EmployeeProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.OwnerProfile
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.SpecialtyRevision
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.UnifiedProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Workshop
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.WorkshopSpecialty
@@ -48,6 +49,7 @@ interface CoreRepository {
         description: String?
     ): AppResult<WorkshopSpecialty>
     suspend fun deleteSpecialty(workshopId: String, specialtyId: String): AppResult<Unit>
+    suspend fun getSpecialtyHistory(workshopId: String, specialtyId: String): AppResult<List<SpecialtyRevision>>
 
     // === Branches ===
     suspend fun getBranches(workshopId: String): AppResult<List<Branch>>
