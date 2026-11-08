@@ -50,6 +50,8 @@ interface WorkOrderRepository {
     suspend fun updateTask(
         workOrderId: WorkOrderId,
         taskId: TaskId,
+        serviceId: ServiceId? = null,
+        assignedMechanicId: EmployeeId? = null,
         description: String? = null,
         evidenceImages: List<String>? = null
     ): AppResult<WorkOrder>

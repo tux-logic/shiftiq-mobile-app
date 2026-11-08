@@ -132,6 +132,8 @@ class WorkOrderRepositoryImpl @Inject constructor(
     override suspend fun updateTask(
         workOrderId: WorkOrderId,
         taskId: TaskId,
+        serviceId: ServiceId?,
+        assignedMechanicId: EmployeeId?,
         description: String?,
         evidenceImages: List<String>?
     ): AppResult<WorkOrder> = withContext(dispatchers.io) {
@@ -140,6 +142,8 @@ class WorkOrderRepositoryImpl @Inject constructor(
                 id = workOrderId.toString(),
                 taskId = taskId.toString(),
                 request = UpdateTaskRequestDto(
+                    serviceId = serviceId?.toString(),
+                    assignedMechanicId = assignedMechanicId?.toString(),
                     description = description,
                     evidenceImages = evidenceImages
                 )

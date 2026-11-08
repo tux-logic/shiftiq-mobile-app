@@ -19,6 +19,7 @@ import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.AssignMecha
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.CompleteTaskUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.CompleteWorkOrderUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.CreateWorkOrderUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.DeleteTaskUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.DeleteWorkOrderUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.GetWorkOrderByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.GetWorkOrdersUseCase
@@ -27,6 +28,7 @@ import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.ReopenTaskU
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.ReserveProductForTaskUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.StartTaskUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.UpdateTaskProductQuantityUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.UpdateTaskUseCase
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.UpdateWorkOrderUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,6 +60,8 @@ class WorkOrderUseCasesTest {
     private lateinit var reserveProductForTaskUseCase: ReserveProductForTaskUseCase
     private lateinit var updateTaskProductQuantityUseCase: UpdateTaskProductQuantityUseCase
     private lateinit var removeProductFromTaskUseCase: RemoveProductFromTaskUseCase
+    private lateinit var updateTaskUseCase: UpdateTaskUseCase
+    private lateinit var deleteTaskUseCase: DeleteTaskUseCase
 
     private val branchId = BranchId(UUID.randomUUID())
     private val vehicleId = VehicleId(UUID.randomUUID())
@@ -104,6 +108,8 @@ class WorkOrderUseCasesTest {
         reserveProductForTaskUseCase = ReserveProductForTaskUseCase(workOrderRepository)
         updateTaskProductQuantityUseCase = UpdateTaskProductQuantityUseCase(workOrderRepository)
         removeProductFromTaskUseCase = RemoveProductFromTaskUseCase(workOrderRepository)
+        updateTaskUseCase = UpdateTaskUseCase(workOrderRepository)
+        deleteTaskUseCase = DeleteTaskUseCase(workOrderRepository)
     }
 
     // --- CreateWorkOrderUseCase Tests ---
@@ -417,5 +423,80 @@ class WorkOrderUseCasesTest {
 
         assertTrue(result is AppResult.Success)
         coVerify(exactly = 1) { workOrderRepository.removeProduct(taskId, productId) }
+    }
+
+    // --- UpdateTaskUseCase & DeleteTaskUseCase Tests ---
+
+    @Test
+    fun `updateTask with short description returns validation error`() = runTest {
+        val result = updateTaskUseCase(
+            workOrderId = workOrderId,
+            taskId = taskId,
+            description = "Short"
+        )
+
+        assertTrue(result is AppResult.Failure)
+        val error = (result as AppResult.Failure).error
+        assertTrue(error is AppError.Validation)
+        assertEquals("description", (error as AppError.Validation).details)
+    }
+
+    @Test
+    fun `updateTask with valid inputs delegates to repository and returns updated order`() = runTest {
+        coEvery {
+            workOrderRepository.updateTask(
+                workOrderId = workOrderId,
+                taskId = taskId,
+                serviceId = serviceId,
+                assignedMechanicId = employeeId,
+                description = "Updated comprehensive diagnostic and brake alignment",
+                evidenceImages = listOf("https://storage.shiftiq.com/evidence2.jpg")
+            )
+        } returns AppResult.Success(dummyWorkOrder)
+
+        val result = updateTaskUseCase(
+            workOrderId = workOrderId,
+            taskId = taskId,
+            serviceId = serviceId,
+            assignedMechanicId = employeeId,
+            description = "Updated comprehensive diagnostic and brake alignment",
+            evidenceImages = listOf("https://storage.shiftiq.com/evidence2.jpg")
+        )
+
+        assertTrue(result is AppResult.Success)
+        assertEquals(dummyWorkOrder, (result as AppResult.Success).data)
+        coVerify(exactly = 1) {
+            workOrderRepository.updateTask(
+                workOrderId = workOrderId,
+                taskId = taskId,
+                serviceId = serviceId,
+                assignedMechanicId = employeeId,
+                description = "Updated comprehensive diagnostic and brake alignment",
+                evidenceImages = listOf("https://storage.shiftiq.com/evidence2.jpg")
+            )
+        }
+    }
+
+    @Test
+    fun `deleteTask with valid inputs delegates to repository and returns success`() = runTest {
+        coEvery {
+            workOrderRepository.deleteTask(
+                workOrderId = workOrderId,
+                taskId = taskId
+            )
+        } returns AppResult.Success(Unit)
+
+        val result = deleteTaskUseCase(
+            workOrderId = workOrderId,
+            taskId = taskId
+        )
+
+        assertTrue(result is AppResult.Success)
+        coVerify(exactly = 1) {
+            workOrderRepository.deleteTask(
+                workOrderId = workOrderId,
+                taskId = taskId
+            )
+        }
     }
 }
