@@ -1,11 +1,11 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.repository
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.HealthApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.HealthApiService
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.SystemHealth
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.HealthRepository
 import kotlinx.coroutines.withContext

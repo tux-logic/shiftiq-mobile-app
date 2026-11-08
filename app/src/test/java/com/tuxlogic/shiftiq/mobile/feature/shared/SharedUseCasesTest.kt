@@ -9,9 +9,9 @@ import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.UploadedMedia
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.HealthRepository
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.IdentityValidationRepository
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.MediaRepository
-import com.tuxlogic.shiftiq.mobile.feature.shared.domain.usecase.CheckHealthUseCase
-import com.tuxlogic.shiftiq.mobile.feature.shared.domain.usecase.LookupIdentityDocumentUseCase
-import com.tuxlogic.shiftiq.mobile.feature.shared.domain.usecase.UploadImageUseCase
+import com.tuxlogic.shiftiq.mobile.feature.shared.application.usecase.CheckHealthUseCase
+import com.tuxlogic.shiftiq.mobile.feature.shared.application.usecase.LookupIdentityDocumentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.shared.application.usecase.UploadImageUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

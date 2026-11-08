@@ -1,6 +1,6 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api
 
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.MediaUploadResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.MediaUploadResourceDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response

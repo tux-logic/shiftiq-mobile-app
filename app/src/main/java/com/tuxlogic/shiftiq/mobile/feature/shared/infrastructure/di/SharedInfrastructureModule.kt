@@ -1,14 +1,14 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.di
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.HealthApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.IdentityValidationApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.MediaApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.HealthRepositoryImpl
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.IdentityValidationRepositoryImpl
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.MediaRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.HealthRepository
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.IdentityValidationRepository
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.repository.MediaRepository
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.HealthApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.IdentityValidationApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.MediaApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.HealthRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.IdentityValidationRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.MediaRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SharedDataModule {
+abstract class SharedInfrastructureModule {
 
     @Binds
     @Singleton

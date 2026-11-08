@@ -1,6 +1,6 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api
 
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.IdentityValidationResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.IdentityValidationResourceDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query

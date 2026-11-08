@@ -1,9 +1,9 @@
-package com.tuxlogic.shiftiq.mobile.feature.shared.data.mapper
+package com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.mapper
 
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.HealthResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.IdentityValidationResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.MediaUploadResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.RootPingResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.HealthResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.IdentityValidationResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.MediaUploadResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.RootPingResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentData
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentType
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.SystemHealth

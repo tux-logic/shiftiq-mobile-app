@@ -2,16 +2,16 @@ package com.tuxlogic.shiftiq.mobile.feature.shared
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.HealthApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.IdentityValidationApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.api.MediaApiService
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.HealthResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.IdentityValidationResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.MediaUploadResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.remote.dto.RootPingResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.HealthRepositoryImpl
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.IdentityValidationRepositoryImpl
-import com.tuxlogic.shiftiq.mobile.feature.shared.data.repository.MediaRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.HealthApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.IdentityValidationApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.api.MediaApiService
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.HealthResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.IdentityValidationResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.MediaUploadResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.remote.dto.RootPingResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.HealthRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.IdentityValidationRepositoryImpl
+import com.tuxlogic.shiftiq.mobile.feature.shared.infrastructure.repository.MediaRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentData
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentType
 import io.mockk.coEvery
