@@ -1,7 +1,9 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase
 
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.repository.FleetRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -18,6 +20,14 @@ class GetEmployeeRegistrationsUseCase @Inject constructor(
     }
 }
 
+class GetEmployeeRegistrationByIdUseCase @Inject constructor(
+    private val repository: FleetRepository
+) {
+    suspend operator fun invoke(id: UUID): AppResult<EmployeeRegistration> {
+        return repository.getEmployeeRegistrationById(id)
+    }
+}
+
 class CreateEmployeeRegistrationUseCase @Inject constructor(
     private val repository: FleetRepository
 ) {
@@ -29,13 +39,21 @@ class CreateEmployeeRegistrationUseCase @Inject constructor(
         salary: Double,
         role: String?
     ): AppResult<EmployeeRegistration> {
+        val trimmedSpeciality = speciality.trim()
+        if (trimmedSpeciality.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "speciality", message = "Specialty code is required"))
+        }
+        if (salary < 0) {
+            return AppResult.Failure(AppError.Validation(details = "salary", message = "Salary cannot be negative"))
+        }
+
         return repository.createEmployeeRegistration(
             employeeId = employeeId,
             branchId = branchId,
-            speciality = speciality,
-            specialityName = specialityName,
+            speciality = trimmedSpeciality,
+            specialityName = specialityName?.trim(),
             salary = salary,
-            role = role
+            role = role?.trim()
         )
     }
 }
@@ -50,11 +68,14 @@ class RequestEmployeeJoinUseCase @Inject constructor(
         specialityName: String?,
         salary: Double?
     ): AppResult<EmployeeRegistration> {
+        if (salary != null && salary < 0) {
+            return AppResult.Failure(AppError.Validation(details = "salary", message = "Desired salary cannot be negative"))
+        }
         return repository.requestEmployeeJoin(
             employeeId = employeeId,
             branchId = branchId,
-            speciality = speciality,
-            specialityName = specialityName,
+            speciality = speciality?.trim(),
+            specialityName = specialityName?.trim(),
             salary = salary
         )
     }
@@ -72,6 +93,47 @@ class RejectEmployeeRegistrationUseCase @Inject constructor(
     private val repository: FleetRepository
 ) {
     suspend operator fun invoke(id: UUID, reason: String? = null): AppResult<EmployeeRegistration> {
-        return repository.rejectEmployeeRegistration(id, reason)
+        return repository.rejectEmployeeRegistration(id, reason?.trim())
+    }
+}
+
+class UpdateEmployeeRegistrationUseCase @Inject constructor(
+    private val repository: FleetRepository
+) {
+    suspend operator fun invoke(
+        id: UUID,
+        speciality: String,
+        specialityName: String?,
+        salary: Double
+    ): AppResult<EmployeeRegistration> {
+        val trimmedSpeciality = speciality.trim()
+        if (trimmedSpeciality.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "speciality", message = "Specialty code is required"))
+        }
+        if (salary < 0) {
+            return AppResult.Failure(AppError.Validation(details = "salary", message = "Salary cannot be negative"))
+        }
+        return repository.updateEmployeeRegistration(
+            id = id,
+            speciality = trimmedSpeciality,
+            specialityName = specialityName?.trim(),
+            salary = salary
+        )
+    }
+}
+
+class DeleteEmployeeRegistrationUseCase @Inject constructor(
+    private val repository: FleetRepository
+) {
+    suspend operator fun invoke(id: UUID): AppResult<Unit> {
+        return repository.deleteEmployeeRegistration(id)
+    }
+}
+
+class GetStaffCareerHistoryUseCase @Inject constructor(
+    private val repository: FleetRepository
+) {
+    suspend operator fun invoke(branchId: UUID, employeeId: UUID): AppResult<List<StaffCareerHistory>> {
+        return repository.getStaffCareerHistory(branchId, employeeId)
     }
 }

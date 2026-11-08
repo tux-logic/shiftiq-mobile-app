@@ -8,7 +8,10 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.CustomerRegistr
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.EmployeeRegistrationDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.RejectEmployeeRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.RequestEmployeeJoinRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.StaffCareerHistoryDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateAppointmentRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateCustomerRegistrationRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.data.remote.dto.UpdateEmployeeRegistrationRequestDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -18,12 +21,9 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/**
- * Servicio Retrofit para endpoints del contexto Fleet en ShiftIQ Platform.
- */
 interface FleetApiService {
 
-    // === Citas (Appointments) ===
+    // === Appointments ===
 
     @GET("api/v1/appointments")
     suspend fun getAppointments(
@@ -54,7 +54,7 @@ interface FleetApiService {
         @Path("appointmentId") appointmentId: String
     ): Response<Unit>
 
-    // === Personal Técnico (Employee Registrations) ===
+    // === Technical Staff (Employee Registrations) ===
 
     @GET("api/v1/employee-registrations")
     suspend fun getEmployeeRegistrations(
@@ -89,7 +89,24 @@ interface FleetApiService {
         @Body request: RejectEmployeeRegistrationRequestDto
     ): Response<EmployeeRegistrationDto>
 
-    // === Clientes Vinculados (Customer Registrations) ===
+    @PUT("api/v1/employee-registrations/{id}")
+    suspend fun updateEmployeeRegistration(
+        @Path("id") id: String,
+        @Body request: UpdateEmployeeRegistrationRequestDto
+    ): Response<EmployeeRegistrationDto>
+
+    @DELETE("api/v1/employee-registrations/{id}")
+    suspend fun deleteEmployeeRegistration(
+        @Path("id") id: String
+    ): Response<Unit>
+
+    @GET("api/v1/branches/{branchId}/employees/{employeeId}/history")
+    suspend fun getStaffCareerHistory(
+        @Path("branchId") branchId: String,
+        @Path("employeeId") employeeId: String
+    ): Response<List<StaffCareerHistoryDto>>
+
+    // === Linked Customers (Customer Registrations) ===
 
     @GET("api/v1/customer-registrations")
     suspend fun getCustomerRegistrations(
@@ -98,8 +115,24 @@ interface FleetApiService {
         @Query("customerId") customerId: String? = null
     ): Response<List<CustomerRegistrationDto>>
 
+    @GET("api/v1/customer-registrations/{registrationId}")
+    suspend fun getCustomerRegistrationById(
+        @Path("registrationId") registrationId: String
+    ): Response<CustomerRegistrationDto>
+
     @POST("api/v1/customer-registrations")
     suspend fun createCustomerRegistration(
         @Body request: CreateCustomerRegistrationRequestDto
     ): Response<CustomerRegistrationDto>
+
+    @PUT("api/v1/customer-registrations/{registrationId}")
+    suspend fun updateCustomerRegistration(
+        @Path("registrationId") registrationId: String,
+        @Body request: UpdateCustomerRegistrationRequestDto
+    ): Response<CustomerRegistrationDto>
+
+    @DELETE("api/v1/customer-registrations/{registrationId}")
+    suspend fun deleteCustomerRegistration(
+        @Path("registrationId") registrationId: String
+    ): Response<Unit>
 }
