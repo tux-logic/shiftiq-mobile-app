@@ -18,12 +18,12 @@ class UpdateServiceUseCase @Inject constructor(
         val trimmedName = name.trim()
         if (trimmedName.isBlank()) {
             return AppResult.Failure(
-                AppError.Validation(details = "name", message = "El nombre del servicio es requerido")
+                AppError.Validation(details = "name", message = "Service name is required")
             )
         }
         if (price < 0.0) {
             return AppResult.Failure(
-                AppError.Validation(details = "price", message = "El precio del servicio no puede ser negativo")
+                AppError.Validation(details = "price", message = "Service price cannot be negative")
             )
         }
         return servicesRepository.updateService(serviceId, trimmedName, price)

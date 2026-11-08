@@ -61,7 +61,7 @@ class OperationsRepositoriesTest {
     private val sampleServiceDto = ServiceResourceDto(
         id = UUID.randomUUID().toString(),
         branchId = branchUuid.toString(),
-        name = "Alineación y Balanceo",
+        name = "Wheel Alignment and Balancing",
         price = 75.0
     )
 
@@ -74,7 +74,7 @@ class OperationsRepositoriesTest {
         internalNumber = 50,
         formattedNumber = "OT-00050",
         status = "PENDING",
-        diagnosticSummary = "Frenos desgastados",
+        diagnosticSummary = "Worn brake pads",
         mileageIn = 60000,
         totalAmount = 180.0,
         tasks = emptyList(),
@@ -99,7 +99,7 @@ class OperationsRepositoriesTest {
         assertTrue(result is AppResult.Success)
         val data = (result as AppResult.Success).data
         assertEquals(1, data.size)
-        assertEquals("Alineación y Balanceo", data[0].name)
+        assertEquals("Wheel Alignment and Balancing", data[0].name)
     }
 
     @Test
@@ -125,7 +125,7 @@ class OperationsRepositoriesTest {
             branchId = branchId,
             vehicleId = vehicleId,
             customerId = customerId,
-            diagnosticSummary = "Frenos desgastados",
+            diagnosticSummary = "Worn brake pads",
             mileageIn = 60000,
             entryInspectionImages = emptyList()
         )

@@ -43,7 +43,7 @@ class ServicesUseCasesTest {
     @Test
     fun `getServices returns list when repository succeeds`() = runTest {
         val expected = listOf(
-            ServiceItem(id = serviceId, branchId = branchId, name = "Alineación", price = Money(80.0))
+            ServiceItem(id = serviceId, branchId = branchId, name = "Wheel Alignment", price = Money(80.0))
         )
         coEvery { servicesRepository.getServices(branchId) } returns AppResult.Success(expected)
 
@@ -67,7 +67,7 @@ class ServicesUseCasesTest {
 
     @Test
     fun `createService with negative price returns validation error`() = runTest {
-        val result = createServiceUseCase(branchId, name = "Cambio de Aceite", price = -10.0)
+        val result = createServiceUseCase(branchId, name = "Oil Change", price = -10.0)
 
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
@@ -78,14 +78,14 @@ class ServicesUseCasesTest {
 
     @Test
     fun `createService with valid data calls repository and returns created item`() = runTest {
-        val expected = ServiceItem(id = serviceId, branchId = branchId, name = "Cambio de Aceite", price = Money(120.0))
-        coEvery { servicesRepository.createService(branchId, "Cambio de Aceite", 120.0) } returns AppResult.Success(expected)
+        val expected = ServiceItem(id = serviceId, branchId = branchId, name = "Oil Change", price = Money(120.0))
+        coEvery { servicesRepository.createService(branchId, "Oil Change", 120.0) } returns AppResult.Success(expected)
 
-        val result = createServiceUseCase(branchId, name = "Cambio de Aceite", price = 120.0)
+        val result = createServiceUseCase(branchId, name = "Oil Change", price = 120.0)
 
         assertTrue(result is AppResult.Success)
         assertEquals(expected, (result as AppResult.Success).data)
-        coVerify(exactly = 1) { servicesRepository.createService(branchId, "Cambio de Aceite", 120.0) }
+        coVerify(exactly = 1) { servicesRepository.createService(branchId, "Oil Change", 120.0) }
     }
 
     @Test
@@ -101,7 +101,7 @@ class ServicesUseCasesTest {
 
     @Test
     fun `updateService with negative price returns validation error`() = runTest {
-        val result = updateServiceUseCase(serviceId, name = "Mantenimiento", price = -5.0)
+        val result = updateServiceUseCase(serviceId, name = "Maintenance", price = -5.0)
 
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
@@ -112,14 +112,14 @@ class ServicesUseCasesTest {
 
     @Test
     fun `updateService with valid data calls repository`() = runTest {
-        val expected = ServiceItem(id = serviceId, branchId = branchId, name = "Mantenimiento Pro", price = 150.0.let { Money(it) })
-        coEvery { servicesRepository.updateService(serviceId, "Mantenimiento Pro", 150.0) } returns AppResult.Success(expected)
+        val expected = ServiceItem(id = serviceId, branchId = branchId, name = "Maintenance Pro", price = 150.0.let { Money(it) })
+        coEvery { servicesRepository.updateService(serviceId, "Maintenance Pro", 150.0) } returns AppResult.Success(expected)
 
-        val result = updateServiceUseCase(serviceId, name = "Mantenimiento Pro", price = 150.0)
+        val result = updateServiceUseCase(serviceId, name = "Maintenance Pro", price = 150.0)
 
         assertTrue(result is AppResult.Success)
         assertEquals(expected, (result as AppResult.Success).data)
-        coVerify(exactly = 1) { servicesRepository.updateService(serviceId, "Mantenimiento Pro", 150.0) }
+        coVerify(exactly = 1) { servicesRepository.updateService(serviceId, "Maintenance Pro", 150.0) }
     }
 
     @Test

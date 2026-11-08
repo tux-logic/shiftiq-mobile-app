@@ -77,7 +77,7 @@ class WorkOrderUseCasesTest {
         internalNumber = 101,
         formattedNumber = "OT-00101",
         status = WorkOrderStatus.PENDING,
-        diagnosticSummary = "Revisión general de frenos",
+        diagnosticSummary = "General brake inspection",
         mileageIn = 45000,
         totalAmount = Money(250.0),
         tasks = emptyList(),
@@ -151,7 +151,7 @@ class WorkOrderUseCasesTest {
             branchId = branchId,
             vehicleId = vehicleId,
             customerId = customerId,
-            diagnosticSummary = "Cambio de bujías",
+            diagnosticSummary = "Spark plug replacement",
             mileageIn = -5
         )
 
@@ -170,7 +170,7 @@ class WorkOrderUseCasesTest {
                 branchId = branchId,
                 vehicleId = vehicleId,
                 customerId = customerId,
-                diagnosticSummary = "Revisión general de frenos",
+                diagnosticSummary = "General brake inspection",
                 mileageIn = 45000,
                 entryInspectionImages = listOf("https://storage.shiftiq.com/img1.jpg")
             )
@@ -181,7 +181,7 @@ class WorkOrderUseCasesTest {
             branchId = branchId,
             vehicleId = vehicleId,
             customerId = customerId,
-            diagnosticSummary = "Revisión general de frenos",
+            diagnosticSummary = "General brake inspection",
             mileageIn = 45000,
             entryInspectionImages = listOf("https://storage.shiftiq.com/img1.jpg")
         )
@@ -194,7 +194,7 @@ class WorkOrderUseCasesTest {
                 branchId = branchId,
                 vehicleId = vehicleId,
                 customerId = customerId,
-                diagnosticSummary = "Revisión general de frenos",
+                diagnosticSummary = "General brake inspection",
                 mileageIn = 45000,
                 entryInspectionImages = listOf("https://storage.shiftiq.com/img1.jpg")
             )
@@ -216,7 +216,7 @@ class WorkOrderUseCasesTest {
 
     @Test
     fun `updateWorkOrder with negative mileage returns validation error`() = runTest {
-        val result = updateWorkOrderUseCase(workOrderId, diagnosticSummary = "Nuevo diagnóstico", mileageIn = -1)
+        val result = updateWorkOrderUseCase(workOrderId, diagnosticSummary = "Updated diagnostic", mileageIn = -1)
 
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
@@ -228,15 +228,15 @@ class WorkOrderUseCasesTest {
     @Test
     fun `updateWorkOrder with valid inputs calls repository`() = runTest {
         coEvery {
-            workOrderRepository.updateWorkOrder(workOrderId, "Diagnóstico actualizado", 50000)
+            workOrderRepository.updateWorkOrder(workOrderId, "Updated diagnostic summary", 50000)
         } returns AppResult.Success(dummyWorkOrder)
 
-        val result = updateWorkOrderUseCase(workOrderId, "Diagnóstico actualizado", 50000)
+        val result = updateWorkOrderUseCase(workOrderId, "Updated diagnostic summary", 50000)
 
         assertTrue(result is AppResult.Success)
         assertEquals(dummyWorkOrder, (result as AppResult.Success).data)
         coVerify(exactly = 1) {
-            workOrderRepository.updateWorkOrder(workOrderId, "Diagnóstico actualizado", 50000)
+            workOrderRepository.updateWorkOrder(workOrderId, "Updated diagnostic summary", 50000)
         }
     }
 
@@ -307,7 +307,7 @@ class WorkOrderUseCasesTest {
 
     @Test
     fun `addTask with valid description calls repository`() = runTest {
-        val validDescription = "Cambio de filtro de aire y aceite"
+        val validDescription = "Air and oil filter replacement"
         coEvery {
             workOrderRepository.addTask(workOrderId, serviceId, employeeId, validDescription, emptyList())
         } returns AppResult.Success(dummyWorkOrder)

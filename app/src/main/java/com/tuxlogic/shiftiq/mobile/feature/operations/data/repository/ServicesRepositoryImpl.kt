@@ -31,7 +31,7 @@ class ServicesRepositoryImpl @Inject constructor(
                 return@withContext AppResult.Failure(
                     AppError.Validation(
                         details = "branchId",
-                        message = "No hay una sede activa seleccionada"
+                        message = "No active branch selected"
                     )
                 )
             }

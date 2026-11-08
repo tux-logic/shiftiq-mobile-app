@@ -24,7 +24,7 @@ class AddTaskToWorkOrderUseCase @Inject constructor(
             return AppResult.Failure(
                 AppError.Validation(
                     details = "description",
-                    message = "La descripción de la tarea debe tener al menos 10 caracteres"
+                    message = "Task description must be at least 10 characters long"
                 )
             )
         }

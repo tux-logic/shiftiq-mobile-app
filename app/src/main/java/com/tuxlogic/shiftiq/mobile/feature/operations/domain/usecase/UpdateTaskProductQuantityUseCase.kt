@@ -18,7 +18,7 @@ class UpdateTaskProductQuantityUseCase @Inject constructor(
     ): AppResult<WorkOrder> {
         if (quantity <= 0) {
             return AppResult.Failure(
-                AppError.Validation(details = "quantity", message = "La cantidad debe ser mayor a 0")
+                AppError.Validation(details = "quantity", message = "Quantity must be greater than 0")
             )
         }
         return workOrderRepository.updateProductQuantity(taskId, productId, quantity)

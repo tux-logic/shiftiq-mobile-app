@@ -29,7 +29,7 @@ fun ServiceResourceDto.toDomain(): ServiceItem = ServiceItem(
 
 fun TaskProductResourceDto.toDomain(): ReservedProduct = ReservedProduct(
     productId = ProductId(productId),
-    productName = productName ?: "Repuesto",
+    productName = productName ?: "Spare Part",
     quantity = quantity,
     unitPrice = Money(unitPrice),
     totalPrice = Money(totalPrice)

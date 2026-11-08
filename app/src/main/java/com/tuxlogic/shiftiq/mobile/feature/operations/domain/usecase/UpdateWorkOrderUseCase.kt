@@ -18,12 +18,12 @@ class UpdateWorkOrderUseCase @Inject constructor(
         val trimmedSummary = diagnosticSummary.trim()
         if (trimmedSummary.isBlank()) {
             return AppResult.Failure(
-                AppError.Validation(details = "diagnosticSummary", message = "El diagnóstico no puede estar vacío")
+                AppError.Validation(details = "diagnosticSummary", message = "Diagnostic summary cannot be blank")
             )
         }
         if (mileageIn < 0) {
             return AppResult.Failure(
-                AppError.Validation(details = "mileageIn", message = "El kilometraje no puede ser negativo")
+                AppError.Validation(details = "mileageIn", message = "Mileage in cannot be negative")
             )
         }
         return workOrderRepository.updateWorkOrder(id, trimmedSummary, mileageIn)

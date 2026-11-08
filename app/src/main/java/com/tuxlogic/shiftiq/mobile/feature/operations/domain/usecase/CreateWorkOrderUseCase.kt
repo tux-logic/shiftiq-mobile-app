@@ -23,18 +23,18 @@ class CreateWorkOrderUseCase @Inject constructor(
     ): AppResult<WorkOrder> {
         if (appointmentId.isBlank()) {
             return AppResult.Failure(
-                AppError.Validation(details = "appointmentId", message = "La cita asociada es requerida")
+                AppError.Validation(details = "appointmentId", message = "Associated appointment is required")
             )
         }
         val trimmedSummary = diagnosticSummary.trim()
         if (trimmedSummary.isBlank()) {
             return AppResult.Failure(
-                AppError.Validation(details = "diagnosticSummary", message = "El diagnóstico inicial es requerido")
+                AppError.Validation(details = "diagnosticSummary", message = "Initial diagnostic summary is required")
             )
         }
         if (mileageIn < 0) {
             return AppResult.Failure(
-                AppError.Validation(details = "mileageIn", message = "El kilometraje de entrada no puede ser negativo")
+                AppError.Validation(details = "mileageIn", message = "Mileage in cannot be negative")
             )
         }
         return workOrderRepository.createWorkOrder(

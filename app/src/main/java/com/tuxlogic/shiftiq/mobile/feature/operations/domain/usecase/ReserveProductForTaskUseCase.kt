@@ -18,7 +18,7 @@ class ReserveProductForTaskUseCase @Inject constructor(
     ): AppResult<WorkOrder> {
         if (quantity <= 0) {
             return AppResult.Failure(
-                AppError.Validation(details = "quantity", message = "La cantidad a reservar debe ser mayor a 0")
+                AppError.Validation(details = "quantity", message = "Reserved quantity must be greater than 0")
             )
         }
         return workOrderRepository.reserveProduct(taskId, productId, quantity)
