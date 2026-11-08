@@ -25,6 +25,8 @@ data class AddTaskRequestDto(
 )
 
 data class UpdateTaskRequestDto(
+    @SerializedName("serviceId") val serviceId: String? = null,
+    @SerializedName("assignedMechanicId") val assignedMechanicId: String? = null,
     @SerializedName("description") val description: String? = null,
     @SerializedName("evidenceImages") val evidenceImages: List<String>? = null
 )
