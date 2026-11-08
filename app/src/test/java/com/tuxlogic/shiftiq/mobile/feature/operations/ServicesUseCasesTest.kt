@@ -7,10 +7,10 @@ import com.tuxlogic.shiftiq.mobile.core.model.Money
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.ServiceId
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.ServiceItem
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.repository.ServicesRepository
-import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.CreateServiceUseCase
-import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.DeleteServiceUseCase
-import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.GetServicesUseCase
-import com.tuxlogic.shiftiq.mobile.feature.operations.domain.usecase.UpdateServiceUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.application.usecase.CreateServiceUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.application.usecase.DeleteServiceUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.application.usecase.GetServicesUseCase
+import com.tuxlogic.shiftiq.mobile.feature.operations.application.usecase.UpdateServiceUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
