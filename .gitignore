@@ -32,3 +32,9 @@ node_modules
 ### VS Code Protection ###
 .vscode/tasks.json
 .vscode/settings.json
+
+### Agent Skills & Config (Local) ###
+.agents/
+skills-lock.json
+.openspec/
+openspec/
