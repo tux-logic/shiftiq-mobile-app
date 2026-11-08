@@ -6,10 +6,10 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.ApproveEmployeeRegistrationUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.CreateEmployeeRegistrationUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.GetEmployeeRegistrationsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.usecase.RejectEmployeeRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.ApproveEmployeeRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.CreateEmployeeRegistrationUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetEmployeeRegistrationsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.RejectEmployeeRegistrationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
