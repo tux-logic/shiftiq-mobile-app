@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.analytics.data.repository
+package com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.repository
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
@@ -7,8 +7,8 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.api.AnalyticsApiService
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.api.AnalyticsApiService
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary

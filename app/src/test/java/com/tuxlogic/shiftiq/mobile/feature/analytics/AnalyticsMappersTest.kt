@@ -2,11 +2,11 @@ package com.tuxlogic.shiftiq.mobile.feature.analytics
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Money
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySnapshotResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySummaryResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.NetworkSummaryResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.AnalyticsSnapshotId
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySnapshotResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.NetworkSummaryResourceDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.UUID

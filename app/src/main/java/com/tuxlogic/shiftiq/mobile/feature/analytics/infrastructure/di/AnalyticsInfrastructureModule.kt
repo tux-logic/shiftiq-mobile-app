@@ -1,8 +1,8 @@
-package com.tuxlogic.shiftiq.mobile.feature.analytics.data.di
+package com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.di
 
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.api.AnalyticsApiService
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.repository.AnalyticsRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.repository.AnalyticsRepository
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.api.AnalyticsApiService
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.repository.AnalyticsRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AnalyticsDataModule {
+abstract class AnalyticsInfrastructureModule {
 
     @Binds
     @Singleton

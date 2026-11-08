@@ -9,9 +9,9 @@ import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySna
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.repository.AnalyticsRepository
-import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.usecase.GetBranchDailySummaryUseCase
-import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.usecase.GetBranchFinancialAnalyticsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.usecase.GetNetworkAnalyticsSummaryUseCase
+import com.tuxlogic.shiftiq.mobile.feature.analytics.application.usecase.GetBranchDailySummaryUseCase
+import com.tuxlogic.shiftiq.mobile.feature.analytics.application.usecase.GetBranchFinancialAnalyticsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.analytics.application.usecase.GetNetworkAnalyticsSummaryUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

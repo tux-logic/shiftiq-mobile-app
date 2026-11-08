@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.analytics.domain.usecase
+package com.tuxlogic.shiftiq.mobile.feature.analytics.application.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary

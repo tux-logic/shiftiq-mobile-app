@@ -1,10 +1,10 @@
-package com.tuxlogic.shiftiq.mobile.feature.analytics.data.mapper
+package com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Money
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySnapshotResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.BranchDailySummaryResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.analytics.data.remote.dto.NetworkSummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySnapshotResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.NetworkSummaryResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.AnalyticsSnapshotId
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
