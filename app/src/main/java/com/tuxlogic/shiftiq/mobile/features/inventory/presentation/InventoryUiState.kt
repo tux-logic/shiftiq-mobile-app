@@ -1,0 +1,3 @@
+package com.tuxlogic.shiftiq.mobile.features.inventory.presentation
+import com.tuxlogic.shiftiq.mobile.features.inventory.domain.model.*
+data class InventoryUiState(val isLoading:Boolean=true,val isSaving:Boolean=false,val isWorkshopUser:Boolean=false,val isProductLoading:Boolean=false,val workshops:List<InventoryWorkshop> = emptyList(),val branches:List<InventoryBranch> = emptyList(),val selectedBranchId:String?=null,val products:List<InventoryProduct> = emptyList(),val selectedProduct:InventoryProductDetails?=null,val searchQuery:String="",val categoryFilter:String="",val lowStockOnly:Boolean=false,val errorMessage:String?=null,val infoMessage:String?=null)

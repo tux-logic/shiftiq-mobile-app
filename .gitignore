@@ -25,5 +25,4 @@ local.properties
 node_modules
 
 ### VS Code Protection ###
-.vscode/tasks.json
-.vscode/settings.json
+config.bat

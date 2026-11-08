@@ -6,13 +6,12 @@ import androidx.room3.Upsert
 
 @Dao
 interface UserDao {
-
     @Query("SELECT * FROM users LIMIT 1")
     suspend fun getActiveUser(): UserEntity?
-
     @Upsert
     suspend fun insertUser(user: UserEntity)
-
     @Query("DELETE FROM users")
     suspend fun clearUsers()
+    @Query("SELECT role FROM users LIMIT 1")
+    suspend fun getActiveRole(): String?
 }
