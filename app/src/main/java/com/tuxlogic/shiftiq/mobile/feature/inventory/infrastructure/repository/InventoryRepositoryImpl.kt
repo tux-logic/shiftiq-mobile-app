@@ -1,4 +1,4 @@
-package com.tuxlogic.shiftiq.mobile.feature.inventory.data.repository
+package com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.repository
 
 import com.tuxlogic.shiftiq.mobile.core.common.dispatchers.DispatcherProvider
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
@@ -7,11 +7,11 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.map
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.network.safeApiCall
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.mapper.toDomain
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.api.InventoryApiService
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.AddBatchRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.CreateProductRequestDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.UpdateProductRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.mapper.toDomain
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.api.InventoryApiService
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.AddBatchRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.CreateProductRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.UpdateProductRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductDetail
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductId
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductItem

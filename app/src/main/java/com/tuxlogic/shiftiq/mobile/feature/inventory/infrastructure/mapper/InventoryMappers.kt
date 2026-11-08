@@ -1,10 +1,10 @@
-package com.tuxlogic.shiftiq.mobile.feature.inventory.data.mapper
+package com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Money
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.ProductBatchDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.ProductDetailResourceDto
-import com.tuxlogic.shiftiq.mobile.feature.inventory.data.remote.dto.ProductResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.ProductBatchDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.ProductDetailResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.inventory.infrastructure.remote.dto.ProductResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.BatchId
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductBatch
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductDetail

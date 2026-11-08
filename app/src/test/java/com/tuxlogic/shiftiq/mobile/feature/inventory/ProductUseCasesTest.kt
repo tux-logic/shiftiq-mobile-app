@@ -11,11 +11,11 @@ import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductId
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductItem
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.Sku
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.repository.InventoryRepository
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.usecase.CreateProductUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.usecase.DeleteProductUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.usecase.GetProductByIdUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.usecase.GetProductsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.usecase.UpdateProductUseCase
+import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.CreateProductUseCase
+import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.DeleteProductUseCase
+import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductByIdUseCase
+import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.UpdateProductUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
