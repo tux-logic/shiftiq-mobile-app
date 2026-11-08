@@ -21,22 +21,6 @@ class UpdateTaskUseCase @Inject constructor(
         description: String? = null,
         evidenceImages: List<String>? = null
     ): AppResult<WorkOrder> {
-        if (workOrderId.value.isBlank()) {
-            return AppResult.Failure(
-                AppError.Validation(
-                    details = "workOrderId",
-                    message = "Work order ID cannot be blank"
-                )
-            )
-        }
-        if (taskId.value.isBlank()) {
-            return AppResult.Failure(
-                AppError.Validation(
-                    details = "taskId",
-                    message = "Task ID cannot be blank"
-                )
-            )
-        }
         val trimmedDescription = description?.trim()
         if (trimmedDescription != null && trimmedDescription.length < 10) {
             return AppResult.Failure(

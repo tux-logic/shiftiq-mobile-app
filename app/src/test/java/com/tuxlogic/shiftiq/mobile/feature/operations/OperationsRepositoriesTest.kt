@@ -16,6 +16,7 @@ import com.tuxlogic.shiftiq.mobile.feature.operations.data.remote.dto.WorkOrderR
 import com.tuxlogic.shiftiq.mobile.feature.operations.data.repository.ServicesRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.operations.data.repository.WorkOrderRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.ProductId
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.ServiceId
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.TaskId
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.WorkOrderId
 import io.mockk.coEvery
@@ -56,6 +57,7 @@ class OperationsRepositoriesTest {
     private val employeeId = EmployeeId(UUID.randomUUID())
     private val workOrderId = WorkOrderId(UUID.randomUUID())
     private val taskId = TaskId(UUID.randomUUID())
+    private val serviceId = ServiceId(UUID.randomUUID())
     private val productId = ProductId(UUID.randomUUID())
 
     private val sampleServiceDto = ServiceResourceDto(
@@ -146,5 +148,62 @@ class OperationsRepositoriesTest {
 
         assertTrue(result is AppResult.Success)
         coVerify(exactly = 1) { workOrdersApiService.startTask(taskId.toString()) }
+    }
+
+    @Test
+    fun `WorkOrderRepository updateTask sends request with updated fields and returns domain entity`() = runTest(testDispatcher) {
+        coEvery {
+            workOrdersApiService.updateTask(
+                id = workOrderId.toString(),
+                taskId = taskId.toString(),
+                request = match { dto ->
+                    dto.serviceId == serviceId.toString() &&
+                    dto.assignedMechanicId == employeeId.toString() &&
+                    dto.description == "Updated task description" &&
+                    dto.evidenceImages?.size == 1
+                }
+            )
+        } returns Response.success(sampleWorkOrderDto)
+
+        val result = workOrderRepository.updateTask(
+            workOrderId = workOrderId,
+            taskId = taskId,
+            serviceId = serviceId,
+            assignedMechanicId = employeeId,
+            description = "Updated task description",
+            evidenceImages = listOf("https://storage.shiftiq.com/evidence1.jpg")
+        )
+
+        assertTrue(result is AppResult.Success)
+        coVerify(exactly = 1) {
+            workOrdersApiService.updateTask(
+                id = workOrderId.toString(),
+                taskId = taskId.toString(),
+                request = any()
+            )
+        }
+    }
+
+    @Test
+    fun `WorkOrderRepository deleteTask calls api and returns success`() = runTest(testDispatcher) {
+        coEvery {
+            workOrdersApiService.deleteTask(
+                id = workOrderId.toString(),
+                taskId = taskId.toString()
+            )
+        } returns Response.success(Unit)
+
+        val result = workOrderRepository.deleteTask(
+            workOrderId = workOrderId,
+            taskId = taskId
+        )
+
+        assertTrue(result is AppResult.Success)
+        coVerify(exactly = 1) {
+            workOrdersApiService.deleteTask(
+                id = workOrderId.toString(),
+                taskId = taskId.toString()
+            )
+        }
     }
 }
