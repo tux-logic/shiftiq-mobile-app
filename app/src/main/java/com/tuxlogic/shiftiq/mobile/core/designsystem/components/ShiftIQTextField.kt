@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 
 @Composable
 fun ShiftIQTextField(
@@ -50,6 +51,9 @@ fun ShiftIQTextField(
         trailingIcon = trailingIcon,
         modifier = modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Slate900,
+            unfocusedTextColor = Slate900,
+            errorTextColor = Slate900,
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline
         )
