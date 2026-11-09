@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
                                     uiState = uiState,
                                     onEmailChanged = loginViewModel::onEmailChanged,
                                     onPasswordChanged = loginViewModel::onPasswordChanged,
-                                    onLoginClick = loginViewModel::login,
+                                    onLoginClick = { loginViewModel.login() },
                                     onLoginSuccess = { role ->
                                         if (role == Role.ROLE_OWNER) {
                                             navController.navigate(AppDestination.BranchSelection.route) {
@@ -87,26 +87,36 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onNavigateToRegister = {
                                         navController.navigate(AppDestination.Register.route)
-                                    }
+                                    },
+                                    onForgotPasswordClick = {
+                                        navController.navigate(AppDestination.ForgotPassword.route)
+                                    },
+                                    onPasswordVisibilityToggle = loginViewModel::onPasswordVisibilityToggle,
+                                    onRememberMeToggle = loginViewModel::onRememberMeToggle
                                 )
                             }
 
                             composable(AppDestination.Register.route) {
                                 val registerViewModel: com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register.RegisterViewModel = hiltViewModel()
-                                val uiState by registerViewModel.uiState.collectAsState()
 
                                 com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register.RegisterScreen(
-                                    uiState = uiState,
-                                    onEmailChanged = registerViewModel::onEmailChanged,
-                                    onPasswordChanged = registerViewModel::onPasswordChanged,
-                                    onRoleSelected = registerViewModel::onRoleSelected,
-                                    onRegisterClick = registerViewModel::register,
-                                    onNavigateToLogin = { navController.popBackStack() },
-                                    onRegisterSuccess = {
+                                    viewModel = registerViewModel,
+                                    onBackToLogin = { navController.popBackStack() },
+                                    onNavigateToRecovery = { navController.navigate(AppDestination.ForgotPassword.route) },
+                                    onRegistrationSuccess = {
                                         navController.navigate(AppDestination.Dashboard.route) {
                                             popUpTo(AppDestination.Login.route) { inclusive = true }
                                         }
                                     }
+                                )
+                            }
+
+                            composable(AppDestination.ForgotPassword.route) {
+                                val recoveryViewModel: com.tuxlogic.shiftiq.mobile.feature.iam.presentation.recovery.RecoveryViewModel = hiltViewModel()
+
+                                com.tuxlogic.shiftiq.mobile.feature.iam.presentation.recovery.RecoveryScreen(
+                                    viewModel = recoveryViewModel,
+                                    onBackToLogin = { navController.popBackStack() }
                                 )
                             }
 
@@ -142,6 +152,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onNavigateToStaff = {
                                         navController.navigate(AppDestination.StaffManagement.route)
+                                    },
+                                    onNavigateToInventory = {
+                                        navController.navigate(AppDestination.Inventory.route)
                                     },
                                     onLogoutClick = {
                                         scope.launch {
@@ -278,6 +291,13 @@ class MainActivity : ComponentActivity() {
                                     onSubmitAddStaff = viewModel::submitAddStaff,
                                     onNavigateBack = { navController.popBackStack() },
                                     onClearMessages = viewModel::clearMessages
+                                )
+                            }
+
+                            // Bloque 4: Inventory (Gestión de Inventario y Stock)
+                            composable(AppDestination.Inventory.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.InventoryScreen(
+                                    onBack = { navController.popBackStack() }
                                 )
                             }
                         }

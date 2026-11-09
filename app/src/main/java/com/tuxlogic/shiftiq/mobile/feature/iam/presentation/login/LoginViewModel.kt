@@ -20,11 +20,21 @@ data class LoginUiState(
     val emailError: String? = null,
     val password: String = "",
     val passwordError: String? = null,
+    val isPasswordVisible: Boolean = false,
+    val rememberMe: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
     val userRole: Role? = null
-)
+) {
+    val isEmailFormatValid: Boolean
+        get() {
+            val trimmed = email.trim()
+            if (trimmed.isBlank()) return false
+            val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
+            return emailRegex.matches(trimmed)
+        }
+}
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -42,7 +52,19 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = value, passwordError = null, errorMessage = null) }
     }
 
-    fun login() {
+    fun onPasswordVisibilityToggle() {
+        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+    }
+
+    fun onRememberMeToggle(value: Boolean) {
+        _uiState.update { it.copy(rememberMe = value) }
+    }
+
+    fun onLogin(onSuccess: (Role) -> Unit = {}) {
+        login(onSuccess)
+    }
+
+    fun login(onSuccess: ((Role) -> Unit)? = null) {
         val currentState = _uiState.value
         _uiState.update { it.copy(isLoading = true, errorMessage = null, emailError = null, passwordError = null) }
 
@@ -56,6 +78,7 @@ class LoginViewModel @Inject constructor(
                         userRole = user.role
                     )
                 }
+                onSuccess?.invoke(user.role)
             }.onFailure { error ->
                 when (error) {
                     is AppError.Validation -> {

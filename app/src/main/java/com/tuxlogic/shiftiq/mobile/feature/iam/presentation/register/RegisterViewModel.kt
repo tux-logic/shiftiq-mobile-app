@@ -2,12 +2,17 @@ package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateCustomerProfileUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LoginUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.RegisterUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.vehicles.RegisterVehicleUseCase
+import com.tuxlogic.shiftiq.mobile.feature.shared.application.usecase.LookupIdentityDocumentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,87 +20,368 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class RegisterUiState(
-    val email: String = "",
-    val emailError: String? = null,
-    val password: String = "",
-    val passwordError: String? = null,
-    val selectedRole: String = "ROLE_OWNER",
-    val isLoading: Boolean = false,
-    val isSuccess: Boolean = false,
-    val errorMessage: String? = null
-)
-
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val createCustomerProfileUseCase: CreateCustomerProfileUseCase,
+    private val registerVehicleUseCase: RegisterVehicleUseCase,
+    private val lookupIdentityDocumentUseCase: LookupIdentityDocumentUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun onEmailChanged(value: String) {
+    private var timerJob: Job? = null
+    private var dniLookupJob: Job? = null
+
+    // Modificadores de Datos del Propietario (Paso 1)
+    fun onFullNameChange(value: String) {
+        _uiState.update { it.copy(fullName = value, fullNameError = null, errorMessage = null) }
+    }
+
+    fun onDocumentNumberChange(value: String) {
+        val filtered = value.filter { it.isDigit() }.take(8)
+        _uiState.update {
+            it.copy(
+                documentNumber = filtered,
+                documentError = null,
+                errorMessage = null,
+                dniVerified = false
+            )
+        }
+        if (filtered.length == 8) {
+            validateDniWithReniec(filtered)
+        }
+    }
+
+    private fun validateDniWithReniec(dni: String) {
+        dniLookupJob?.cancel()
+        dniLookupJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLookingUpDni = true, documentError = null) }
+            val result = lookupIdentityDocumentUseCase(IdentityDocumentType.DNI, dni)
+            result.onSuccess { lookup ->
+                if (lookup is com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentData.DniData && lookup.verified && lookup.fullName.isNotBlank()) {
+                    _uiState.update { current ->
+                        current.copy(
+                            isLookingUpDni = false,
+                            dniVerified = true,
+                            fullName = if (current.fullName.isBlank()) lookup.fullName else current.fullName,
+                            documentError = null
+                        )
+                    }
+                } else {
+                    _uiState.update { current ->
+                        current.copy(
+                            isLookingUpDni = false,
+                            dniVerified = false,
+                            documentError = "El DNI no fue encontrado en el padrón oficial (RENIEC)."
+                        )
+                    }
+                }
+            }.onFailure {
+                _uiState.update { current ->
+                    current.copy(
+                        isLookingUpDni = false,
+                        dniVerified = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun onPhoneChange(value: String) {
+        val filtered = value.filter { it.isDigit() }.take(9)
+        _uiState.update { it.copy(phone = filtered, phoneError = null, errorMessage = null) }
+    }
+
+    fun onEmailChange(value: String) {
         _uiState.update { it.copy(email = value, emailError = null, errorMessage = null) }
     }
 
-    fun onPasswordChanged(value: String) {
+    fun onEmailChanged(value: String) = onEmailChange(value)
+
+    fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, passwordError = null, errorMessage = null) }
+    }
+
+    fun onPasswordChanged(value: String) = onPasswordChange(value)
+
+    fun onConfirmPasswordChange(value: String) {
+        _uiState.update { it.copy(confirmPassword = value, confirmPasswordError = null, errorMessage = null) }
+    }
+
+    fun onTogglePasswordVisibility() {
+        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+    }
+
+    fun onToggleConfirmPasswordVisibility() {
+        _uiState.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
+    }
+
+    fun onToggleAcceptsNotifications(value: Boolean) {
+        _uiState.update { it.copy(notificationsAccepted = value, errorMessage = null) }
+    }
+
+    fun onToggleAcceptsTerms(value: Boolean) {
+        _uiState.update { it.copy(termsAccepted = value, errorMessage = null) }
     }
 
     fun onRoleSelected(role: String) {
         _uiState.update { it.copy(selectedRole = role) }
     }
 
-    fun register() {
-        val currentState = _uiState.value
-        _uiState.update { it.copy(isLoading = true, errorMessage = null, emailError = null, passwordError = null) }
+    // Modificadores del Vehículo y Dongle (Paso 2)
+    fun onBrandChange(value: String) {
+        _uiState.update { it.copy(brand = value) }
+    }
 
+    fun onModelChange(value: String) {
+        _uiState.update { it.copy(model = value) }
+    }
+
+    fun onYearChange(value: String) {
+        val filtered = value.filter { it.isDigit() }.take(4)
+        _uiState.update { it.copy(year = filtered) }
+    }
+
+    fun onPlateNumberChange(value: String) {
+        val uppercase = value.uppercase().take(10)
+        _uiState.update { it.copy(plateNumber = uppercase, plateError = null) }
+    }
+
+    fun onVinChange(value: String) {
+        val uppercase = value.uppercase().filter { it !in "IOQ" }.take(17)
+        _uiState.update { it.copy(vin = uppercase, vinError = null) }
+    }
+
+    fun onScanBleDevices() {
         viewModelScope.launch {
-            val result = registerUseCase(
-                email = currentState.email,
-                password = currentState.password,
-                role = currentState.selectedRole
-            )
-            result.onSuccess {
-                // Inicia sesión automáticamente tras el registro exitoso
-                val loginResult = loginUseCase(currentState.email, currentState.password)
-                loginResult.onSuccess {
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-                }.onFailure {
-                    // Si el login automático falla, aún marcamos éxito para que inicie sesión manualmente
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+            _uiState.update { it.copy(isScanningBle = true) }
+            delay(1200)
+            _uiState.update {
+                it.copy(
+                    isScanningBle = false,
+                    selectedDongleId = "OBD2-BT-9821",
+                    dongleSignal = "Excelente (-42 dBm)",
+                    dongleBattery = 98
+                )
+            }
+        }
+    }
+
+    fun onSelectDongle(dongleId: String) {
+        _uiState.update { it.copy(selectedDongleId = dongleId) }
+    }
+
+    // Navegación del Wizard
+    fun onNextStep() {
+        val state = _uiState.value
+        when (state.step) {
+            RegisterStep.STEP_1_USER -> {
+                if (state.fullName.trim().length < 3) {
+                    _uiState.update { it.copy(fullNameError = "Ingresa tu nombre y apellido completo.") }
+                    return
                 }
-            }.onFailure { error ->
-                when (error) {
-                    is AppError.Validation -> {
+                if (!state.isDniValid) {
+                    _uiState.update { it.copy(documentError = "El DNI debe contener 8 dígitos numéricos.") }
+                    return
+                }
+                if (state.documentError != null) {
+                    return
+                }
+                if (!state.isPhoneValid) {
+                    _uiState.update { it.copy(phoneError = "Ingresa un número de celular válido (9 dígitos).") }
+                    return
+                }
+                if (!state.isEmailValid) {
+                    _uiState.update { it.copy(emailError = "Ingresa un correo electrónico con formato válido.") }
+                    return
+                }
+                if (!state.isPasswordValid) {
+                    val missing = mutableListOf<String>()
+                    if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
+                    if (!state.hasUppercase) missing.add("1 mayúscula")
+                    if (!state.hasNumber) missing.add("1 número")
+                    _uiState.update { it.copy(passwordError = "Contraseña débil. Requiere: ${missing.joinToString(", ")}.") }
+                    return
+                }
+                if (!state.doPasswordsMatch) {
+                    _uiState.update { it.copy(confirmPasswordError = "Las contraseñas no coinciden.") }
+                    return
+                }
+                if (!state.termsAccepted) {
+                    _uiState.update { it.copy(errorMessage = "Debes aceptar los Términos de Servicio para continuar.") }
+                    return
+                }
+                if (!state.notificationsAccepted) {
+                    _uiState.update { it.copy(errorMessage = "Debes aceptar las Notificaciones de telemetría para continuar.") }
+                    return
+                }
+
+                _uiState.update { it.copy(step = RegisterStep.STEP_2_VEHICLE, errorMessage = null) }
+            }
+
+            RegisterStep.STEP_2_VEHICLE -> {
+                if (state.brand.trim().isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa la marca del vehículo.") }
+                    return
+                }
+                if (state.model.trim().isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa el modelo del vehículo.") }
+                    return
+                }
+                if (!state.isYearValid) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa un año de fabricación válido (1980 - 2026).") }
+                    return
+                }
+                if (!state.isPlateValid) {
+                    _uiState.update { it.copy(plateError = "Ingresa una placa vehicular válida (entre 5 y 10 caracteres).") }
+                    return
+                }
+                if (!state.isVinValid) {
+                    _uiState.update { it.copy(vinError = "El número de chasis (VIN) debe tener exactamente 17 caracteres sin I, O, Q.") }
+                    return
+                }
+
+                _uiState.update { it.copy(step = RegisterStep.STEP_3_CONFIRM, errorMessage = null) }
+            }
+
+            RegisterStep.STEP_3_CONFIRM -> {
+                onSubmitRegistration()
+            }
+
+            RegisterStep.OTP -> { /* Validación OTP si se requiere */ }
+            RegisterStep.SUCCESS -> { /* Navegación a login / dashboard */ }
+            RegisterStep.ERROR -> {
+                onCorrectData()
+            }
+        }
+    }
+
+    fun onPreviousStep(onExit: () -> Unit) {
+        when (_uiState.value.step) {
+            RegisterStep.STEP_1_USER -> onExit()
+            RegisterStep.STEP_2_VEHICLE -> _uiState.update { it.copy(step = RegisterStep.STEP_1_USER, errorMessage = null) }
+            RegisterStep.STEP_3_CONFIRM -> _uiState.update { it.copy(step = RegisterStep.STEP_2_VEHICLE, errorMessage = null) }
+            RegisterStep.OTP -> _uiState.update { it.copy(step = RegisterStep.STEP_3_CONFIRM, errorMessage = null) }
+            RegisterStep.ERROR -> onCorrectData()
+            RegisterStep.SUCCESS -> onExit()
+        }
+    }
+
+    fun onCorrectData() {
+        val state = _uiState.value
+        val isVehicleError = state.errorMessage?.let { msg ->
+            msg.contains("placa", ignoreCase = true) ||
+            msg.contains("vin", ignoreCase = true) ||
+            msg.contains("vehículo", ignoreCase = true) ||
+            msg.contains("vehicular", ignoreCase = true)
+        } ?: false
+
+        val targetStep = if (isVehicleError) {
+            RegisterStep.STEP_2_VEHICLE
+        } else {
+            RegisterStep.STEP_1_USER
+        }
+        _uiState.update { it.copy(step = targetStep, errorMessage = null) }
+    }
+
+    fun register() = onSubmitRegistration()
+
+    fun onSubmitRegistration(onSuccess: () -> Unit = {}) {
+        val state = _uiState.value
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // 1. Registro de usuario en IAM
+            val regResult = registerUseCase(
+                email = state.email.trim(),
+                password = state.password,
+                role = state.selectedRole
+            )
+
+            regResult.onSuccess { user ->
+                // 2. Iniciar sesión para obtener tokens e inyectar Bearer
+                val loginResult = loginUseCase(state.email.trim(), state.password)
+                loginResult.onSuccess {
+                    // 3. Crear perfil de cliente en Core
+                    val nameParts = state.fullName.trim().split(" ")
+                    val firstName = nameParts.firstOrNull()?.ifBlank { "Conductor" } ?: "Conductor"
+                    val lastName = if (nameParts.size > 1) nameParts.drop(1).joinToString(" ") else "ShiftIQ"
+
+                    val custResult = createCustomerProfileUseCase(
+                        userId = user.id.value.toString(),
+                        firstName = firstName,
+                        lastName = lastName,
+                        businessName = "",
+                        documentType = "DNI",
+                        documentNumber = state.documentNumber.trim(),
+                        phone = state.phone.trim()
+                    )
+
+                    custResult.onSuccess {
+                        // 4. Registrar vehículo en IoT
+                        val vehResult = registerVehicleUseCase(
+                            plateNumber = state.plateNumber.trim().uppercase(),
+                            brand = state.brand.trim(),
+                            model = state.model.trim(),
+                            year = state.year.toIntOrNull() ?: 2020,
+                            vin = state.vin.trim().uppercase()
+                        )
+
+                        vehResult.onSuccess {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    step = RegisterStep.SUCCESS,
+                                    isSuccess = true,
+                                    errorMessage = null
+                                )
+                            }
+                            onSuccess()
+                        }.onFailure { vehError ->
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    step = RegisterStep.ERROR,
+                                    errorMessage = "Error al registrar vehículo: ${vehError.message}"
+                                )
+                            }
+                        }
+                    }.onFailure { custError ->
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                emailError = if (error.details == "email") error.message else null,
-                                passwordError = if (error.details == "password") error.message else null,
-                                errorMessage = if (error.details != "email" && error.details != "password") error.message else null
+                                step = RegisterStep.ERROR,
+                                errorMessage = "Error al crear perfil de conductor: ${custError.message}"
                             )
                         }
                     }
-                    is AppError.Conflict -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = "El correo ya está registrado en el sistema."
-                            )
-                        }
+                }.onFailure { loginError ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            step = RegisterStep.ERROR,
+                            errorMessage = "Cuenta creada, pero falló el inicio de sesión: ${loginError.message}"
+                        )
                     }
-                    else -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = error.message
-                            )
-                        }
-                    }
+                }
+            }.onFailure { regError ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        step = RegisterStep.ERROR,
+                        errorMessage = regError.message
+                    )
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
+        dniLookupJob?.cancel()
     }
 }

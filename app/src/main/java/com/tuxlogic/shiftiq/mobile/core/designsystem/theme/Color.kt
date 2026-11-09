@@ -28,3 +28,20 @@ val ShiftIQError = Color(0xFFBA1A1A)            // Critical / DTC Alert
 val ShiftIQOnError = Color(0xFFFFFFFF)
 val ShiftIQWarning = Color(0xFFF59E0B)          // Pending / Caution
 val ShiftIQSuccess = Color(0xFF10B981)          // Completed / Active
+
+// Slate & Semantic Color Palette (for high contrast text and UI components)
+val Primary = ShiftIQPrimary
+val PrimaryBlue = ShiftIQPrimary
+val SeverityCrimson = ShiftIQError
+val TelematicsGreen = ShiftIQSuccess
+
+val Slate50 = Color(0xFFF8FAFC)
+val Slate100 = Color(0xFFF1F5F9)
+val Slate200 = Color(0xFFE2E8F0)
+val Slate300 = Color(0xFFCBD5E1)
+val Slate400 = Color(0xFF94A3B8)
+val Slate500 = Color(0xFF64748B)
+val Slate600 = Color(0xFF475569)
+val Slate700 = Color(0xFF334155)
+val Slate800 = Color(0xFF1E293B)
+val Slate900 = Color(0xFF0F172A)

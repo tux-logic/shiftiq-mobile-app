@@ -44,6 +44,7 @@ fun RoleDashboardScreen(
     onNavigateToOwnerProfile: () -> Unit = {},
     onNavigateToAppointments: () -> Unit = {},
     onNavigateToStaff: () -> Unit = {},
+    onNavigateToInventory: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -199,6 +200,14 @@ fun RoleDashboardScreen(
                 ) {
                     Text("Equipo y Personal de Taller (Fleet)")
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                ShiftIQPrimaryButton(
+                    text = "Inventario y Productos",
+                    onClick = onNavigateToInventory,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             ShiftIQSecondaryButton(
