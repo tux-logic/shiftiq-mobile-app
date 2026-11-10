@@ -21,11 +21,10 @@ suspend fun <T> safeApiCall(
             val body = response.body()
             if (body != null) {
                 AppResult.Success(body)
-            } else if (response.code() == 204) {
+            } else {
+                // Para respuestas HTTP 2xx exitosas sin cuerpo (ej. 204 No Content, o 200 OK con Content-Length 0 / ResponseEntity<Void>)
                 @Suppress("UNCHECKED_CAST")
                 AppResult.Success(Unit as T)
-            } else {
-                AppResult.Failure(AppError.Unexpected(message = "El servidor respondió con cuerpo vacío."))
             }
         } else {
             val errorBodyString = response.errorBody()?.string()

@@ -7,6 +7,8 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateCustomerProfileUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LoginUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.RegisterUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.SendOtpUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.VerifyOtpUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.vehicles.RegisterVehicleUseCase
 import com.tuxlogic.shiftiq.mobile.feature.shared.application.usecase.LookupIdentityDocumentUseCase
 import com.tuxlogic.shiftiq.mobile.feature.shared.domain.model.IdentityDocumentType
@@ -26,7 +28,9 @@ class RegisterViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val createCustomerProfileUseCase: CreateCustomerProfileUseCase,
     private val registerVehicleUseCase: RegisterVehicleUseCase,
-    private val lookupIdentityDocumentUseCase: LookupIdentityDocumentUseCase
+    private val lookupIdentityDocumentUseCase: LookupIdentityDocumentUseCase,
+    private val sendOtpUseCase: SendOtpUseCase,
+    private val verifyOtpUseCase: VerifyOtpUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -174,6 +178,116 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { it.copy(selectedDongleId = dongleId) }
     }
 
+    // Modificadores de OTP (Paso de Verificación)
+    fun onOtpCodeChanged(code: String) {
+        val filtered = code.filter { it.isDigit() }.take(6)
+        _uiState.update {
+            it.copy(
+                otpCode = filtered,
+                isOtpValid = filtered.length == 6,
+                errorMessage = null
+            )
+        }
+    }
+
+    private fun startOtpTimer() {
+        timerJob?.cancel()
+        _uiState.update { it.copy(timeLeft = 60, isResendEnabled = false) }
+        timerJob = viewModelScope.launch {
+            while (_uiState.value.timeLeft > 0) {
+                delay(1000)
+                _uiState.update { current ->
+                    val newTime = current.timeLeft - 1
+                    current.copy(
+                        timeLeft = newTime,
+                        isResendEnabled = newTime <= 0
+                    )
+                }
+            }
+        }
+    }
+
+    fun onResendOtp() {
+        val state = _uiState.value
+        if (!state.isResendEnabled && state.timeLeft > 0) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = sendOtpUseCase(state.email.trim())
+            result.onSuccess {
+                _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                startOtpTimer()
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error al reenviar código: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun requestOtpAndProceed() {
+        val state = _uiState.value
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = sendOtpUseCase(state.email.trim())
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        step = RegisterStep.OTP,
+                        errorMessage = null,
+                        otpCode = "",
+                        isOtpValid = false
+                    )
+                }
+                startOtpTimer()
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        step = RegisterStep.ERROR,
+                        errorMessage = "No se pudo enviar el código de verificación al correo: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun onVerifyOtpAndRegister(onSuccess: () -> Unit = {}) {
+        val state = _uiState.value
+        if (!state.isOtpCodeComplete) {
+            _uiState.update { it.copy(errorMessage = "Ingresa el código completo de 6 dígitos.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val verifyResult = verifyOtpUseCase(state.email.trim(), state.otpCode.trim())
+            verifyResult.onSuccess { verified ->
+                if (verified) {
+                    executeFinalRegistration(onSuccess)
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "El código ingresado es incorrecto o ha expirado."
+                        )
+                    }
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error de validación OTP: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+
     // Navegación del Wizard
     fun onNextStep() {
         val state = _uiState.value
@@ -248,11 +362,15 @@ class RegisterViewModel @Inject constructor(
             }
 
             RegisterStep.STEP_3_CONFIRM -> {
-                onSubmitRegistration()
+                requestOtpAndProceed()
             }
 
-            RegisterStep.OTP -> { /* Validación OTP si se requiere */ }
-            RegisterStep.SUCCESS -> { /* Navegación a login / dashboard */ }
+            RegisterStep.OTP -> {
+                onVerifyOtpAndRegister()
+            }
+
+            RegisterStep.SUCCESS -> { /* Finalizado */ }
+
             RegisterStep.ERROR -> {
                 onCorrectData()
             }
@@ -287,14 +405,18 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { it.copy(step = targetStep, errorMessage = null) }
     }
 
-    fun register() = onSubmitRegistration()
+    fun register() = requestOtpAndProceed()
 
     fun onSubmitRegistration(onSuccess: () -> Unit = {}) {
+        requestOtpAndProceed()
+    }
+
+    private fun executeFinalRegistration(onSuccess: () -> Unit) {
         val state = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            // 1. Registro de usuario en IAM
+            // 1. Registro de usuario en IAM (ahora con OTP validado previamente)
             val regResult = registerUseCase(
                 email = state.email.trim(),
                 password = state.password,
