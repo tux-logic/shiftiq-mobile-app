@@ -45,6 +45,7 @@ fun RoleDashboardScreen(
     onNavigateToAppointments: () -> Unit = {},
     onNavigateToStaff: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
+    onNavigateToCustomerVehicles: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -208,6 +209,16 @@ fun RoleDashboardScreen(
                     onClick = onNavigateToInventory,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (userRole == Role.ROLE_USER) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    ShiftIQPrimaryButton(
+                        text = "Mis vehículos y diagnóstico IoT",
+                        onClick = onNavigateToCustomerVehicles,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             ShiftIQSecondaryButton(
