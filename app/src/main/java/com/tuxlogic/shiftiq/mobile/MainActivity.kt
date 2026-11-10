@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,7 +64,8 @@ class MainActivity : ComponentActivity() {
 
                         NavHost(
                             navController = navController,
-                            startDestination = startDestination
+                            startDestination = startDestination,
+                            modifier = Modifier.padding(innerPadding)
                         ) {
                             composable(AppDestination.Login.route) {
                                 val loginViewModel: LoginViewModel = hiltViewModel()
@@ -156,6 +158,9 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToInventory = {
                                         navController.navigate(AppDestination.Inventory.route)
                                     },
+                                    onNavigateToCustomerVehicles = {
+                                        navController.navigate(AppDestination.CustomerVehicles.route)
+                                    },
                                     onLogoutClick = {
                                         scope.launch {
                                             logoutUseCase()
@@ -166,6 +171,14 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
+                                )
+                            }
+
+                            composable(AppDestination.CustomerVehicles.route) {
+                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.iot.presentation.vehicles.CustomerVehiclesViewModel = hiltViewModel()
+                                com.tuxlogic.shiftiq.mobile.feature.iot.presentation.vehicles.CustomerVehiclesScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
 
