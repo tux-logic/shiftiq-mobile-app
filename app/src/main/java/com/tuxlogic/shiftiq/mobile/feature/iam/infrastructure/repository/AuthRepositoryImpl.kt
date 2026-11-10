@@ -101,14 +101,19 @@ class AuthRepositoryImpl @Inject constructor(
         withContext(dispatchers.io) {
             safeApiCall {
                 authApiService.sendOtp(SendOtpRequestDto(email = email))
-            }.map { it.toDomain() }
+            }.map {
+                OtpDispatchResult(
+                    message = "Código enviado exitosamente",
+                    expiresInSeconds = 300L
+                )
+            }
         }
 
     override suspend fun verifyOtp(email: String, code: String): AppResult<Boolean> =
         withContext(dispatchers.io) {
             safeApiCall {
                 authApiService.verifyOtp(VerifyOtpRequestDto(email = email, code = code))
-            }.map { it.verified }
+            }.map { true }
         }
 
     override suspend fun requestPasswordRecovery(email: String): AppResult<Unit> =

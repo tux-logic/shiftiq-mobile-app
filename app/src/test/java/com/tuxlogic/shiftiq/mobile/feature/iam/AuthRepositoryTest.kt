@@ -130,22 +130,20 @@ class AuthRepositoryTest {
 
     @Test
     fun `sendOtp dispatches request and returns OtpDispatchResult`() = runTest(testDispatcher) {
-        val dto = SendOtpResponseDto(message = "OTP sent", expiresInSeconds = 300L)
-        coEvery { authApiService.sendOtp(any()) } returns Response.success(dto)
+        coEvery { authApiService.sendOtp(any()) } returns Response.success(Unit)
 
         val result = repository.sendOtp("user@example.com")
 
         assertTrue(result is AppResult.Success)
         val otpResult = (result as AppResult.Success).data
-        assertEquals("OTP sent", otpResult.message)
+        assertEquals("Código enviado exitosamente", otpResult.message)
         assertEquals(300L, otpResult.expiresInSeconds)
         coVerify(exactly = 1) { authApiService.sendOtp(match { it.email == "user@example.com" }) }
     }
 
     @Test
     fun `verifyOtp returns boolean verification status`() = runTest(testDispatcher) {
-        val dto = VerifyOtpResponseDto(verified = true)
-        coEvery { authApiService.verifyOtp(any()) } returns Response.success(dto)
+        coEvery { authApiService.verifyOtp(any()) } returns Response.success(Unit)
 
         val result = repository.verifyOtp("user@example.com", "123456")
 
