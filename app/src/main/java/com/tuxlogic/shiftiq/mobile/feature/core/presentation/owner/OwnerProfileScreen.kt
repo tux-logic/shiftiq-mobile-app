@@ -1,4 +1,11 @@
 package com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -241,23 +248,56 @@ fun OwnerProfileContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(20.dp)
+                            .imePadding()
+                            .padding(horizontal = 22.dp, vertical = 24.dp)
                     ) {
-                        Text(
-                            text = "Registrar Datos del Dueño",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Completa tu información legal y de contacto para asociar tus talleres en ShiftIQ.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 8 }
+                        ) {
+                            Column {
+                                Surface(
+                                    shape = RoundedCornerShape(18.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(56.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(18.dp))
+                                Text(
+                                    text = "Datos del propietario",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Completa tu información legal y de contacto para asociar tus talleres en ShiftIQ.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 24.sp
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(28.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(18.dp),
+                                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                            ) {
                         OutlinedTextField(
                             value = uiState.firstName,
                             onValueChange = onFirstNameChanged,
@@ -265,11 +305,10 @@ fun OwnerProfileContent(
                             placeholder = { Text("Ej: Alan") },
                             isError = uiState.firstNameError != null,
                             supportingText = uiState.firstNameError?.let { { Text(it) } },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
                         )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
+                        Spacer(modifier = Modifier.height(4.dp))
                         OutlinedTextField(
                             value = uiState.lastName,
                             onValueChange = onLastNameChanged,
@@ -277,11 +316,10 @@ fun OwnerProfileContent(
                             placeholder = { Text("Ej: Jara") },
                             isError = uiState.lastNameError != null,
                             supportingText = uiState.lastNameError?.let { { Text(it) } },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
                         )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
+                        Spacer(modifier = Modifier.height(4.dp))
                         OutlinedTextField(
                             value = uiState.documentNumber,
                             onValueChange = onDocumentNumberChanged,
@@ -290,11 +328,10 @@ fun OwnerProfileContent(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             isError = uiState.documentNumberError != null,
                             supportingText = uiState.documentNumberError?.let { { Text(it) } },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
                         )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
+                        Spacer(modifier = Modifier.height(4.dp))
                         OutlinedTextField(
                             value = uiState.phone,
                             onValueChange = onPhoneChanged,
@@ -303,9 +340,9 @@ fun OwnerProfileContent(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             isError = uiState.phoneError != null,
                             supportingText = uiState.phoneError?.let { { Text(it) } },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
                         )
-
                         if (uiState.errorMessage != null) {
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
@@ -314,22 +351,21 @@ fun OwnerProfileContent(
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
-
                         Spacer(modifier = Modifier.height(24.dp))
-
                         ShiftIQButton(
                             text = "Guardar Perfil de Dueño",
                             onClick = onSubmit,
                             isLoading = uiState.isLoading,
                             modifier = Modifier.fillMaxWidth()
                         )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun OwnerProfileViewPreview() {

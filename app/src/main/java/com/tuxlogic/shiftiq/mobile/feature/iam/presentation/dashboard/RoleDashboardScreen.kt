@@ -1,6 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +58,7 @@ fun RoleDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp)
+                .padding(horizontal = 22.dp, vertical = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -67,7 +70,7 @@ fun RoleDashboardScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(56.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
@@ -85,8 +88,8 @@ fun RoleDashboardScreen(
                         modifier = Modifier.padding(start = 16.dp)
                     ) {
                         Text(
-                            text = "¡Sesión Iniciada!",
-                            style = MaterialTheme.typography.titleLarge.copy(
+                            text = "¡Sesión iniciada!",
+                            style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold
                             )
                         )
@@ -105,17 +108,18 @@ fun RoleDashboardScreen(
                 // Tarjeta de estado de sesión
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(22.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
                             text = "Información de Sesión Activa",
@@ -123,6 +127,8 @@ fun RoleDashboardScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                         InfoRow(label = "Rol del Sistema", value = userRole?.name ?: "N/A")
                         InfoRow(label = "ID de Usuario", value = userId?.toString()?.take(8) ?: "N/A")
@@ -134,11 +140,9 @@ fun RoleDashboardScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     )
@@ -149,7 +153,7 @@ fun RoleDashboardScreen(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "Hito 1: IAM completado",
+                            text = "Cuenta protegida",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -157,7 +161,7 @@ fun RoleDashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Autenticación, persistencia en DataStore y control de acceso basados en rol listos para los siguientes bloques de negocio.",
+                            text = "Tu sesión está activa y tus accesos se ajustan a tu rol.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -165,7 +169,7 @@ fun RoleDashboardScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 ShiftIQPrimaryButton(
                     text = "Gestionar Talleres y Sedes",
@@ -175,10 +179,11 @@ fun RoleDashboardScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                androidx.compose.material3.OutlinedButton(
+                OutlinedButton(
                     onClick = onNavigateToOwnerProfile,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Text("Ver / Editar Mi Perfil de Dueño")
                 }
@@ -193,10 +198,11 @@ fun RoleDashboardScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                androidx.compose.material3.OutlinedButton(
+                OutlinedButton(
                     onClick = onNavigateToStaff,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Text("Equipo y Personal de Taller (Fleet)")
                 }

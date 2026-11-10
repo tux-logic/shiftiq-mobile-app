@@ -1,7 +1,18 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.login
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,14 +25,17 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +46,12 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -44,9 +64,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +94,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowForward
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.checkCircle
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.googleLogo
+import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.appleLogo
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.lockOutline
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.mailOutline
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
@@ -95,6 +128,22 @@ fun LoginScreen(
     onRememberMeToggle: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var contentVisible by remember { mutableStateOf(false) }
+    val waveTransition = rememberInfiniteTransition(label = "login-waves")
+    val wavePhase by waveTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 7000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "login-wave-phase"
+    )
+    LaunchedEffect(Unit) {
+        delay(80)
+        contentVisible = true
+    }
+
     LaunchedEffect(uiState.isSuccess, uiState.userRole) {
         if (uiState.isSuccess && uiState.userRole != null) {
             onLoginSuccess(uiState.userRole)
@@ -103,55 +152,99 @@ fun LoginScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color.White,
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Account Login",
-                        color = Slate900,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
+        containerColor = Slate50,
+        contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .navigationBarsPadding()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp, vertical = 8.dp),
+                .padding(bottom = 28.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Spacer(modifier = Modifier.height(14.dp))
+            // Brand hero follows the reference composition and keeps a dedicated logo area.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(252.dp)
+                    .background(
+                        Brush.linearGradient(listOf(PrimaryBlue, Color(0xFF1748B8))),
+                        LoginHeroShape
+                    )
+            ) {
+                Canvas(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(LoginHeroShape)
+                ) {
+                    val w = size.width
+                    val h = size.height
+                    val drift = wavePhase * w * 0.16f
+                    val backWave = Path().apply {
+                        moveTo(0f, h * 0.66f)
+                        cubicTo(w * 0.24f + drift, h * 0.82f, w * 0.42f + drift, h * 0.53f, w * 0.68f, h * 0.70f)
+                        cubicTo(w * 0.84f, h * 0.81f, w * 0.93f, h * 0.72f, w, h * 0.62f)
+                        lineTo(w, h)
+                        lineTo(0f, h)
+                        close()
+                    }
+                    val frontWave = Path().apply {
+                        moveTo(0f, h * 0.76f)
+                        cubicTo(w * 0.20f, h * 0.62f, w * 0.43f + drift, h * 0.90f, w * 0.66f, h * 0.79f)
+                        cubicTo(w * 0.82f, h * 0.71f, w * 0.92f, h * 0.84f, w, h * 0.74f)
+                        lineTo(w, h)
+                        lineTo(0f, h)
+                        close()
+                    }
+                    drawPath(backWave, Color.White.copy(alpha = 0.075f), style = Fill)
+                    drawPath(frontWave, Color.White.copy(alpha = 0.06f), style = Fill)
+                }
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 4.dp)
+                ) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.align(Alignment.Center).padding(top = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.16f))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.4f)), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("LOGO", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Text("Bienvenido", color = Color.White, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text("Inicia sesión para continuar", color = Color.White.copy(alpha = 0.88f), fontSize = 14.sp)
+                }
+            }
 
-            Text(
-                text = "Bienvenido de vuelta",
-                color = Slate900,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                lineHeight = 34.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Ingresa tus credenciales para acceder a la plataforma ShiftIQ",
-                color = Slate500,
-                fontSize = 14.sp
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(450)) + slideInVertically(
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                ) { it / 7 }
+            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp)) {
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Credential Form Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate50),
-                border = BorderStroke(1.dp, Slate200)
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Slate200),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -433,15 +526,15 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Primary Button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Primary)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Brush.horizontalGradient(listOf(PrimaryBlue, Color(0xFF1748B8))))
                     .scaleOnPress(
                         onClick = onLoginClick
                     ),
@@ -474,7 +567,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Divider
             Row(
@@ -502,37 +595,27 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Google OAuth
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White)
-                    .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(14.dp))
-                    .scaleOnPress(onClick = { /* OAuth */ }),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = googleLogo,
-                        contentDescription = "Google",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(19.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Continuar con Google",
-                        color = Slate800,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+            // Social sign-in affordances match the reference. Only the backend-supported provider is enabled.
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SocialLoginButton("Google", modifier = Modifier.weight(1f), onClick = {}) {
+                    Icon(googleLogo, contentDescription = "Google", tint = Color.Unspecified, modifier = Modifier.size(22.dp))
+                }
+                SocialLoginButton("Apple", modifier = Modifier.weight(1f), onClick = {}) {
+                    Icon(appleLogo, contentDescription = "Apple", tint = Slate900, modifier = Modifier.size(22.dp))
+                }
+                SocialLoginButton("Facebook", modifier = Modifier.weight(1f), onClick = {}) {
+                    Box(
+                        modifier = Modifier.size(22.dp).clip(CircleShape).background(Color(0xFF1877F2)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("f", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 20.sp)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Footer
             Row(
@@ -555,8 +638,40 @@ fun LoginScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+            }
+            }
         }
     }
+}
+
+private object LoginHeroShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        Outline.Generic(
+            Path().apply {
+                moveTo(0f, 0f)
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height * 0.88f)
+                cubicTo(size.width * 0.78f, size.height * 0.99f, size.width * 0.28f, size.height * 0.90f, 0f, size.height * 0.78f)
+                close()
+            }
+        )
+}
+
+@Composable
+private fun SocialLoginButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(54.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Slate200),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+    ) { icon() }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
