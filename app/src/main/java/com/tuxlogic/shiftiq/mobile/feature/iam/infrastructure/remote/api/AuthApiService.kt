@@ -50,12 +50,12 @@ interface AuthApiService {
     @POST("api/v1/authentication/otp/send")
     suspend fun sendOtp(
         @Body request: SendOtpRequestDto
-    ): Response<SendOtpResponseDto>
+    ): Response<Unit>
 
     @POST("api/v1/authentication/otp/verify")
     suspend fun verifyOtp(
         @Body request: VerifyOtpRequestDto
-    ): Response<VerifyOtpResponseDto>
+    ): Response<Unit>
 
     @POST("api/v1/authentication/password-recoveries")
     suspend fun requestPasswordRecovery(
