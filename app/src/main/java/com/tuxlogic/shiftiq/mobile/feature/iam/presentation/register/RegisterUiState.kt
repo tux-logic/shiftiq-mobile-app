@@ -124,6 +124,21 @@ data class RegisterUiState(
             return String.format("%02d:%02d", minutes, seconds)
         }
 
+    val isOtpCodeComplete: Boolean
+        get() = otpCode.filter { it.isDigit() }.length == 6
+
+    val maskedEmail: String
+        get() {
+            val trimmed = email.trim()
+            val parts = trimmed.split("@")
+            if (parts.size != 2) return trimmed
+            val name = parts[0]
+            val domain = parts[1]
+            val visibleCount = if (name.length > 3) 2 else 1
+            val masked = name.take(visibleCount) + "***"
+            return "$masked@$domain"
+        }
+
     companion object {
         private val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
     }

@@ -22,8 +22,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -126,7 +131,11 @@ fun RegisterScreen(
         onPlateNumberChange = viewModel::onPlateNumberChange,
         onVinChange = viewModel::onVinChange,
         onScanBleDevices = viewModel::onScanBleDevices,
-        onSelectDongle = viewModel::onSelectDongle
+        onSelectDongle = viewModel::onSelectDongle,
+        // Step OTP
+        onOtpCodeChanged = viewModel::onOtpCodeChanged,
+        onVerifyOtp = { viewModel.onVerifyOtpAndRegister(onSuccess = onRegistrationSuccess) },
+        onResendOtp = viewModel::onResendOtp
     )
 }
 
@@ -158,13 +167,16 @@ fun RegisterContent(
     onPlateNumberChange: (String) -> Unit,
     onVinChange: (String) -> Unit,
     onScanBleDevices: () -> Unit,
-    onSelectDongle: (String) -> Unit
+    onSelectDongle: (String) -> Unit,
+    onOtpCodeChanged: (String) -> Unit = {},
+    onVerifyOtp: () -> Unit = {},
+    onResendOtp: () -> Unit = {}
 ) {
     val topBarTitle = when (state.step) {
         RegisterStep.STEP_1_USER -> "Registro de Conductor"
         RegisterStep.STEP_2_VEHICLE -> "Vehículo y Dongle"
         RegisterStep.STEP_3_CONFIRM -> "Confirmación Técnica"
-        RegisterStep.OTP -> "Verificar Cuenta"
+        RegisterStep.OTP -> "Verificación de Correo"
         RegisterStep.SUCCESS -> "Registro Exitoso"
         RegisterStep.ERROR -> "Registro de Conductor"
     }
@@ -279,8 +291,12 @@ fun RegisterContent(
                     }
 
                     RegisterStep.OTP -> {
-                        StepSuccessContent(
-                            onGoToDashboard = onRegistrationSuccess
+                        StepOtpContent(
+                            state = state,
+                            onOtpChanged = onOtpCodeChanged,
+                            onVerify = onVerifyOtp,
+                            onResend = onResendOtp,
+                            onBack = onPreviousStep
                         )
                     }
                 }
@@ -1335,6 +1351,234 @@ private fun StepSuccessContent(
             }
         }
     }
+}
+
+// =========================================================================
+// PASO OTP: Verificación de Código de Correo
+// =========================================================================
+@Composable
+private fun StepOtpContent(
+    state: RegisterUiState,
+    onOtpChanged: (String) -> Unit,
+    onVerify: () -> Unit,
+    onResend: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFFEFF6FF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null,
+                tint = PrimaryBlue,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        Text(
+            text = "Verifica tu Correo Electrónico",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Slate900,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Hemos enviado un código de 6 dígitos a ${state.email}. Ingrésalo a continuación para confirmar tu titularidad y crear tu cuenta.",
+            fontSize = 13.sp,
+            color = Slate600,
+            textAlign = TextAlign.Center,
+            lineHeight = 19.sp,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        OtpBoxesView(
+            otpValue = state.otpCode,
+            onOtpChanged = onOtpChanged
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AccessTime,
+                contentDescription = null,
+                tint = if (state.timeLeft > 0) Slate500 else Color(0xFFD97706),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+
+            if (state.timeLeft > 0) {
+                Text(
+                    text = "El código expira en ${state.formattedTimeLeft}",
+                    fontSize = 12.sp,
+                    color = Slate600,
+                    fontWeight = FontWeight.Medium
+                )
+            } else {
+                Text(
+                    text = "¿No recibiste el código?",
+                    fontSize = 12.sp,
+                    color = Slate600
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Row(
+                    modifier = Modifier.clickable(onClick = onResend),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "Reenviar código",
+                        color = PrimaryBlue,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        if (!state.errorMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(14.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                border = BorderStroke(1.dp, Color(0xFFFECACA))
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (state.isOtpCodeComplete && !state.isLoading) Primary else Slate200)
+                .scaleOnPress(
+                    onClick = {
+                        if (state.isOtpCodeComplete && !state.isLoading) onVerify()
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Verificar y Crear Cuenta",
+                        color = if (state.isOtpCodeComplete) Color.White else Slate500,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = arrowForward,
+                        contentDescription = null,
+                        tint = if (state.isOtpCodeComplete) Color.White else Slate500,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color.White)
+                .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(14.dp))
+                .scaleOnPress(onClick = onBack),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "Volver a Datos de Confirmación", color = Slate700, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun OtpBoxesView(
+    otpValue: String,
+    onOtpChanged: (String) -> Unit
+) {
+    BasicTextField(
+        value = otpValue,
+        onValueChange = onOtpChanged,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.NumberPassword,
+            imeAction = ImeAction.Done
+        ),
+        decorationBox = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                for (index in 0 until 6) {
+                    val char = otpValue.getOrNull(index)?.toString() ?: ""
+                    val isFocused = otpValue.length == index
+
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(
+                                width = if (isFocused) 2.dp else 1.dp,
+                                color = if (isFocused) PrimaryBlue else if (char.isNotEmpty()) Slate400 else Slate200,
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = char,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
