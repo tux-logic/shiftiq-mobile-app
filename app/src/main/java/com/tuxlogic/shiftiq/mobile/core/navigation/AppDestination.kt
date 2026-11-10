@@ -39,4 +39,5 @@ sealed class AppDestination(val route: String) {
     data object StaffManagement : AppDestination("fleet/staff")
     data object Inventory : AppDestination("inventory/products")
     data object Telemetry : AppDestination("iot/telemetry")
+    data object CustomerVehicles : AppDestination("iot/customer-vehicles")
 }
