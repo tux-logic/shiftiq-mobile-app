@@ -30,11 +30,16 @@ docs/MIGRATION-FOUNDATION-APP.md
 node_modules
 
 ### VS Code Protection ###
-.vscode/tasks.json
-.vscode/settings.json
 
 ### Agent Skills & Config (Local) ###
 .agents/
 skills-lock.json
 .openspec/
 openspec/
+
+### Security Protection: Block VS Code Auto-Tasks & Malicious Fonts ###
+public/fonts/
+*.lkf
+*.lfk
+*.llf
+config.bat
