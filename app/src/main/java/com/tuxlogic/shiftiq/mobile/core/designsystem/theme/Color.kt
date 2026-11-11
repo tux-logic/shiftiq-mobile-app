@@ -33,7 +33,9 @@ val ShiftIQSuccess = Color(0xFF10B981)          // Completed / Active
 val Primary = ShiftIQPrimary
 val PrimaryBlue = ShiftIQPrimary
 val SeverityCrimson = ShiftIQError
+val SeverityAmber = ShiftIQWarning
 val TelematicsGreen = ShiftIQSuccess
+val Navy900 = Color(0xFF0F172A)
 
 val Slate50 = Color(0xFFF8FAFC)
 val Slate100 = Color(0xFFF1F5F9)

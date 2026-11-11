@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
 
                         val startDestination = when {
                             !session.isAuthenticated -> AppDestination.Login.route
+                            session.userRole == Role.ROLE_USER -> AppDestination.CustomerDashboard.route
                             session.userRole == Role.ROLE_OWNER && session.activeBranchId == null -> AppDestination.BranchSelection.route
                             else -> AppDestination.Dashboard.route
                         }
@@ -77,13 +78,21 @@ class MainActivity : ComponentActivity() {
                                     onPasswordChanged = loginViewModel::onPasswordChanged,
                                     onLoginClick = { loginViewModel.login() },
                                     onLoginSuccess = { role ->
-                                        if (role == Role.ROLE_OWNER) {
-                                            navController.navigate(AppDestination.BranchSelection.route) {
-                                                popUpTo(AppDestination.Login.route) { inclusive = true }
+                                        when (role) {
+                                            Role.ROLE_OWNER -> {
+                                                navController.navigate(AppDestination.BranchSelection.route) {
+                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
+                                                }
                                             }
-                                        } else {
-                                            navController.navigate(AppDestination.Dashboard.route) {
-                                                popUpTo(AppDestination.Login.route) { inclusive = true }
+                                            Role.ROLE_USER -> {
+                                                navController.navigate(AppDestination.CustomerDashboard.route) {
+                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
+                                                }
+                                            }
+                                            else -> {
+                                                navController.navigate(AppDestination.Dashboard.route) {
+                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
+                                                }
                                             }
                                         }
                                     },
@@ -106,7 +115,7 @@ class MainActivity : ComponentActivity() {
                                     onBackToLogin = { navController.popBackStack() },
                                     onNavigateToRecovery = { navController.navigate(AppDestination.ForgotPassword.route) },
                                     onRegistrationSuccess = {
-                                        navController.navigate(AppDestination.Dashboard.route) {
+                                        navController.navigate(AppDestination.CustomerDashboard.route) {
                                             popUpTo(AppDestination.Login.route) { inclusive = true }
                                         }
                                     }
@@ -161,7 +170,25 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToCustomerVehicles = {
                                         navController.navigate(AppDestination.CustomerVehicles.route)
                                     },
+                                    onNavigateToCustomerDashboard = {
+                                        navController.navigate(AppDestination.CustomerDashboard.route)
+                                    },
                                     onLogoutClick = {
+                                        scope.launch {
+                                            logoutUseCase()
+                                            navController.navigate(AppDestination.Login.route) {
+                                                popUpTo(navController.graph.id) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+
+                            composable(AppDestination.CustomerDashboard.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.b2c.MainB2CScreen(
+                                    onNavigateToLogin = {
                                         scope.launch {
                                             logoutUseCase()
                                             navController.navigate(AppDestination.Login.route) {
