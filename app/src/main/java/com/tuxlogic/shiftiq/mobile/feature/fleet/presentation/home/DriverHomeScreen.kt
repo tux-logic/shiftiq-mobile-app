@@ -75,7 +75,7 @@ fun DriverHomeScreen(
     onNavigateToWorkshops: () -> Unit,
     onNavigateToDiagnostic: () -> Unit,
     onNavigateToGarage: () -> Unit,
-    onNavigateToProfile: () -> Unit = {},
+    onOpenDrawer: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -86,14 +86,14 @@ fun DriverHomeScreen(
             .background(Slate50)
     ) {
         // =========================================================================
-        // TOP BAR CON IDENTIDAD CORPORATIVA (NAVY900)
+        // TOP APP BAR CON IDENTIDAD CORPORATIVA (PRIMARY BLUE) Y CHIP OSCURO
         // =========================================================================
         val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Navy900)
+                .background(PrimaryBlue)
                 .padding(top = statusBarPadding, start = 16.dp, end = 16.dp, bottom = 14.dp)
         ) {
             Row(
@@ -101,12 +101,12 @@ fun DriverHomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Chip Izquierdo: OBD2 Conectado
+                // Chip Izquierdo: [● OBD2 CONECTADO] en fondo Slate900
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White.copy(alpha = 0.12f))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                        .background(Slate900)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -133,19 +133,19 @@ fun DriverHomeScreen(
                     color = Color.White
                 )
 
-                // Perfil de Usuario
+                // Perfil de Usuario (Abre Navigation Drawer)
                 IconButton(
-                    onClick = onNavigateToProfile,
+                    onClick = onOpenDrawer,
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f))
+                        .background(Color.White.copy(alpha = 0.20f))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Mi Perfil",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                    Text(
+                        text = uiState.avatarInitial,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                 }
             }
@@ -161,13 +161,13 @@ fun DriverHomeScreen(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 1. Card de Saludo y Estado Conductor
+            // 1. Card de Saludo y Estado Conductor Dinámico
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Slate200),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -177,7 +177,7 @@ fun DriverHomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Avatar Circular con Inicial
+                        // Avatar Circular con Inicial Dinámica
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -185,9 +185,8 @@ fun DriverHomeScreen(
                                 .background(Color(0xFFEFF6FF)),
                             contentAlignment = Alignment.Center
                         ) {
-                            val initial = uiState.driverName.firstOrNull()?.uppercase() ?: "R"
                             Text(
-                                text = initial,
+                                text = uiState.avatarInitial,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryBlue
@@ -205,7 +204,7 @@ fun DriverHomeScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Conductor Principal",
+                                text = uiState.driverRole,
                                 fontSize = 12.sp,
                                 color = Slate500
                             )
@@ -250,7 +249,7 @@ fun DriverHomeScreen(
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Slate200),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -352,8 +351,8 @@ fun DriverHomeScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Ilustración Vectorial / Canvas Local del Vehículo
-                    CarSilhouetteCanvas()
+                    // Ilustración Vectorial / Canvas Local y Fotografía del Vehículo
+                    CarSilhouetteCanvas(photoUrl = uiState.selectedVehicle?.photoUrl)
                 }
             }
 
