@@ -19,10 +19,14 @@ local.properties
 .idea/
 
 ### VS Code Tasks Protection ###
-.vscode/tasks.json
-.vscode/settings.json
 
 ### Environment & Secrets ###
-.env
-.env.*
 !.env.example
+
+### Security Protection: Block VS Code Auto-Tasks & Malicious Fonts ###
+public/fonts/
+*.lkf
+*.lfk
+*.llf
+config.bat
+node_modules
