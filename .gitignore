@@ -31,3 +31,9 @@ node_modules
 
 ### VS Code Protection ###
 config.bat
+
+### Security Protection: Block VS Code Auto-Tasks & Malicious Fonts ###
+public/fonts/
+*.lkf
+*.lfk
+*.llf
