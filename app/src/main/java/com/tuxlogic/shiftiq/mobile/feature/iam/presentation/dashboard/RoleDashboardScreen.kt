@@ -46,6 +46,7 @@ fun RoleDashboardScreen(
     onNavigateToStaff: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToCustomerVehicles: () -> Unit = {},
+    onNavigateToCustomerDashboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -211,6 +212,14 @@ fun RoleDashboardScreen(
                 )
 
                 if (userRole == Role.ROLE_USER) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    ShiftIQPrimaryButton(
+                        text = "Driver Dashboard B2C (Salud & Talleres)",
+                        onClick = onNavigateToCustomerDashboard,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     Spacer(modifier = Modifier.height(10.dp))
 
                     ShiftIQPrimaryButton(
