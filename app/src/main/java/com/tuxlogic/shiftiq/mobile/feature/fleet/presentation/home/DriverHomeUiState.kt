@@ -8,7 +8,9 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverVehicleHealt
 
 data class DriverHomeUiState(
     val isLoading: Boolean = false,
-    val driverName: String = "Rodrigo",
+    val driverName: String = "Conductor",
+    val driverEmail: String = "",
+    val driverRole: String = "Conductor Particular",
     val selectedVehicle: B2CVehicleItem? = null,
     val availableVehicles: List<B2CVehicleItem> = emptyList(),
     val vehicleHealth: DriverVehicleHealth = DriverVehicleHealth(),
@@ -20,4 +22,7 @@ data class DriverHomeUiState(
     val isScanning: Boolean = false,
     val scanProgressMessage: String? = null,
     val errorMessage: String? = null
-)
+) {
+    val avatarInitial: String
+        get() = driverName.trim().firstOrNull()?.uppercase() ?: "C"
+}
