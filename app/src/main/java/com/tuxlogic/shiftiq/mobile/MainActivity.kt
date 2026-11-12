@@ -335,8 +335,109 @@ class MainActivity : ComponentActivity() {
                             }
 
                             // Bloque 4: Inventory (Gestión de Inventario y Stock)
+                            // IMPORTANT: declare /create before /{productId} so "create" is not treated as an id.
                             composable(AppDestination.Inventory.route) {
                                 com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.InventoryScreen(
+                                    onBack = { navController.popBackStack() },
+                                    onOpenDetail = { productId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryProductDetail.createRoute(productId)
+                                        )
+                                    },
+                                    onCreateProduct = { branchId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryCreateProduct.createRoute(branchId)
+                                        )
+                                    },
+                                    onBatchIn = { productId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryBatchIn.createRoute(productId)
+                                        )
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.InventoryCreateProduct.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("branchId") {
+                                        type = androidx.navigation.NavType.StringType
+                                        defaultValue = "none"
+                                        nullable = false
+                                    }
+                                )
+                            ) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.form.ProductFormScreen(
+                                    onBack = { navController.popBackStack() },
+                                    onViewCatalog = {
+                                        navController.popBackStack(AppDestination.Inventory.route, inclusive = false)
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.InventoryProductDetail.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("productId") {
+                                        type = androidx.navigation.NavType.StringType
+                                    }
+                                )
+                            ) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.detail.ProductDetailScreen(
+                                    onBack = { navController.popBackStack() },
+                                    onEdit = { productId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryEditProduct.createRoute(productId)
+                                        )
+                                    },
+                                    onBatchIn = { productId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryBatchIn.createRoute(productId)
+                                        )
+                                    },
+                                    onAdjust = { productId ->
+                                        navController.navigate(
+                                            AppDestination.InventoryStockAdjust.createRoute(productId)
+                                        )
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.InventoryEditProduct.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("productId") {
+                                        type = androidx.navigation.NavType.StringType
+                                    }
+                                )
+                            ) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.form.ProductFormScreen(
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.InventoryBatchIn.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("productId") {
+                                        type = androidx.navigation.NavType.StringType
+                                    }
+                                )
+                            ) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.stock.BatchInScreen(
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.InventoryStockAdjust.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("productId") {
+                                        type = androidx.navigation.NavType.StringType
+                                    }
+                                )
+                            ) {
+                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.stock.StockAdjustmentScreen(
                                     onBack = { navController.popBackStack() }
                                 )
                             }

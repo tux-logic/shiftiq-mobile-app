@@ -1,6 +1,6 @@
 package com.tuxlogic.shiftiq.mobile.feature.inventory.presentation
 
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductDetail
+import com.tuxlogic.shiftiq.mobile.core.model.Money
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductItem
 
 data class InventoryBranchUi(
@@ -10,8 +10,6 @@ data class InventoryBranchUi(
 
 data class InventoryUiState(
     val isLoading: Boolean = false,
-    val isSaving: Boolean = false,
-    val isProductLoading: Boolean = false,
     val branches: List<InventoryBranchUi> = listOf(
         InventoryBranchUi("b1000000-0000-0000-0000-000000000001", "Sede Central - ShiftIQ"),
         InventoryBranchUi("b1000000-0000-0000-0000-000000000002", "Sede Norte - Taller Express"),
@@ -19,10 +17,25 @@ data class InventoryUiState(
     ),
     val selectedBranchId: String? = "b1000000-0000-0000-0000-000000000001",
     val products: List<ProductItem> = emptyList(),
-    val selectedProduct: ProductDetail? = null,
     val searchQuery: String = "",
     val categoryFilter: String = "",
     val lowStockOnly: Boolean = false,
     val errorMessage: String? = null,
     val infoMessage: String? = null
-)
+) {
+    val availableCategories: List<String>
+        get() = (InventorySuggestedCategoriesLocal + products.map { it.category })
+            .distinct()
+            .sorted()
+
+    val criticalCount: Int
+        get() = products.count { it.lowStockAlert }
+
+    val warehouseValue: Money
+        get() = products.fold(Money.ZERO) { acc, item ->
+            acc + (item.salePrice * item.currentStock)
+        }
+}
+
+private val InventorySuggestedCategoriesLocal =
+    listOf("Filtros", "Frenos", "Aceites", "Suspensión", "Lubricantes", "Eléctrico")

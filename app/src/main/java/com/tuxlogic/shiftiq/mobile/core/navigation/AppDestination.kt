@@ -37,7 +37,26 @@ sealed class AppDestination(val route: String) {
     data object Appointments : AppDestination("fleet/appointments")
     data object CreateAppointment : AppDestination("fleet/appointments/create")
     data object StaffManagement : AppDestination("fleet/staff")
+    // Feature Inventory: catálogo, ficha, alta, lote FIFO y ajuste
     data object Inventory : AppDestination("inventory/products")
+    data object InventoryCreateProduct : AppDestination("inventory/products/create") {
+        fun createRoute(branchId: String? = null): String {
+            val id = branchId?.takeIf { it.isNotBlank() }
+            return if (id == null) route else "$route?branchId=$id"
+        }
+    }
+    data object InventoryProductDetail : AppDestination("inventory/products/{productId}") {
+        fun createRoute(productId: String) = "inventory/products/$productId"
+    }
+    data object InventoryEditProduct : AppDestination("inventory/products/{productId}/edit") {
+        fun createRoute(productId: String) = "inventory/products/$productId/edit"
+    }
+    data object InventoryBatchIn : AppDestination("inventory/products/{productId}/batch") {
+        fun createRoute(productId: String) = "inventory/products/$productId/batch"
+    }
+    data object InventoryStockAdjust : AppDestination("inventory/products/{productId}/adjust") {
+        fun createRoute(productId: String) = "inventory/products/$productId/adjust"
+    }
     data object Telemetry : AppDestination("iot/telemetry")
     data object CustomerVehicles : AppDestination("iot/customer-vehicles")
 
