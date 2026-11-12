@@ -164,10 +164,8 @@ private fun DiagnosticsTopBar(
             .fillMaxWidth()
             .background(Navy900)
             .padding(
-                top = statusBarPadding,
-                start = spacing.medium,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
+                horizontal = spacing.medium,
+                vertical = spacing.medium
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

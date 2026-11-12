@@ -209,10 +209,8 @@ private fun GarageTopBar(
             .fillMaxWidth()
             .background(Navy900)
             .padding(
-                top = statusBarPadding + spacing.small,
-                start = spacing.medium,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
+                horizontal = spacing.medium,
+                vertical = spacing.medium
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

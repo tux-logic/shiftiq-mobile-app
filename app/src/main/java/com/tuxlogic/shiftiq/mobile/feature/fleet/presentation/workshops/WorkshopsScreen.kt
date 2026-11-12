@@ -181,7 +181,6 @@ private fun WorkshopsTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = statusBarPadding)
                 .height(spacing.topBarHeight)
                 .padding(horizontal = spacing.medium),
             horizontalArrangement = Arrangement.SpaceBetween,
