@@ -22,21 +22,19 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityAmber
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverDtcAlert
 
 @Composable
@@ -46,162 +44,215 @@ fun DtcAlertBanner(
     modifier: Modifier = Modifier
 ) {
     if (alert != null) {
-        // Alerta DTC Activa (Borde Ámbar de Severidad Media)
-        Card(
-            modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.5.dp, SeverityAmber),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFEF3C7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = SeverityAmber,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = alert.title,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate900
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF1F5F9))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = alert.code,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Slate900
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Tag de severidad
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFFFFBEB))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "Severidad: ${alert.severity} • Revisión sugerida en ${alert.suggestedReviewKm} km",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFB45309)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = alert.description,
-                    fontSize = 12.sp,
-                    color = Slate700,
-                    lineHeight = 16.sp
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onViewDiagnosticDetail),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Ver Diagnóstico Completo",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
+        ActiveDtcAlertCard(
+            alert = alert,
+            onViewDiagnosticDetail = onViewDiagnosticDetail,
+            modifier = modifier
+        )
     } else {
-        // Estado Positivo ("Vehículo Saludable: Sin alertas críticas")
-        Card(
-            modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5)),
-            border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        CleanHealthBanner(modifier = modifier)
+    }
+}
+
+@Composable
+private fun ActiveDtcAlertCard(
+    alert: DriverDtcAlert,
+    onViewDiagnosticDetail: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(spacing.strokeMedium, ShiftIQWarning),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.medium)
         ) {
-            Row(
+            DtcAlertTopHeader(title = alert.title, code = alert.code)
+            Spacer(modifier = Modifier.height(spacing.small))
+            DtcSeverityPill(severity = alert.severity, km = alert.suggestedReviewKm)
+            Spacer(modifier = Modifier.height(spacing.small))
+            Text(
+                text = alert.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.smallMedium))
+            DtcViewDetailCta(onClick = onViewDiagnosticDetail)
+        }
+    }
+}
+
+@Composable
+private fun DtcAlertTopHeader(
+    title: String,
+    code: String,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .size(spacing.badgeHeight + spacing.small)
+                    .clip(CircleShape)
+                    .background(ShiftIQWarning.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFD1FAE5)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = TelematicsGreen,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "Vehículo Saludable: Sin alertas críticas",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF065F46)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Todos los parámetros OBD-II operan dentro de los umbrales seguros.",
-                        fontSize = 11.sp,
-                        color = Color(0xFF047857)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = ShiftIQWarning,
+                    modifier = Modifier.size(spacing.iconLarge)
+                )
+            }
+            Spacer(modifier = Modifier.width(spacing.smallMedium))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(spacing.radiusSmall))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
+        ) {
+            Text(
+                text = code,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun DtcSeverityPill(
+    severity: String,
+    km: Int,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(spacing.radiusSmall))
+            .background(ShiftIQWarning.copy(alpha = 0.12f))
+            .padding(horizontal = spacing.smallMedium, vertical = spacing.extraSmall)
+    ) {
+        Text(
+            text = "Severidad: $severity • Revisión sugerida en $km km",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = ShiftIQWarning
+        )
+    }
+}
+
+@Composable
+private fun DtcViewDetailCta(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Ver Diagnóstico Completo",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(spacing.extraSmall))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(spacing.iconSmall)
+        )
+    }
+}
+
+@Composable
+private fun CleanHealthBanner(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(spacing.strokeThin, ShiftIQSuccess.copy(alpha = 0.35f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = ShiftIQSuccess,
+                modifier = Modifier.size(spacing.iconExtraLarge)
+            )
+            Spacer(modifier = Modifier.width(spacing.smallMedium))
+            Column {
+                Text(
+                    text = "Sin códigos de falla detectados",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(spacing.micro))
+                Text(
+                    text = "Todos los sistemas ECU operan dentro de los parámetros OEM normales.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
+    }
+}
+
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun DtcAlertBannerPreview() {
+    ShiftIQTheme {
+        DtcAlertBanner(
+            alert = DriverDtcAlert(
+                code = "P0135",
+                title = "Circuito Calefactor Sensor O2",
+                severity = "Moderada",
+                suggestedReviewKm = 500,
+                description = "Se detectó resistencia anómala en el circuito del calefactor de la sonda lambda."
+            ),
+            onViewDiagnosticDetail = {}
+        )
     }
 }

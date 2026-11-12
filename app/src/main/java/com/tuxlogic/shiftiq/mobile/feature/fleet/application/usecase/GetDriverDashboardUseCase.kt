@@ -20,6 +20,8 @@ import javax.inject.Inject
 
 data class DriverDashboardData(
     val driverName: String,
+    val driverEmail: String = "",
+    val driverRole: String = "Conductor Particular",
     val selectedVehicle: B2CVehicleItem?,
     val availableVehicles: List<B2CVehicleItem>,
     val vehicleHealth: DriverVehicleHealth,
@@ -34,11 +36,45 @@ class GetDriverDashboardUseCase @Inject constructor(
     private val vehicleDao: VehicleDao,
     private val telemetryDao: TelemetryDao,
     private val iotRepository: IotRepository,
-    private val workOrderRepository: WorkOrderRepository
+    private val workOrderRepository: WorkOrderRepository,
+    private val getCustomerByUserIdUseCase: com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
 ) {
     suspend operator fun invoke(): DriverDashboardData {
         val session = sessionDataStore.sessionState.firstOrNull()
         val userId = session?.userId
+        val userEmail = session?.userEmail.orEmpty()
+
+        // 0. Obtener nombre real del conductor desde perfil de Core o derivado del email
+        var driverName = ""
+        if (userId != null) {
+            try {
+                val customerResult = getCustomerByUserIdUseCase(userId.value.toString())
+                if (customerResult is AppResult.Success) {
+                    val customer = customerResult.data
+                    val name = customer.firstName?.ifBlank { null }
+                        ?: customer.displayName.ifBlank { null }
+                    if (!name.isNullOrBlank()) {
+                        driverName = name
+                    }
+                }
+            } catch (_: Exception) {
+                // Silencioso en modo offline
+            }
+        }
+
+        if (driverName.isBlank() && userEmail.isNotBlank()) {
+            val emailPart = userEmail.substringBefore("@")
+                .split(".", "_", "-")
+                .firstOrNull()
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+            if (!emailPart.isNullOrBlank()) {
+                driverName = emailPart
+            }
+        }
+
+        if (driverName.isBlank()) {
+            driverName = "Conductor"
+        }
 
         // 1. Obtener vehículos desde Room (offline first)
         val cachedVehicles = vehicleDao.getAllVehicles().firstOrNull().orEmpty()
@@ -125,7 +161,9 @@ class GetDriverDashboardUseCase @Inject constructor(
         )
 
         return DriverDashboardData(
-            driverName = "Rodrigo",
+            driverName = driverName,
+            driverEmail = userEmail,
+            driverRole = "Conductor Particular",
             selectedVehicle = primaryVehicle,
             availableVehicles = vehicles,
             vehicleHealth = DriverVehicleHealth(

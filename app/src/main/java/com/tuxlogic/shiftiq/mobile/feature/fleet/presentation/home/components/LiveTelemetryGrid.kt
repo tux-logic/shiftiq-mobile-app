@@ -22,21 +22,19 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 
 @Composable
@@ -44,93 +42,111 @@ fun LiveTelemetryGrid(
     telemetry: DriverLiveTelemetry,
     modifier: Modifier = Modifier
 ) {
+    val spacing = MaterialTheme.spacing
     Column(modifier = modifier.fillMaxWidth()) {
-        // Cabecera de sección
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "TELEMETRÍA EN VIVO",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp,
-                color = Slate900
-            )
+        LiveTelemetryHeader()
+        Spacer(modifier = Modifier.height(spacing.smallMedium))
+        LiveTelemetryRow(
+            firstTitle = "Régimen Motor",
+            firstValue = telemetry.rpm.toString(),
+            firstUnit = "RPM",
+            firstIcon = Icons.Outlined.Settings,
+            secondTitle = "Refrigerante",
+            secondValue = telemetry.temperatureCelsius.toString(),
+            secondUnit = "°C",
+            secondIcon = Icons.Default.Thermostat
+        )
+        Spacer(modifier = Modifier.height(spacing.smallMedium))
+        val formattedBattery = String.format(java.util.Locale.US, "%.1f", telemetry.batteryVoltage)
+        val formattedKm = String.format(java.util.Locale.US, "%,d", telemetry.odometerKm)
+        LiveTelemetryRow(
+            firstTitle = "Batería",
+            firstValue = formattedBattery,
+            firstUnit = "V",
+            firstIcon = Icons.Default.ElectricBolt,
+            secondTitle = "Kilometraje",
+            secondValue = formattedKm,
+            secondUnit = "km",
+            secondIcon = Icons.Default.Speed
+        )
+    }
+}
 
-            // Badge de Sincronizado
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFECFDF5))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(TelematicsGreen)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Sincronizado",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TelematicsGreen
-                )
-            }
-        }
+@Composable
+private fun LiveTelemetryHeader(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "TELEMETRÍA EN VIVO",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        LiveTelemetrySyncBadge()
+    }
+}
 
-        Spacer(modifier = Modifier.height(12.dp))
+@Composable
+private fun LiveTelemetrySyncBadge(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(spacing.radiusMedium))
+            .background(ShiftIQSuccess.copy(alpha = 0.15f))
+            .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(spacing.indicatorHeight)
+                .clip(CircleShape)
+                .background(ShiftIQSuccess)
+        )
+        Spacer(modifier = Modifier.width(spacing.extraSmall))
+        Text(
+            text = "Sincronizado",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = ShiftIQSuccess
+        )
+    }
+}
 
-        // Fila 1: Régimen Motor & Refrigerante
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            TelemetryMetricCard(
-                title = "Régimen Motor",
-                value = telemetry.rpm.toString(),
-                unit = "RPM",
-                icon = Icons.Outlined.Settings,
-                modifier = Modifier.weight(1f)
-            )
-            TelemetryMetricCard(
-                title = "Refrigerante",
-                value = telemetry.temperatureCelsius.toString(),
-                unit = "°C",
-                icon = Icons.Default.Thermostat,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Fila 2: Batería & Kilometraje
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            val formattedBattery = String.format(java.util.Locale.US, "%.1f", telemetry.batteryVoltage)
-            TelemetryMetricCard(
-                title = "Batería",
-                value = formattedBattery,
-                unit = "V",
-                icon = Icons.Default.ElectricBolt,
-                modifier = Modifier.weight(1f)
-            )
-
-            val formattedKm = String.format(java.util.Locale.US, "%,d", telemetry.odometerKm)
-            TelemetryMetricCard(
-                title = "Kilometraje",
-                value = formattedKm,
-                unit = "km",
-                icon = Icons.Default.Speed,
-                modifier = Modifier.weight(1f)
-            )
-        }
+@Composable
+private fun LiveTelemetryRow(
+    firstTitle: String,
+    firstValue: String,
+    firstUnit: String,
+    firstIcon: ImageVector,
+    secondTitle: String,
+    secondValue: String,
+    secondUnit: String,
+    secondIcon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
+    ) {
+        TelemetryMetricCard(
+            title = firstTitle,
+            value = firstValue,
+            unit = firstUnit,
+            icon = firstIcon,
+            modifier = Modifier.weight(1f)
+        )
+        TelemetryMetricCard(
+            title = secondTitle,
+            value = secondValue,
+            unit = secondUnit,
+            icon = secondIcon,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -142,63 +158,103 @@ private fun TelemetryMetricCard(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
+    val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Slate200),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp)
+                .padding(spacing.medium)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Slate500
-                )
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF1F5F9)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = value,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Slate900
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = unit,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Slate500,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
-            }
+            TelemetryMetricTopRow(title = title, icon = icon)
+            Spacer(modifier = Modifier.height(spacing.small))
+            TelemetryMetricValueRow(value = value, unit = unit)
         }
+    }
+}
+
+@Composable
+private fun TelemetryMetricTopRow(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Box(
+            modifier = Modifier
+                .size(spacing.badgeHeight)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(spacing.iconMedium)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TelemetryMetricValueRow(
+    value: String,
+    unit: String,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(spacing.extraSmall))
+        Text(
+            text = unit,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = spacing.micro)
+        )
+    }
+}
+
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun LiveTelemetryGridPreview() {
+    ShiftIQTheme {
+        LiveTelemetryGrid(
+            telemetry = DriverLiveTelemetry(
+                rpm = 842,
+                temperatureCelsius = 89,
+                batteryVoltage = 13.8,
+                odometerKm = 45210
+            )
+        )
     }
 }

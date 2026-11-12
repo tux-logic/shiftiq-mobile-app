@@ -47,3 +47,14 @@ val Slate600 = Color(0xFF475569)
 val Slate700 = Color(0xFF334155)
 val Slate800 = Color(0xFF1E293B)
 val Slate900 = Color(0xFF0F172A)
+
+// Specialized Telemetry & Action Colors
+val CanBusCyan = Color(0xFF0284C7)
+val ObdTeal = Color(0xFF0FB5BA)
+val WhatsAppGreen = Color(0xFF25D366)
+val WalBufferAmber = Color(0xFFD97706)
+
+// Material 3 Bottom Navigation Tokens (Figma Frame 215:15142)
+val NavActiveBlue = Color(0xFF1E3A8A)
+val NavActivePill = Color(0xFFDBEAFE)
+val NavInactiveSlate = Color(0xFF64748B)
