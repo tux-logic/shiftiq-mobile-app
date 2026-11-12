@@ -60,7 +60,10 @@ data class MaintenanceHistoryItem(
     val workshopName: String,
     val description: String,
     val totalCostPen: Double,
-    val voucherUrl: String? = null
+    val voucherUrl: String? = null,
+    val voucherId: String? = null,
+    val hasPdfVoucher: Boolean = false,
+    val hasTechnicalDetail: Boolean = false
 )
 
 data class WorkshopItem(

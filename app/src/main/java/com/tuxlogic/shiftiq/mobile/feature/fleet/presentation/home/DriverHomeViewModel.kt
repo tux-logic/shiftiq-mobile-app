@@ -42,6 +42,8 @@ class DriverHomeViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         driverName = data.driverName,
+                        driverEmail = data.driverEmail,
+                        driverRole = data.driverRole,
                         selectedVehicle = data.selectedVehicle,
                         availableVehicles = data.availableVehicles,
                         vehicleHealth = data.vehicleHealth,
