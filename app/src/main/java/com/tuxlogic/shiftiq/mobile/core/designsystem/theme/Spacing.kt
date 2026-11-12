@@ -44,6 +44,7 @@ data class Spacing(
     // Layout & Component Dimensions
     val chipHeight: Dp = 32.dp,
     val badgeHeight: Dp = 24.dp,
+    val controlButtonSize: Dp = 28.dp,
     val topBarHeight: Dp = 64.dp,
     val bottomNavHeight: Dp = 64.dp,
     val navPillWidth: Dp = 40.dp,
@@ -69,6 +70,8 @@ data class Spacing(
     val dropzoneHeight: Dp = 120.dp,
     val thumbSize: Dp = 48.dp,
     val timelineDotSize: Dp = 12.dp,
+    val timelinePinSize: Dp = 20.dp,
+    val qrCodeSize: Dp = 56.dp,
     val elevationSmall: Dp = 2.dp,
     val elevationMedium: Dp = 4.dp,
     val strokeThin: Dp = 1.dp,

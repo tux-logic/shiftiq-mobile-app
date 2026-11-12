@@ -75,11 +75,16 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.Diagnos
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.DtcDetailScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.OfflineTelemetryScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.GarageScreen
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.external.ExternalServiceRegistrationRoute
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.history.ServiceVoucherPdfRoute
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.history.TechnicalInterventionDetailRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.registration.VehicleRegistrationScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.DriverHomeRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.DriverHomeViewModel
-import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.AppointmentBookingScreen
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.AppointmentBookingRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.WorkshopsScreen
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.appointments.MyAppointmentsRoute
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.detail.WorkshopDetailRoute
 import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorder.LiveWorkOrderScreen
 import kotlinx.coroutines.launch
 
@@ -327,14 +332,30 @@ fun MainB2CScreen(
                     onNavigateBack = { activeChildScreen = null }
                 )
             }
+            activeChildScreen?.startsWith("workshop_detail:") == true -> {
+                val workshopId = activeChildScreen?.removePrefix("workshop_detail:") ?: "w1"
+                WorkshopDetailRoute(
+                    workshopId = workshopId,
+                    onNavigateBack = { activeChildScreen = null },
+                    onNavigateToBooking = { id -> activeChildScreen = "appointment_booking:$id" }
+                )
+            }
+            activeChildScreen == "my_appointments" -> {
+                MyAppointmentsRoute(
+                    onNavigateBack = { activeChildScreen = null }
+                )
+            }
             activeChildScreen?.startsWith("appointment_booking:") == true -> {
                 val workshopId = activeChildScreen?.removePrefix("appointment_booking:") ?: "workshop-1"
-                AppointmentBookingScreen(
+                AppointmentBookingRoute(
                     workshopId = workshopId,
                     onNavigateBack = { activeChildScreen = null },
                     onBookingConfirmed = {
                         activeChildScreen = null
                         selectedTab = 0
+                    },
+                    onNavigateToMyAppointments = {
+                        activeChildScreen = "my_appointments"
                     }
                 )
             }
@@ -342,6 +363,28 @@ fun MainB2CScreen(
                 val orderId = activeChildScreen?.removePrefix("live_work_order:") ?: "OT-2026-0418"
                 LiveWorkOrderScreen(
                     workOrderId = orderId,
+                    onNavigateBack = { activeChildScreen = null }
+                )
+            }
+            activeChildScreen == "external_service_registration" -> {
+                ExternalServiceRegistrationRoute(
+                    onNavigateBack = { activeChildScreen = null }
+                )
+            }
+            activeChildScreen?.startsWith("intervention_detail:") == true -> {
+                val interventionId = activeChildScreen?.removePrefix("intervention_detail:") ?: "hist-2"
+                TechnicalInterventionDetailRoute(
+                    interventionId = interventionId,
+                    onNavigateBack = { activeChildScreen = null },
+                    onNavigateToVoucherPdf = { voucherId ->
+                        activeChildScreen = "voucher_pdf:$voucherId"
+                    }
+                )
+            }
+            activeChildScreen?.startsWith("voucher_pdf:") == true -> {
+                val voucherId = activeChildScreen?.removePrefix("voucher_pdf:") ?: "v-0004921"
+                ServiceVoucherPdfRoute(
+                    voucherId = voucherId,
                     onNavigateBack = { activeChildScreen = null }
                 )
             }
@@ -374,11 +417,22 @@ fun MainB2CScreen(
                                 onNavigateToOfflineMode = { activeChildScreen = "offline_mode" }
                             )
                             2 -> WorkshopsScreen(
-                                onNavigateToBooking = { workshopId -> activeChildScreen = "appointment_booking:$workshopId" }
+                                onNavigateToBooking = { workshopId -> activeChildScreen = "appointment_booking:$workshopId" },
+                                onNavigateToDetail = { workshopId -> activeChildScreen = "workshop_detail:$workshopId" },
+                                onNavigateToMyAppointments = { activeChildScreen = "my_appointments" }
                             )
                             3 -> GarageScreen(
                                 onAddVehicle = { activeChildScreen = "vehicle_registration" },
-                                onNavigateToProfile = { showProfileModal = true }
+                                onNavigateToProfile = { showProfileModal = true },
+                                onNavigateToExternalServiceRegistration = {
+                                    activeChildScreen = "external_service_registration"
+                                },
+                                onNavigateToInterventionDetail = { interventionId ->
+                                    activeChildScreen = "intervention_detail:$interventionId"
+                                },
+                                onNavigateToVoucherPdf = { voucherId ->
+                                    activeChildScreen = "voucher_pdf:$voucherId"
+                                }
                             )
                         }
                     }

@@ -23,12 +23,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +47,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,15 +63,24 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.WorkshopItem
 
 @Composable
 fun WorkshopsRoute(
     onNavigateToBooking: (String) -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {},
+    onNavigateToMyAppointments: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: WorkshopsViewModel = hiltViewModel()
 ) {
@@ -74,6 +90,8 @@ fun WorkshopsRoute(
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onFilterSelected = viewModel::onFilterSelected,
         onNavigateToBooking = onNavigateToBooking,
+        onNavigateToDetail = onNavigateToDetail,
+        onNavigateToMyAppointments = onNavigateToMyAppointments,
         modifier = modifier
     )
 }
@@ -81,11 +99,15 @@ fun WorkshopsRoute(
 @Composable
 fun WorkshopsScreen(
     onNavigateToBooking: (String) -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {},
+    onNavigateToMyAppointments: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: WorkshopsViewModel = hiltViewModel()
 ) {
     WorkshopsRoute(
         onNavigateToBooking = onNavigateToBooking,
+        onNavigateToDetail = onNavigateToDetail,
+        onNavigateToMyAppointments = onNavigateToMyAppointments,
         modifier = modifier,
         viewModel = viewModel
     )
@@ -97,6 +119,8 @@ fun WorkshopsScreen(
     onSearchQueryChange: (String) -> Unit,
     onFilterSelected: (WorkshopFilter) -> Unit,
     onNavigateToBooking: (String) -> Unit,
+    onNavigateToDetail: (String) -> Unit,
+    onNavigateToMyAppointments: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -107,7 +131,10 @@ fun WorkshopsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        WorkshopsTopBar(statusBarPadding = statusBarPadding)
+        WorkshopsTopBar(
+            onNavigateToMyAppointments = onNavigateToMyAppointments,
+            statusBarPadding = statusBarPadding
+        )
 
         Column(
             modifier = Modifier
@@ -125,9 +152,14 @@ fun WorkshopsScreen(
                 onSelectFilter = onFilterSelected
             )
             VectorGpsMapCard()
+            WorkshopsCatalogListHeader(
+                count = (uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops }).size,
+                onNavigateToMyAppointments = onNavigateToMyAppointments
+            )
             WorkshopsCatalogList(
                 workshops = uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops },
-                onNavigateToBooking = onNavigateToBooking
+                onNavigateToBooking = onNavigateToBooking,
+                onNavigateToDetail = onNavigateToDetail
             )
             Spacer(modifier = Modifier.height(spacing.medium))
         }
@@ -136,48 +168,62 @@ fun WorkshopsScreen(
 
 @Composable
 private fun WorkshopsTopBar(
+    onNavigateToMyAppointments: () -> Unit,
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding,
-                start = spacing.medium,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = Navy900,
+        shadowElevation = spacing.elevationSmall
     ) {
-        Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = statusBarPadding)
+                .height(spacing.topBarHeight)
+                .padding(horizontal = spacing.medium),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusFull))
+                    .background(ObdTeal.copy(alpha = 0.2f))
+                    .padding(horizontal = spacing.small, vertical = spacing.micro)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(spacing.indicatorHeight)
+                            .clip(CircleShape)
+                            .background(ObdTeal)
+                    )
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text(
+                        text = "OBD2 CONECTADO",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ObdTeal
+                    )
+                }
+            }
+
             Text(
-                text = "Buscar Talleres Afiliados",
+                text = "Talleres Afiliados",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            Text(
-                text = "Talleres certificados con bahías activas",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.7f)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(ShiftIQSuccess.copy(alpha = 0.2f))
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = "OBD2 ACTIVO",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = ShiftIQSuccess
-            )
+
+            IconButton(onClick = onNavigateToMyAppointments) {
+                Icon(
+                    imageVector = Icons.Default.EventNote,
+                    contentDescription = "Mis Citas",
+                    tint = Color.White
+                )
+            }
         }
     }
 }
@@ -196,7 +242,7 @@ private fun WorkshopSearchBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("Buscar por distrito, especialidad o nombre...") },
+            placeholder = { Text("Buscar taller por distrito o servicio...", style = MaterialTheme.typography.bodySmall) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -205,13 +251,14 @@ private fun WorkshopSearchBar(
                     modifier = Modifier.size(spacing.iconMedium)
                 )
             },
+            shape = RoundedCornerShape(spacing.radiusMedium),
             modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.width(spacing.small))
         IconButton(
             onClick = {},
             modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
+                .size(spacing.buttonHeight)
                 .clip(RoundedCornerShape(spacing.radiusMedium))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
@@ -236,14 +283,14 @@ private fun WorkshopFilterChips(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing.small)
     ) {
-        WorkshopFilter.values().forEach { filter ->
+        WorkshopFilter.entries.forEach { filter ->
             FilterChip(
                 selected = filter == selectedFilter,
                 onClick = { onSelectFilter(filter) },
                 label = { Text(filter.label, style = MaterialTheme.typography.labelSmall) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.primary
+                    selectedContainerColor = PrimaryBlue,
+                    selectedLabelColor = Color.White
                 )
             )
         }
@@ -273,24 +320,142 @@ private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
                 drawLine(lineColor, Offset(0f, h * 0.70f), Offset(w, h * 0.70f), strokeWidth = 3f)
                 drawLine(lineColor, Offset(w * 0.30f, 0f), Offset(w * 0.30f, h), strokeWidth = 3f)
                 drawLine(lineColor, Offset(w * 0.70f, 0f), Offset(w * 0.70f, h), strokeWidth = 3f)
-                drawCircle(Color(0xFF0F62FE), radius = 14f, center = Offset(w * 0.45f, h * 0.50f))
-                drawCircle(Color(0xFF0F62FE), radius = 28f, center = Offset(w * 0.45f, h * 0.50f), style = Stroke(width = 3f))
-                drawCircle(Color(0xFFBA1A1A), radius = 12f, center = Offset(w * 0.25f, h * 0.30f))
-                drawCircle(Color(0xFFBA1A1A), radius = 12f, center = Offset(w * 0.75f, h * 0.65f))
+                drawCircle(PrimaryBlue, radius = 14f, center = Offset(w * 0.45f, h * 0.50f))
+                drawCircle(PrimaryBlue, radius = 28f, center = Offset(w * 0.45f, h * 0.50f), style = Stroke(width = 3f))
+                drawCircle(ObdTeal, radius = 12f, center = Offset(w * 0.25f, h * 0.30f))
+                drawCircle(ShiftIQWarning, radius = 12f, center = Offset(w * 0.75f, h * 0.65f))
             }
+
+            // GPS Pill
             Row(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .align(Alignment.TopStart)
                     .padding(spacing.smallMedium)
-                    .clip(RoundedCornerShape(spacing.radiusSmall))
-                    .background(Navy900)
-                    .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
+                    .clip(RoundedCornerShape(spacing.radiusFull))
+                    .background(Color.White.copy(alpha = 0.95f))
+                    .padding(horizontal = spacing.small, vertical = spacing.micro),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Navigation, contentDescription = null, tint = Color.White, modifier = Modifier.size(spacing.iconSmall))
+                Box(
+                    modifier = Modifier
+                        .size(spacing.indicatorHeight)
+                        .clip(CircleShape)
+                        .background(ObdTeal)
+                )
                 Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text("GPS Activo: San Miguel", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                Text(
+                    text = "GPS EN VIVO",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate700
+                )
             }
+
+            // Map Controls Right
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(spacing.smallMedium),
+                verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(spacing.controlButtonSize)
+                        .clip(RoundedCornerShape(spacing.radiusSmall))
+                        .background(Color.White)
+                        .clickable {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("+", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
+                }
+                Box(
+                    modifier = Modifier
+                        .size(spacing.controlButtonSize)
+                        .clip(RoundedCornerShape(spacing.radiusSmall))
+                        .background(Color.White)
+                        .clickable {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("−", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
+                }
+                Box(
+                    modifier = Modifier
+                        .size(spacing.controlButtonSize)
+                        .clip(RoundedCornerShape(spacing.radiusSmall))
+                        .background(Color.White)
+                        .clickable {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(spacing.iconSmall))
+                }
+            }
+
+            // Pins overlay
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = spacing.extraExtraLarge)
+                    .clip(RoundedCornerShape(spacing.radiusSmall))
+                    .background(Navy900)
+                    .padding(horizontal = spacing.small, vertical = spacing.micro)
+            ) {
+                Text(text = "Silva (1.2 km)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkshopsCatalogListHeader(
+    count: Int,
+    onNavigateToMyAppointments: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Talleres Recomendados",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Slate900
+            )
+            Spacer(modifier = Modifier.width(spacing.small))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusExtraSmall))
+                    .background(Slate200)
+                    .padding(horizontal = spacing.extraSmall, vertical = spacing.micro)
+            ) {
+                Text(
+                    text = "$count Cercanos",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Slate700
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.clickable(onClick = onNavigateToMyAppointments),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Mis Citas",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
+            )
+            Spacer(modifier = Modifier.width(spacing.micro))
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = null,
+                tint = PrimaryBlue,
+                modifier = Modifier.size(spacing.iconSmall)
+            )
         }
     }
 }
@@ -299,6 +464,7 @@ private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
 private fun WorkshopsCatalogList(
     workshops: List<WorkshopItem>,
     onNavigateToBooking: (String) -> Unit,
+    onNavigateToDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -307,7 +473,11 @@ private fun WorkshopsCatalogList(
         verticalArrangement = Arrangement.spacedBy(spacing.medium)
     ) {
         workshops.forEach { workshop ->
-            WorkshopCardItem(workshop = workshop, onBook = { onNavigateToBooking(workshop.id) })
+            WorkshopCardItem(
+                workshop = workshop,
+                onBook = { onNavigateToBooking(workshop.id) },
+                onViewProfile = { onNavigateToDetail(workshop.id) }
+            )
         }
     }
 }
@@ -316,6 +486,7 @@ private fun WorkshopsCatalogList(
 private fun WorkshopCardItem(
     workshop: WorkshopItem,
     onBook: () -> Unit,
+    onViewProfile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -329,17 +500,23 @@ private fun WorkshopCardItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium)
+                .padding(spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             WorkshopCardHeader(workshop = workshop)
+            WorkshopTrustBadgesRow(isCertified = workshop.isCertifiedShiftIQ, hasFreeBays = workshop.hasFreeBaysToday)
             if (!workshop.linkedIssue.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(spacing.small))
                 DtcAlignmentBanner(issue = workshop.linkedIssue)
             }
-            Spacer(modifier = Modifier.height(spacing.smallMedium))
-            WorkshopCardPricingRow(minPen = workshop.estimatedCostMinPen, maxPen = workshop.estimatedCostMaxPen, slot = workshop.nextAvailableSlot)
-            Spacer(modifier = Modifier.height(spacing.smallMedium))
-            WorkshopCardActions(onBook = onBook)
+            WorkshopCardPricingRow(
+                minPen = workshop.estimatedCostMinPen,
+                maxPen = workshop.estimatedCostMaxPen,
+                slot = workshop.nextAvailableSlot
+            )
+            WorkshopCardActions(
+                onBook = onBook,
+                onViewProfile = onViewProfile
+            )
         }
     }
 }
@@ -353,41 +530,114 @@ private fun WorkshopCardHeader(
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(spacing.avatarMedium)
+                    .clip(RoundedCornerShape(spacing.radiusMedium))
+                    .background(Slate100),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Storefront,
+                    contentDescription = null,
+                    tint = PrimaryBlue,
+                    modifier = Modifier.size(spacing.iconLarge)
+                )
+            }
+            Spacer(modifier = Modifier.width(spacing.smallMedium))
+            Column {
                 Text(
                     text = workshop.name,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Slate900
                 )
-                if (workshop.isCertifiedShiftIQ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "★ ${workshop.rating}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ShiftIQWarning
+                    )
                     Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text(
+                        text = "(${workshop.reviewCount} reseñas) • ${workshop.district}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Slate500
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Verified,
-                        contentDescription = "Certificado",
-                        tint = MaterialTheme.colorScheme.primary,
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Slate500,
                         modifier = Modifier.size(spacing.iconSmall)
+                    )
+                    Spacer(modifier = Modifier.width(spacing.micro))
+                    Text(
+                        text = "A ${workshop.distanceKm} km de tu ubicación",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Slate500
                     )
                 }
             }
-            Text(
-                text = "${workshop.district} • ${workshop.distanceKm} km",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        IconButton(onClick = {}) {
+            Icon(
+                imageVector = Icons.Default.BookmarkBorder,
+                contentDescription = "Favorito",
+                tint = Slate500,
+                modifier = Modifier.size(spacing.iconLarge)
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Star, contentDescription = null, tint = ShiftIQWarning, modifier = Modifier.size(spacing.iconMedium))
-            Spacer(modifier = Modifier.width(spacing.micro))
-            Text(
-                text = workshop.rating.toString(),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+    }
+}
+
+@Composable
+private fun WorkshopTrustBadgesRow(
+    isCertified: Boolean,
+    hasFreeBays: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.small)
+    ) {
+        if (isCertified) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusSmall))
+                    .background(PrimaryBlue.copy(alpha = 0.1f))
+                    .padding(horizontal = spacing.small, vertical = spacing.micro)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Verified, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(spacing.iconSmall))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text("Certificado ShiftIq", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                }
+            }
+        }
+        if (hasFreeBays) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusSmall))
+                    .background(Slate100)
+                    .padding(horizontal = spacing.small, vertical = spacing.micro)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = ShiftIQSuccess, modifier = Modifier.size(spacing.iconSmall))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text("Bahías libres hoy", style = MaterialTheme.typography.labelSmall, color = Slate700)
+                }
+            }
         }
     }
 }
@@ -402,17 +652,45 @@ private fun DtcAlignmentBanner(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(spacing.radiusSmall))
-            .background(ShiftIQWarning.copy(alpha = 0.12f))
-            .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
+            .background(Slate100)
+            .padding(spacing.small),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.Info, contentDescription = null, tint = ShiftIQWarning, modifier = Modifier.size(spacing.iconSmall))
-        Spacer(modifier = Modifier.width(spacing.extraSmall))
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(spacing.controlButtonSize)
+                    .clip(RoundedCornerShape(spacing.radiusSmall))
+                    .background(Navy900),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Info, contentDescription = null, tint = Color.White, modifier = Modifier.size(spacing.iconMedium))
+            }
+            Spacer(modifier = Modifier.width(spacing.small))
+            Column {
+                Text(
+                    text = "VINCULADO A FALLA DTC",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate500
+                )
+                Text(
+                    text = issue,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate900
+                )
+            }
+        }
         Text(
-            text = "Especialista para resolver: $issue",
+            text = "S/ 140 - S/ 180 ESTIMADO",
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = ShiftIQWarning
+            fontWeight = FontWeight.Bold,
+            color = PrimaryBlue
         )
     }
 }
@@ -431,12 +709,12 @@ private fun WorkshopCardPricingRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(text = "S/ $minPen - S/ $maxPen", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = Slate500)
+            Text(text = "S/ ${minPen.toInt()} - S/ ${maxPen.toInt()} PEN", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Slate900)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(text = "Próximo Turno", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(text = slot, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            Text(text = "Próximo Turno Libre", style = MaterialTheme.typography.labelSmall, color = Slate500)
+            Text(text = slot, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = PrimaryBlue)
         }
     }
 }
@@ -444,6 +722,7 @@ private fun WorkshopCardPricingRow(
 @Composable
 private fun WorkshopCardActions(
     onBook: () -> Unit,
+    onViewProfile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -452,17 +731,18 @@ private fun WorkshopCardActions(
         horizontalArrangement = Arrangement.spacedBy(spacing.small)
     ) {
         OutlinedButton(
-            onClick = {},
-            modifier = Modifier.weight(1f),
+            onClick = onViewProfile,
+            modifier = Modifier.weight(1f).height(spacing.buttonHeight),
+            border = BorderStroke(spacing.strokeThin, PrimaryBlue),
             shape = RoundedCornerShape(spacing.radiusMedium)
         ) {
-            Text("Ver Perfil", style = MaterialTheme.typography.labelMedium)
+            Text("Ver Perfil", color = PrimaryBlue, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         }
         Button(
             onClick = onBook,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).height(spacing.buttonHeight),
             shape = RoundedCornerShape(spacing.radiusMedium),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
             Text("Reservar Cita", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         }
@@ -495,7 +775,9 @@ private fun WorkshopsScreenPreview() {
             ),
             onSearchQueryChange = {},
             onFilterSelected = {},
-            onNavigateToBooking = {}
+            onNavigateToBooking = {},
+            onNavigateToDetail = {},
+            onNavigateToMyAppointments = {}
         )
     }
 }

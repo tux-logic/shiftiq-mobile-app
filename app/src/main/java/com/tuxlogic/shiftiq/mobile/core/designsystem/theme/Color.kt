@@ -50,6 +50,7 @@ val Slate900 = Color(0xFF0F172A)
 
 // Specialized Telemetry & Action Colors
 val CanBusCyan = Color(0xFF0284C7)
+val ObdTeal = Color(0xFF0FB5BA)
 val WhatsAppGreen = Color(0xFF25D366)
 val WalBufferAmber = Color(0xFFD97706)
 

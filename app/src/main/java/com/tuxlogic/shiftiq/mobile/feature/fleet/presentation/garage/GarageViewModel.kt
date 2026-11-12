@@ -81,7 +81,10 @@ class GarageViewModel @Inject constructor(
                         mileage = 45102,
                         workshopName = "Taller Automotriz Silva",
                         description = "Cambio de aceite sintético 5W-30, cambio de filtro de aire/aceite y rotación de neumáticos en cruz.",
-                        totalCostPen = 280.0
+                        totalCostPen = 280.0,
+                        voucherId = "v-0004921",
+                        hasPdfVoucher = true,
+                        hasTechnicalDetail = false
                     ),
                     MaintenanceHistoryItem(
                         id = "hist-2",
@@ -90,7 +93,10 @@ class GarageViewModel @Inject constructor(
                         mileage = 41200,
                         workshopName = "Taller Multimarca San Miguel",
                         description = "Calibración de combas delanteras y balanceo dinámico en las 4 ruedas.",
-                        totalCostPen = 90.0
+                        totalCostPen = 90.0,
+                        voucherId = "v-0004922",
+                        hasPdfVoucher = false,
+                        hasTechnicalDetail = true
                     )
                 )
 

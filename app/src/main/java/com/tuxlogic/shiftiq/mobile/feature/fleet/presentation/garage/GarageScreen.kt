@@ -2,6 +2,8 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,15 +23,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
@@ -38,6 +44,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,15 +61,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate50
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate300
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.MaintenanceHistoryItem
@@ -72,6 +88,9 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.components.
 fun MyGarageRoute(
     onAddVehicle: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToExternalServiceRegistration: () -> Unit = {},
+    onNavigateToInterventionDetail: (String) -> Unit = {},
+    onNavigateToVoucherPdf: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: GarageViewModel = hiltViewModel()
 ) {
@@ -80,6 +99,9 @@ fun MyGarageRoute(
         uiState = uiState,
         onAddVehicle = onAddVehicle,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToExternalServiceRegistration = onNavigateToExternalServiceRegistration,
+        onNavigateToInterventionDetail = onNavigateToInterventionDetail,
+        onNavigateToVoucherPdf = onNavigateToVoucherPdf,
         modifier = modifier
     )
 }
@@ -88,12 +110,18 @@ fun MyGarageRoute(
 fun GarageScreen(
     onAddVehicle: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToExternalServiceRegistration: () -> Unit = {},
+    onNavigateToInterventionDetail: (String) -> Unit = {},
+    onNavigateToVoucherPdf: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: GarageViewModel = hiltViewModel()
 ) {
     MyGarageRoute(
         onAddVehicle = onAddVehicle,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToExternalServiceRegistration = onNavigateToExternalServiceRegistration,
+        onNavigateToInterventionDetail = onNavigateToInterventionDetail,
+        onNavigateToVoucherPdf = onNavigateToVoucherPdf,
         modifier = modifier,
         viewModel = viewModel
     )
@@ -105,6 +133,9 @@ fun MyGarageScreen(
     uiState: GarageUiState,
     onAddVehicle: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToExternalServiceRegistration: () -> Unit,
+    onNavigateToInterventionDetail: (String) -> Unit,
+    onNavigateToVoucherPdf: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showPairingSheet by rememberSaveable { mutableStateOf(false) }
@@ -145,12 +176,15 @@ fun MyGarageScreen(
                 oilLifePercent = uiState.engineOilLifePercent
             )
 
-            MaintenanceHistoryHeader()
-            uiState.maintenanceHistory.forEach { item ->
-                MaintenanceTimelineCard(item = item)
-            }
+            MaintenanceHistorySection(
+                items = uiState.maintenanceHistory,
+                onNavigateToInterventionDetail = onNavigateToInterventionDetail,
+                onNavigateToVoucherPdf = onNavigateToVoucherPdf
+            )
 
-            OutsideNetworkServiceBanner()
+            OutsideNetworkServiceBanner(
+                onAddExternalService = onNavigateToExternalServiceRegistration
+            )
             Spacer(modifier = Modifier.height(spacing.medium))
         }
     }
@@ -175,7 +209,7 @@ private fun GarageTopBar(
             .fillMaxWidth()
             .background(Navy900)
             .padding(
-                top = statusBarPadding,
+                top = statusBarPadding + spacing.small,
                 start = spacing.medium,
                 end = spacing.medium,
                 bottom = spacing.smallMedium
@@ -233,7 +267,7 @@ private fun PersonalFleetHeader(
         }
         OutlinedButton(
             onClick = onAddVehicle,
-            shape = RoundedCornerShape(spacing.radiusMedium),
+            shape = RoundedCornerShape(spacing.radiusFull),
             border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.primary)
         ) {
             Icon(
@@ -242,7 +276,11 @@ private fun PersonalFleetHeader(
                 modifier = Modifier.size(spacing.iconMedium)
             )
             Spacer(modifier = Modifier.width(spacing.extraSmall))
-            Text(text = "Agregar", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Agregar",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -268,14 +306,84 @@ private fun VehicleFleetCard(
         ) {
             VehicleCardTopRow(vehicle = vehicle)
             Spacer(modifier = Modifier.height(spacing.small))
-            Text(
-                text = "${vehicle.brand} ${vehicle.model} ${vehicle.year}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${vehicle.brand} ${vehicle.model} ${vehicle.year}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                PlateChip(plate = vehicle.plateNumber)
+            }
+            Spacer(modifier = Modifier.height(spacing.small))
+            VehicleSpecBox(vehicle = vehicle)
             Spacer(modifier = Modifier.height(spacing.smallMedium))
             VehicleCardFooterRow(vehicle = vehicle, onPairObd = onPairObd)
+        }
+    }
+}
+
+@Composable
+private fun PlateChip(plate: String, modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(spacing.radiusExtraSmall))
+            .background(Slate100)
+            .border(spacing.strokeThin, Slate200, RoundedCornerShape(spacing.radiusExtraSmall))
+            .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
+    ) {
+        Text(
+            text = plate,
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            color = Slate700
+        )
+    }
+}
+
+@Composable
+private fun VehicleSpecBox(vehicle: B2CVehicleItem, modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(spacing.radiusMedium))
+            .background(Slate100.copy(alpha = 0.5f))
+            .border(spacing.strokeThin, Slate200.copy(alpha = 0.6f), RoundedCornerShape(spacing.radiusMedium))
+            .padding(horizontal = spacing.medium, vertical = spacing.smallMedium)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "IDENTIFICADOR VIN",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Slate400,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = vehicle.vin,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Slate700
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.DirectionsCar,
+                contentDescription = null,
+                tint = Slate400,
+                modifier = Modifier.size(spacing.iconExtraLarge)
+            )
         }
     }
 }
@@ -294,8 +402,9 @@ private fun VehicleCardTopRow(
         if (vehicle.isMonitored) {
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(spacing.radiusMedium))
-                    .background(ShiftIQSuccess.copy(alpha = 0.15f))
+                    .clip(RoundedCornerShape(spacing.radiusFull))
+                    .background(ShiftIQSuccess.copy(alpha = 0.12f))
+                    .border(spacing.strokeThin, ShiftIQSuccess.copy(alpha = 0.3f), RoundedCornerShape(spacing.radiusFull))
                     .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -316,8 +425,9 @@ private fun VehicleCardTopRow(
         } else {
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(spacing.radiusMedium))
-                    .background(ShiftIQWarning.copy(alpha = 0.15f))
+                    .clip(RoundedCornerShape(spacing.radiusFull))
+                    .background(ShiftIQWarning.copy(alpha = 0.12f))
+                    .border(spacing.strokeThin, ShiftIQWarning.copy(alpha = 0.3f), RoundedCornerShape(spacing.radiusFull))
                     .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -337,18 +447,20 @@ private fun VehicleCardTopRow(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = vehicle.plateNumber,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        if (vehicle.isPrimary) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusExtraSmall))
+                    .background(Slate100)
+                    .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
+            ) {
+                Text(
+                    text = "Ppal",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = Slate500
+                )
+            }
         }
     }
 }
@@ -362,7 +474,11 @@ private fun VehicleCardFooterRow(
     val spacing = MaterialTheme.spacing
     if (vehicle.isMonitored) {
         Row(
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(spacing.radiusSmall))
+                .background(Slate50)
+                .padding(horizontal = spacing.medium, vertical = spacing.small),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -370,22 +486,32 @@ private fun VehicleCardFooterRow(
                 Icon(
                     imageVector = Icons.Default.Wifi,
                     contentDescription = null,
-                    tint = CanBusCyan,
-                    modifier = Modifier.size(spacing.iconSmall)
+                    tint = ObdTeal,
+                    modifier = Modifier.size(spacing.iconMedium)
                 )
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Spacer(modifier = Modifier.width(spacing.compact))
                 Text(
-                    text = "OBD2 Conectado",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "OBD2 Enlazado",
+                    style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = CanBusCyan
+                    color = ObdTeal
                 )
             }
-            Text(
-                text = "Batería: ${vehicle.batteryVoltage}V",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusExtraSmall))
+                    .background(Color.White)
+                    .border(spacing.strokeThin, Slate200, RoundedCornerShape(spacing.radiusExtraSmall))
+                    .padding(horizontal = spacing.small, vertical = spacing.micro)
+            ) {
+                Text(
+                    text = "${vehicle.batteryVoltage}V",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate700
+                )
+            }
         }
     } else {
         Row(
@@ -394,16 +520,24 @@ private fun VehicleCardFooterRow(
         ) {
             Button(
                 onClick = onPairObd,
-                shape = RoundedCornerShape(spacing.radiusSmall),
-                colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+                shape = RoundedCornerShape(spacing.radiusMedium),
+                colors = ButtonDefaults.buttonColors(containerColor = Slate100, contentColor = Slate700),
+                border = BorderStroke(spacing.strokeThin, Slate300),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
                     imageVector = Icons.Default.Bluetooth,
                     contentDescription = null,
-                    modifier = Modifier.size(spacing.iconSmall)
+                    modifier = Modifier.size(spacing.iconMedium),
+                    tint = Slate700
                 )
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text("Vincular OBD2", style = MaterialTheme.typography.labelSmall)
+                Spacer(modifier = Modifier.width(spacing.small))
+                Text(
+                    text = "Vincular OBD2",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Slate700
+                )
             }
         }
     }
@@ -433,7 +567,7 @@ private fun RealTimeTelemetryHeader(modifier: Modifier = Modifier) {
             )
         }
         Text(
-            text = "Sync: Reciente",
+            text = "Sync: Hace 3m",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -465,7 +599,7 @@ private fun GarageTelemetryKpiGrid(
                 unit = "km",
                 subtitle = "+45 km esta semana",
                 subtitleColor = ShiftIQSuccess,
-                icon = Icons.Default.Edit,
+                icon = Icons.Default.Speed,
                 modifier = Modifier.weight(1f)
             )
             GarageMetricCard(
@@ -549,6 +683,7 @@ private fun GarageMetricCard(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.titleLarge,
+                    fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -556,6 +691,7 @@ private fun GarageMetricCard(
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -570,19 +706,124 @@ private fun GarageMetricCard(
 }
 
 @Composable
-private fun MaintenanceHistoryHeader(modifier: Modifier = Modifier) {
+private fun MaintenanceHistorySection(
+    items: List<MaintenanceHistoryItem>,
+    onNavigateToInterventionDetail: (String) -> Unit,
+    onNavigateToVoucherPdf: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.medium)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Historial de Intervenciones",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Registros certificados y facturas",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            YearFilterDropdown()
+        }
+
+        items.forEachIndexed { index, item ->
+            TimelineEventItem(
+                item = item,
+                isPrimaryPin = index == 0,
+                onNavigateToInterventionDetail = onNavigateToInterventionDetail,
+                onNavigateToVoucherPdf = onNavigateToVoucherPdf
+            )
+        }
+    }
+}
+
+@Composable
+private fun YearFilterDropdown(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(spacing.radiusSmall))
+            .background(Color.White)
+            .border(spacing.strokeThin, Slate300, RoundedCornerShape(spacing.radiusSmall))
+            .padding(horizontal = spacing.smallMedium, vertical = spacing.compact),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(
-            text = "Historial de Intervenciones",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            text = "Todos los años",
+            style = MaterialTheme.typography.labelMedium,
+            color = Slate700
         )
-        Text(
-            text = "Registros certificados y facturas",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        Spacer(modifier = Modifier.width(spacing.extraSmall))
+        Icon(
+            imageVector = Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = Slate500,
+            modifier = Modifier.size(spacing.iconMedium)
+        )
+    }
+}
+
+@Composable
+private fun TimelineEventItem(
+    item: MaintenanceHistoryItem,
+    isPrimaryPin: Boolean,
+    onNavigateToInterventionDetail: (String) -> Unit,
+    onNavigateToVoucherPdf: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(top = spacing.small)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(spacing.timelinePinSize)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(
+                        spacing.strokeMedium,
+                        if (isPrimaryPin) Navy900 else ObdTeal,
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(spacing.small)
+                        .clip(CircleShape)
+                        .background(if (isPrimaryPin) Navy900 else ObdTeal)
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(spacing.strokeMedium)
+                    .height(spacing.vehicleCardHeight)
+                    .background(Slate300)
+            )
+        }
+
+        MaintenanceTimelineCard(
+            item = item,
+            onNavigateToInterventionDetail = onNavigateToInterventionDetail,
+            onNavigateToVoucherPdf = onNavigateToVoucherPdf,
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -590,6 +831,8 @@ private fun MaintenanceHistoryHeader(modifier: Modifier = Modifier) {
 @Composable
 private fun MaintenanceTimelineCard(
     item: MaintenanceHistoryItem,
+    onNavigateToInterventionDetail: (String) -> Unit,
+    onNavigateToVoucherPdf: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -602,7 +845,8 @@ private fun MaintenanceTimelineCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium)
+                .padding(spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -616,50 +860,83 @@ private fun MaintenanceTimelineCard(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "S/ ${item.totalCostPen}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "${item.mileage} km",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(spacing.extraSmall))
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "${item.workshopName} • ${item.mileage} km",
+                text = "${item.workshopName} • ${item.description}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(spacing.extraSmall))
-            Text(
-                text = item.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(spacing.smallMedium))
-            OutlinedButton(
-                onClick = {},
-                shape = RoundedCornerShape(spacing.radiusSmall),
-                modifier = Modifier.fillMaxWidth()
+            HorizontalDivider(color = Slate100, thickness = spacing.strokeThin)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Download,
-                    contentDescription = null,
-                    modifier = Modifier.size(spacing.iconSmall)
-                )
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text("Descargar Comprobante PDF", style = MaterialTheme.typography.labelSmall)
+                Column {
+                    Text(
+                        text = "Total Invertido",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "S/ ${String.format(java.util.Locale.US, "%.2f", item.totalCostPen)} PEN",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                if (item.hasPdfVoucher) {
+                    Button(
+                        onClick = { onNavigateToVoucherPdf(item.voucherId ?: item.id) },
+                        shape = RoundedCornerShape(spacing.radiusSmall),
+                        colors = ButtonDefaults.buttonColors(containerColor = Slate100, contentColor = Slate700)
+                    ) {
+                        Text("PDF Comprobante", style = MaterialTheme.typography.labelSmall)
+                        Spacer(modifier = Modifier.width(spacing.extraSmall))
+                        Icon(
+                            imageVector = Icons.Default.PictureAsPdf,
+                            contentDescription = null,
+                            modifier = Modifier.size(spacing.iconSmall)
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = { onNavigateToInterventionDetail(item.id) },
+                        shape = RoundedCornerShape(spacing.radiusSmall),
+                        colors = ButtonDefaults.buttonColors(containerColor = Slate100, contentColor = Navy900)
+                    ) {
+                        Text("Ver Detalle", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(spacing.extraSmall))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(spacing.iconSmall)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun OutsideNetworkServiceBanner(modifier: Modifier = Modifier) {
+private fun OutsideNetworkServiceBanner(
+    onAddExternalService: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -687,9 +964,10 @@ private fun OutsideNetworkServiceBanner(modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Spacer(modifier = Modifier.width(spacing.small))
             Button(
-                onClick = {},
-                shape = RoundedCornerShape(spacing.radiusSmall),
+                onClick = onAddExternalService,
+                shape = RoundedCornerShape(spacing.radiusMedium),
                 colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
             ) {
                 Text("Añadir", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
@@ -729,12 +1007,16 @@ private fun MyGarageScreenPreview() {
                         mileage = 45102,
                         workshopName = "Taller Automotriz Silva",
                         description = "Cambio de aceite sintético 5W-30 y filtros.",
-                        totalCostPen = 280.0
+                        totalCostPen = 280.0,
+                        hasPdfVoucher = true
                     )
                 )
             ),
             onAddVehicle = {},
-            onNavigateToProfile = {}
+            onNavigateToProfile = {},
+            onNavigateToExternalServiceRegistration = {},
+            onNavigateToInterventionDetail = {},
+            onNavigateToVoucherPdf = {}
         )
     }
 }
