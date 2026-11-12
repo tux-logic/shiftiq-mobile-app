@@ -123,7 +123,7 @@ private fun DtcDetailTopBar(
             .fillMaxWidth()
             .background(Navy900)
             .padding(
-                top = statusBarPadding,
+                top = spacing.medium,
                 start = spacing.small,
                 end = spacing.medium,
                 bottom = spacing.smallMedium
