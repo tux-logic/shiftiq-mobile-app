@@ -40,4 +40,22 @@ sealed class AppDestination(val route: String) {
     data object Inventory : AppDestination("inventory/products")
     data object Telemetry : AppDestination("iot/telemetry")
     data object CustomerVehicles : AppDestination("iot/customer-vehicles")
+
+    // Flujo B2C Conductor (Fleet & Operations Bounded Context)
+    data object B2CMain : AppDestination("b2c/main")
+    data object B2CHome : AppDestination("b2c/home")
+    data object B2CDiagnostics : AppDestination("b2c/diagnostics")
+    data object B2CWorkshops : AppDestination("b2c/workshops")
+    data object B2CGarage : AppDestination("b2c/garage")
+    data object B2CVehicleRegistration : AppDestination("b2c/garage/register-vehicle")
+    data object B2CDtcDetail : AppDestination("b2c/diagnostics/dtc/{dtcCode}") {
+        fun createRoute(dtcCode: String) = "b2c/diagnostics/dtc/$dtcCode"
+    }
+    data object B2COfflineTelemetry : AppDestination("b2c/diagnostics/offline")
+    data object B2CAppointmentBooking : AppDestination("b2c/workshops/{workshopId}/booking") {
+        fun createRoute(workshopId: String) = "b2c/workshops/$workshopId/booking"
+    }
+    data object B2CLiveWorkOrder : AppDestination("b2c/work-order/{workOrderId}") {
+        fun createRoute(workOrderId: String) = "b2c/work-order/$workOrderId"
+    }
 }

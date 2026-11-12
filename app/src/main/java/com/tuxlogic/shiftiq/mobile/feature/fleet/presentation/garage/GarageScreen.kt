@@ -22,11 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Tune
@@ -36,455 +37,470 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityAmber
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate300
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate50
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate800
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.MaintenanceHistoryItem
-import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.CarSilhouetteCanvas
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.components.ObdPairingBottomSheet
+
+@Composable
+fun MyGarageRoute(
+    onAddVehicle: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: GarageViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    MyGarageScreen(
+        uiState = uiState,
+        onAddVehicle = onAddVehicle,
+        onNavigateToProfile = onNavigateToProfile,
+        modifier = modifier
+    )
+}
 
 @Composable
 fun GarageScreen(
-    viewModel: GarageViewModel = hiltViewModel(),
     onAddVehicle: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    viewModel: GarageViewModel = hiltViewModel()
+) {
+    MyGarageRoute(
+        onAddVehicle = onAddVehicle,
+        onNavigateToProfile = onNavigateToProfile,
+        modifier = modifier,
+        viewModel = viewModel
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyGarageScreen(
+    uiState: GarageUiState,
+    onAddVehicle: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    var showPairingSheet by rememberSaveable { mutableStateOf(false) }
+    val spacing = MaterialTheme.spacing
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate50)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // =========================================================================
-        // TOP BAR
-        // =========================================================================
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Navy900)
-                .padding(top = statusBarPadding, start = 16.dp, end = 16.dp, bottom = 14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Mi Garaje - Historial",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+        GarageTopBar(
+            onNavigateToProfile = onNavigateToProfile,
+            statusBarPadding = statusBarPadding
+        )
 
-                IconButton(
-                    onClick = onNavigateToProfile,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Mi Perfil",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
-
-        // =========================================================================
-        // CONTENIDO SCROLLABLE
-        // =========================================================================
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+            verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
-            // Cabecera: Flota Personal / Vehículos Registrados
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "FLOTA PERSONAL",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate500,
-                        letterSpacing = 0.5.sp
-                    )
-                    Text(
-                        text = "Vehículos Registrados",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                }
+            PersonalFleetHeader(onAddVehicle = onAddVehicle)
 
-                OutlinedButton(
-                    onClick = onAddVehicle,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, PrimaryBlue),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Agregar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            // Listado de Vehículos
             uiState.vehicles.forEach { vehicle ->
-                VehicleFleetCard(vehicle = vehicle)
-            }
-
-            // Espacio Disponible (Tarjeta con borde punteado)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                border = BorderStroke(1.dp, Slate300)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 18.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = null,
-                        tint = Slate400,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Espacio Disponible",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Slate500
-                    )
-                }
-            }
-
-            // =========================================================================
-            // SECCIÓN: TELEMETRÍA EN TIEMPO REAL
-            // =========================================================================
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Tune, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Telemetría en Tiempo Real",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                }
-                Text(
-                    text = "Sync: Hace 3m",
-                    fontSize = 11.sp,
-                    color = Slate500
+                VehicleFleetCard(
+                    vehicle = vehicle,
+                    onPairObd = { showPairingSheet = true }
                 )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                GarageMetricCard(
-                    title = "Odómetro Actual",
-                    value = "48, 120",
-                    unit = "km",
-                    subtitle = "+45 km esta semana",
-                    subtitleColor = TelematicsGreen,
-                    icon = Icons.Default.Edit,
-                    modifier = Modifier.weight(1f)
-                )
-                GarageMetricCard(
-                    title = "Próx. Servicio",
-                    value = "50, 000",
-                    unit = "km",
-                    subtitle = "En 1,880 km",
-                    subtitleColor = Slate500,
-                    icon = Icons.Default.CalendarToday,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            RealTimeTelemetryHeader()
+            GarageTelemetryKpiGrid(
+                odometerKm = uiState.currentOdometerKm,
+                nextServiceKm = uiState.nextServiceKm,
+                batteryVoltage = uiState.batteryHealthVoltage,
+                oilLifePercent = uiState.engineOilLifePercent
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                GarageMetricCard(
-                    title = "Salud Batería",
-                    value = "13.8",
-                    unit = "V",
-                    subtitle = "Estado Óptimo",
-                    subtitleColor = TelematicsGreen,
-                    icon = Icons.Default.ElectricBolt,
-                    modifier = Modifier.weight(1f)
-                )
-                GarageMetricCard(
-                    title = "Aceite Motor",
-                    value = "78%",
-                    unit = "vida",
-                    subtitle = "Nivel Adecuado",
-                    subtitleColor = Slate500,
-                    icon = Icons.Default.Opacity,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // =========================================================================
-            // HISTORIAL DE INTERVENCIONES
-            // =========================================================================
-            Column {
-                Text(
-                    text = "Historial de Intervenciones",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Slate900
-                )
-                Text(
-                    text = "Registros certificados y facturas",
-                    fontSize = 12.sp,
-                    color = Slate500
-                )
-            }
-
+            MaintenanceHistoryHeader()
             uiState.maintenanceHistory.forEach { item ->
                 MaintenanceTimelineCard(item = item)
             }
 
-            // Banner Inferior: Servicio fuera de red
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Slate200)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "¿Realizaste un servicio fuera de red?",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate900
-                        )
-                        Text(
-                            text = "Registra factura y kilometraje manual",
-                            fontSize = 11.sp,
-                            color = Slate500
-                        )
-                    }
+            OutsideNetworkServiceBanner()
+            Spacer(modifier = Modifier.height(spacing.medium))
+        }
+    }
 
-                    Button(
-                        onClick = {},
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Navy900)
-                    ) {
-                        Text(text = "Añadir", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+    if (showPairingSheet) {
+        ObdPairingBottomSheet(
+            onDismissRequest = { showPairingSheet = false },
+            onDeviceConnected = { showPairingSheet = false }
+        )
+    }
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun GarageTopBar(
+    onNavigateToProfile: () -> Unit,
+    statusBarPadding: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Navy900)
+            .padding(
+                top = statusBarPadding,
+                start = spacing.medium,
+                end = spacing.medium,
+                bottom = spacing.smallMedium
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Mi Garaje - Historial",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        IconButton(
+            onClick = onNavigateToProfile,
+            modifier = Modifier
+                .size(spacing.badgeHeight + spacing.smallMedium)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.15f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Mi Perfil",
+                tint = Color.White,
+                modifier = Modifier.size(spacing.iconLarge)
+            )
         }
     }
 }
 
 @Composable
-private fun VehicleFleetCard(vehicle: B2CVehicleItem) {
+private fun PersonalFleetHeader(
+    onAddVehicle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "FLOTA PERSONAL",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Vehículos Registrados",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        OutlinedButton(
+            onClick = onAddVehicle,
+            shape = RoundedCornerShape(spacing.radiusMedium),
+            border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.primary)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(spacing.iconMedium)
+            )
+            Spacer(modifier = Modifier.width(spacing.extraSmall))
+            Text(text = "Agregar", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun VehicleFleetCard(
+    vehicle: B2CVehicleItem,
+    onPairObd: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Slate200),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(spacing.medium)
         ) {
-            // Fila Superior: Badges y Placa
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (vehicle.isMonitored) {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFECFDF5))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(TelematicsGreen)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Monitoreo Activo",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TelematicsGreen
-                        )
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFFFBEB))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = SeverityAmber,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Sin Dispositivo",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SeverityAmber
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFF1F5F9))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = vehicle.plateNumber,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Slate900
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Nombre del auto
+            VehicleCardTopRow(vehicle = vehicle)
+            Spacer(modifier = Modifier.height(spacing.small))
             Text(
                 text = "${vehicle.brand} ${vehicle.model} ${vehicle.year}",
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Slate900
+                color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(modifier = Modifier.height(spacing.smallMedium))
+            VehicleCardFooterRow(vehicle = vehicle, onPairObd = onPairObd)
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Silueta / Ilustración
-            CarSilhouetteCanvas()
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Pie de tarjeta
-            if (vehicle.isMonitored) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Wifi,
-                            contentDescription = null,
-                            tint = Color(0xFF0284C7),
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "OBD2 Enlazado",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF0284C7)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFFF8FAFC))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                    ) {
-                        Text(
-                            text = "${vehicle.batteryVoltage}V",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate800
-                        )
-                    }
-                }
-            } else {
-                OutlinedButton(
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, PrimaryBlue),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
-                ) {
-                    Icon(imageVector = Icons.Default.Link, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Vincular OBD2", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+@Composable
+private fun VehicleCardTopRow(
+    vehicle: B2CVehicleItem,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (vehicle.isMonitored) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusMedium))
+                    .background(ShiftIQSuccess.copy(alpha = 0.15f))
+                    .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(spacing.indicatorHeight)
+                        .clip(CircleShape)
+                        .background(ShiftIQSuccess)
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text(
+                    text = "Monitoreo Activo",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ShiftIQSuccess
+                )
             }
+        } else {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(spacing.radiusMedium))
+                    .background(ShiftIQWarning.copy(alpha = 0.15f))
+                    .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = ShiftIQWarning,
+                    modifier = Modifier.size(spacing.iconSmall)
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text(
+                    text = "Sin Dispositivo",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ShiftIQWarning
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(spacing.radiusSmall))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
+        ) {
+            Text(
+                text = vehicle.plateNumber,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun VehicleCardFooterRow(
+    vehicle: B2CVehicleItem,
+    onPairObd: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    if (vehicle.isMonitored) {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Wifi,
+                    contentDescription = null,
+                    tint = CanBusCyan,
+                    modifier = Modifier.size(spacing.iconSmall)
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text(
+                    text = "OBD2 Conectado",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = CanBusCyan
+                )
+            }
+            Text(
+                text = "Batería: ${vehicle.batteryVoltage}V",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Button(
+                onClick = onPairObd,
+                shape = RoundedCornerShape(spacing.radiusSmall),
+                colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Bluetooth,
+                    contentDescription = null,
+                    modifier = Modifier.size(spacing.iconSmall)
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text("Vincular OBD2", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RealTimeTelemetryHeader(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Tune,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(spacing.iconMedium)
+            )
+            Spacer(modifier = Modifier.width(spacing.compact))
+            Text(
+                text = "Telemetría en Tiempo Real",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Text(
+            text = "Sync: Reciente",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun GarageTelemetryKpiGrid(
+    odometerKm: Int,
+    nextServiceKm: Int,
+    batteryVoltage: Double,
+    oilLifePercent: Int,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.smallMedium)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
+        ) {
+            val formattedOdo = String.format(java.util.Locale.US, "%,d", odometerKm)
+            val formattedNext = String.format(java.util.Locale.US, "%,d", nextServiceKm)
+            GarageMetricCard(
+                title = "Odómetro Actual",
+                value = formattedOdo,
+                unit = "km",
+                subtitle = "+45 km esta semana",
+                subtitleColor = ShiftIQSuccess,
+                icon = Icons.Default.Edit,
+                modifier = Modifier.weight(1f)
+            )
+            GarageMetricCard(
+                title = "Próx. Servicio",
+                value = formattedNext,
+                unit = "km",
+                subtitle = "En 1,880 km",
+                subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                icon = Icons.Default.CalendarToday,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
+        ) {
+            val formattedBat = String.format(java.util.Locale.US, "%.1f", batteryVoltage)
+            GarageMetricCard(
+                title = "Salud Batería",
+                value = formattedBat,
+                unit = "V",
+                subtitle = "Estado Óptimo",
+                subtitleColor = ShiftIQSuccess,
+                icon = Icons.Default.ElectricBolt,
+                modifier = Modifier.weight(1f)
+            )
+            GarageMetricCard(
+                title = "Aceite Motor",
+                value = "$oilLifePercent%",
+                unit = "vida",
+                subtitle = "Nivel Adecuado",
+                subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                icon = Icons.Default.Opacity,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -499,49 +515,94 @@ private fun GarageMetricCard(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
+    val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Slate200)
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(spacing.medium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = title, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Slate500)
-                Icon(imageVector = icon, contentDescription = null, tint = Slate400, modifier = Modifier.size(14.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(spacing.iconMedium)
+                )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(spacing.small))
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Slate900)
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(text = unit, fontSize = 11.sp, color = Slate500, modifier = Modifier.padding(bottom = 1.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = subtitle, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = subtitleColor)
+            Spacer(modifier = Modifier.height(spacing.extraSmall))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = subtitleColor
+            )
         }
     }
 }
 
 @Composable
-private fun MaintenanceTimelineCard(item: MaintenanceHistoryItem) {
+private fun MaintenanceHistoryHeader(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Column(modifier = modifier) {
+        Text(
+            text = "Historial de Intervenciones",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = "Registros certificados y facturas",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun MaintenanceTimelineCard(
+    item: MaintenanceHistoryItem,
+    modifier: Modifier = Modifier
+) {
+    val spacing = MaterialTheme.spacing
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Slate200)
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(spacing.medium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -550,60 +611,130 @@ private fun MaintenanceTimelineCard(item: MaintenanceHistoryItem) {
             ) {
                 Text(
                     text = item.date,
-                    fontSize = 11.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "${String.format(java.util.Locale.US, "%,d", item.mileage)} km",
-                    fontSize = 11.sp,
-                    color = Slate500
+                    text = "S/ ${item.totalCostPen}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
+            Spacer(modifier = Modifier.height(spacing.extraSmall))
             Text(
                 text = item.title,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = Slate900
+                color = MaterialTheme.colorScheme.onSurface
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
             Text(
-                text = "${item.workshopName} • ${item.description}",
-                fontSize = 12.sp,
-                color = Slate700,
-                lineHeight = 16.sp
+                text = "${item.workshopName} • ${item.mileage} km",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(modifier = Modifier.height(spacing.extraSmall))
+            Text(
+                text = item.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.smallMedium))
+            OutlinedButton(
+                onClick = {},
+                shape = RoundedCornerShape(spacing.radiusSmall),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Text(text = "Total Invertido", fontSize = 10.sp, color = Slate500)
-                    Text(
-                        text = "S/ ${String.format(java.util.Locale.US, "%.2f", item.totalCostPen)} PEN",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Slate900
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = {},
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Slate300)
-                ) {
-                    Text(text = "PDF Comprobante", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Slate800)
-                }
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = null,
+                    modifier = Modifier.size(spacing.iconSmall)
+                )
+                Spacer(modifier = Modifier.width(spacing.extraSmall))
+                Text("Descargar Comprobante PDF", style = MaterialTheme.typography.labelSmall)
             }
         }
+    }
+}
+
+@Composable
+private fun OutsideNetworkServiceBanner(modifier: Modifier = Modifier) {
+    val spacing = MaterialTheme.spacing
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusLarge),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.medium),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "¿Realizaste un servicio fuera de red?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Registra factura y kilometraje manual",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Button(
+                onClick = {},
+                shape = RoundedCornerShape(spacing.radiusSmall),
+                colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            ) {
+                Text("Añadir", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun MyGarageScreenPreview() {
+    ShiftIQTheme {
+        MyGarageScreen(
+            uiState = GarageUiState(
+                vehicles = listOf(
+                    B2CVehicleItem(
+                        id = "v-1",
+                        brand = "Kia",
+                        model = "Rio",
+                        year = 2019,
+                        plateNumber = "ABC-123",
+                        vin = "KNADE1234567890",
+                        isMonitored = true,
+                        batteryVoltage = 13.8
+                    )
+                ),
+                currentOdometerKm = 48120,
+                nextServiceKm = 50000,
+                batteryHealthVoltage = 13.8,
+                engineOilLifePercent = 78,
+                maintenanceHistory = listOf(
+                    MaintenanceHistoryItem(
+                        id = "h-1",
+                        date = "15 FEB 2026",
+                        title = "Mantenimiento Preventivo 45,000 km",
+                        mileage = 45102,
+                        workshopName = "Taller Automotriz Silva",
+                        description = "Cambio de aceite sintético 5W-30 y filtros.",
+                        totalCostPen = 280.0
+                    )
+                )
+            ),
+            onAddVehicle = {},
+            onNavigateToProfile = {}
+        )
     }
 }

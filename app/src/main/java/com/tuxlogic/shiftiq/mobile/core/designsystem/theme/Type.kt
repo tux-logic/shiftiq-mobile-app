@@ -73,5 +73,33 @@ val ShiftIQTypography = Typography(
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = ShiftIQFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = ShiftIQFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = ShiftIQFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = ShiftIQFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.5.sp
     )
 )
