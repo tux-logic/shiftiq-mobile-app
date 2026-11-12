@@ -166,44 +166,40 @@ private fun DriverHomeTopBar(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    Column(
+
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
             .padding(
-                top = statusBarPadding,
-                start = spacing.medium,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            )
+                horizontal = spacing.medium,
+                vertical = spacing.medium
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        ObdStatusChip(isConnected = isObdConnected)
+
+        Text(
+            text = "Home Dashboard",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimary
+        )
+
+        IconButton(
+            onClick = onOpenDrawer,
+            modifier = Modifier
+                .size(spacing.badgeHeight + spacing.smallMedium)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.20f))
         ) {
-            ObdStatusChip(isConnected = isObdConnected)
             Text(
-                text = "Home Dashboard",
-                style = MaterialTheme.typography.titleMedium,
+                text = avatarInitial,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
-            IconButton(
-                onClick = onOpenDrawer,
-                modifier = Modifier
-                    .size(spacing.badgeHeight + spacing.smallMedium)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.20f))
-            ) {
-                Text(
-                    text = avatarInitial,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
         }
     }
 }
