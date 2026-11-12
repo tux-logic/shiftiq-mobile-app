@@ -61,7 +61,14 @@ data class ProductDetailResourceDto(
     @SerializedName("batches") val batches: List<ProductBatchDto>? = null
 )
 
+/**
+ * Response body for POST /api/v1/inventory/products/{id}/batches.
+ * Matches backend ProductBatchResource (not a custom envelope).
+ */
 data class BatchUpdateResponseDto(
-    @SerializedName("message") val message: String? = null,
-    @SerializedName("currentStock") val currentStock: Int
+    @SerializedName("batchId") val batchId: String,
+    @SerializedName("initialQuantity") val initialQuantity: Int,
+    @SerializedName("availableQuantity") val availableQuantity: Int,
+    @SerializedName("acquisitionCost") val acquisitionCost: Double,
+    @SerializedName("createdAt") val createdAt: String? = null
 )

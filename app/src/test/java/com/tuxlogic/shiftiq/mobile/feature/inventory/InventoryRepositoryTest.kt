@@ -92,7 +92,15 @@ class InventoryRepositoryTest {
     fun `addStockBatch with positive quantity calls repository and returns updated stock`() = runTest(testDispatcher) {
         coEvery {
             inventoryApiService.addStockBatch(productId.toString(), any())
-        } returns Response.success(BatchUpdateResponseDto("Stock updated", 22))
+        } returns Response.success(
+            BatchUpdateResponseDto(
+                batchId = UUID.randomUUID().toString(),
+                initialQuantity = 10,
+                availableQuantity = 22,
+                acquisitionCost = 25.0,
+                createdAt = "2026-11-12T12:00:00Z"
+            )
+        )
 
         val result = addStockBatchUseCase(productId, quantity = 10, acquisitionCost = 25.0)
 
@@ -105,7 +113,15 @@ class InventoryRepositoryTest {
     fun `addStockBatch with negative quantity sets zero acquisition cost and calls api`() = runTest(testDispatcher) {
         coEvery {
             inventoryApiService.addStockBatch(productId.toString(), any())
-        } returns Response.success(BatchUpdateResponseDto("Stock adjusted", 8))
+        } returns Response.success(
+            BatchUpdateResponseDto(
+                batchId = UUID.randomUUID().toString(),
+                initialQuantity = -4,
+                availableQuantity = 8,
+                acquisitionCost = 0.0,
+                createdAt = "2026-11-12T12:00:00Z"
+            )
+        )
 
         val result = addStockBatchUseCase(productId, quantity = -4, acquisitionCost = 99.0)
 

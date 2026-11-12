@@ -9,13 +9,7 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.AddStockBatchUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.CreateProductUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.DeleteProductUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.UpdateProductUseCase
-import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,11 +23,6 @@ import javax.inject.Inject
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
-    private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val createProductUseCase: CreateProductUseCase,
-    private val updateProductUseCase: UpdateProductUseCase,
-    private val addStockBatchUseCase: AddStockBatchUseCase,
-    private val deleteProductUseCase: DeleteProductUseCase,
     private val sessionDataStore: SessionDataStore,
     private val eventBus: DomainEventBus
 ) : ViewModel() {
@@ -44,7 +33,6 @@ class InventoryViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
-        // Observe session active branch
         viewModelScope.launch {
             sessionDataStore.sessionState.collect { session ->
                 val branchIdStr = session.activeBranchId?.toString()
@@ -55,11 +43,11 @@ class InventoryViewModel @Inject constructor(
             }
         }
 
-        // Subscribe to Domain Event for cross-context active branch synchronization
         viewModelScope.launch {
             eventBus.subscribe<ActiveBranchChangedEvent>().collect { event ->
-                val newBranchStr = event.newBranchId.toString()
-                _uiState.update { it.copy(selectedBranchId = newBranchStr, selectedProduct = null) }
+                _uiState.update {
+                    it.copy(selectedBranchId = event.newBranchId.toString(), categoryFilter = "")
+                }
                 loadProducts()
             }
         }
@@ -68,7 +56,7 @@ class InventoryViewModel @Inject constructor(
     }
 
     fun selectBranch(branchId: String) {
-        _uiState.update { it.copy(selectedBranchId = branchId, selectedProduct = null) }
+        _uiState.update { it.copy(selectedBranchId = branchId, categoryFilter = "") }
         loadProducts()
     }
 
@@ -81,123 +69,42 @@ class InventoryViewModel @Inject constructor(
         }
     }
 
+    fun setCategoryFilter(category: String) {
+        val next = if (_uiState.value.categoryFilter.equals(category, ignoreCase = true)) "" else category
+        _uiState.update { it.copy(categoryFilter = next) }
+        loadProducts()
+    }
+
+    fun clearCategoryFilter() {
+        _uiState.update { it.copy(categoryFilter = "") }
+        loadProducts()
+    }
+
     fun setLowStockOnly(lowStockOnly: Boolean) {
         _uiState.update { it.copy(lowStockOnly = lowStockOnly) }
         loadProducts()
     }
 
+    fun clearMessages() {
+        _uiState.update { it.copy(errorMessage = null, infoMessage = null) }
+    }
+
     fun loadProducts() {
         val branchIdStr = _uiState.value.selectedBranchId ?: return
-        val currentQuery = _uiState.value.searchQuery
-        val currentLowStock = _uiState.value.lowStockOnly
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = getProductsUseCase(
                 branchId = BranchId(branchIdStr),
-                name = currentQuery,
-                lowStockOnly = if (currentLowStock) true else null
+                name = _uiState.value.searchQuery,
+                category = _uiState.value.categoryFilter.takeIf { it.isNotBlank() },
+                lowStockOnly = if (_uiState.value.lowStockOnly) true else null
             )
             result.onSuccess { items ->
                 _uiState.update { it.copy(isLoading = false, products = items) }
             }.onFailure { error ->
-                _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
-            }
-        }
-    }
-
-    fun loadProduct(productId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isProductLoading = true, errorMessage = null) }
-            val result = getProductByIdUseCase(ProductId(productId))
-            result.onSuccess { detail ->
-                _uiState.update { it.copy(isProductLoading = false, selectedProduct = detail) }
-            }.onFailure { error ->
-                _uiState.update { it.copy(isProductLoading = false, errorMessage = error.message) }
-            }
-        }
-    }
-
-    fun clearSelectedProduct() {
-        _uiState.update { it.copy(selectedProduct = null) }
-    }
-
-    fun saveProduct(
-        id: String?,
-        name: String,
-        category: String,
-        sku: String,
-        description: String?,
-        price: Double,
-        minimumStock: Int
-    ) {
-        val branchIdStr = _uiState.value.selectedBranchId ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
-            val result = if (id == null) {
-                createProductUseCase(
-                    branchId = BranchId(branchIdStr),
-                    category = category,
-                    name = name,
-                    sku = sku,
-                    description = description,
-                    salePrice = price,
-                    minimumStock = minimumStock
-                )
-            } else {
-                updateProductUseCase(
-                    id = ProductId(id),
-                    category = category,
-                    name = name,
-                    sku = sku,
-                    description = description,
-                    salePrice = price,
-                    minimumStock = minimumStock
-                )
-            }
-
-            result.onSuccess {
                 _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        infoMessage = if (id == null) "Producto creado exitosamente." else "Producto actualizado exitosamente."
-                    )
+                    it.copy(isLoading = false, errorMessage = mapInventoryError(error))
                 }
-                loadProducts()
-                if (id != null) loadProduct(id)
-            }.onFailure { error ->
-                _uiState.update { it.copy(isSaving = false, errorMessage = error.message) }
-            }
-        }
-    }
-
-    fun addStock(productId: String, quantity: Int, acquisitionCost: Double) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
-            val result = addStockBatchUseCase(
-                productId = ProductId(productId),
-                quantity = quantity,
-                acquisitionCost = acquisitionCost
-            )
-            result.onSuccess {
-                _uiState.update { it.copy(isSaving = false, infoMessage = "Movimiento de stock registrado.") }
-                loadProducts()
-                loadProduct(productId)
-            }.onFailure { error ->
-                _uiState.update { it.copy(isSaving = false, errorMessage = error.message) }
-            }
-        }
-    }
-
-    fun deleteProduct(productId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, errorMessage = null) }
-            val result = deleteProductUseCase(ProductId(productId))
-            result.onSuccess {
-                _uiState.update { it.copy(isSaving = false, selectedProduct = null, infoMessage = "Producto eliminado.") }
-                loadProducts()
-            }.onFailure { error ->
-                _uiState.update { it.copy(isSaving = false, errorMessage = error.message) }
             }
         }
     }

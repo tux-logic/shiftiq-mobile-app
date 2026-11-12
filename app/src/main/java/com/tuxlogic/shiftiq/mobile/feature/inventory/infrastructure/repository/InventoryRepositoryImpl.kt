@@ -119,7 +119,7 @@ class InventoryRepositoryImpl @Inject constructor(
                     acquisitionCost = acquisitionCost
                 )
             )
-        }.map { it.currentStock }
+        }.map { it.availableQuantity }
     }
 
     override suspend fun deleteProduct(id: ProductId): AppResult<Unit> =
