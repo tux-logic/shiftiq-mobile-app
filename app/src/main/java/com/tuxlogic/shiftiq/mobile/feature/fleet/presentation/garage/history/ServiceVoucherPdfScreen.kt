@@ -1,6 +1,10 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.history
 
 import android.content.Intent
+import android.provider.OpenableColumns
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
@@ -79,17 +85,82 @@ fun ServiceVoucherPdfRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    LaunchedEffect(voucherId) { viewModel.loadVoucher(voucherId) }
+    val downloadLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { destination ->
+        if (destination != null) {
+            val safeVoucherNumber = uiState.voucherNumber
+                .replace(Regex("[^A-Za-z0-9._-]"), "_")
+                .ifBlank { "servicio" }
+            val fallbackName = "ShiftIQ_Comprobante_$safeVoucherNumber.pdf"
+            val lines = buildList {
+                add("Comprobante: ${uiState.voucherNumber.ifBlank { "No disponible" }}")
+                add("Tipo: ${uiState.voucherType.ifBlank { "No disponible" }}")
+                add("Estado: ${uiState.status.ifBlank { "No disponible" }}")
+                add("Fecha de emisión: ${uiState.emissionDate.ifBlank { "No disponible" }}")
+                add("Emisor: ${listOf(uiState.companyName, uiState.tradeName).filter(String::isNotBlank).joinToString(" · ").ifBlank { "No disponible" }}")
+                if (uiState.ruc.isNotBlank()) add("RUC: ${uiState.ruc}")
+                if (uiState.address.isNotBlank()) add("Dirección: ${uiState.address}")
+                add("Cliente: ${uiState.clientName.ifBlank { "No disponible" }}")
+                if (uiState.clientDni.isNotBlank()) add("Documento del cliente: ${uiState.clientDni}")
+                if (uiState.vehicleInfo.isNotBlank()) add("Vehículo: ${uiState.vehicleInfo}")
+                uiState.odometerKm?.let { add("Odómetro: $it km") }
+                if (uiState.serviceReason.isNotBlank()) add("Servicio: ${uiState.serviceReason}")
+                add("")
+                add("Detalle del comprobante")
+                if (uiState.items.isEmpty()) {
+                    add("El backend no devolvió el detalle de productos o servicios.")
+                } else {
+                    uiState.items.forEach { item ->
+                        add("${item.quantity} × ${item.description} · Unitario S/ ${"%.2f".format(java.util.Locale.US, item.unitPrice)} · Total S/ ${"%.2f".format(java.util.Locale.US, item.totalPrice)}")
+                    }
+                }
+                uiState.taxableAmount?.let { add("Base imponible: S/ ${"%.2f".format(java.util.Locale.US, it)}") }
+                uiState.igvAmount?.let { add("IGV: S/ ${"%.2f".format(java.util.Locale.US, it)}") }
+                uiState.totalPaid?.let { add("Total pagado: S/ ${"%.2f".format(java.util.Locale.US, it)}") }
+                uiState.balance?.let { add("Saldo pendiente: S/ ${"%.2f".format(java.util.Locale.US, it)}") }
+                if (uiState.paymentInfo.isNotBlank()) add("Pagos: ${uiState.paymentInfo}")
+                if (uiState.sunatHash.isNotBlank()) add("Hash SUNAT: ${uiState.sunatHash}")
+                add("")
+                add("Copia PDF generada en la app a partir de los datos recibidos del backend.")
+            }
+            PdfDocumentExporter.write(context, destination, "Comprobante de servicio", lines)
+                .onSuccess {
+                    val savedName = context.contentResolver.query(
+                        destination,
+                        arrayOf(OpenableColumns.DISPLAY_NAME),
+                        null,
+                        null,
+                        null
+                    )?.use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getString(0) else null
+                    } ?: fallbackName
+                    val sizeBytes = context.contentResolver.openFileDescriptor(destination, "r")?.use { it.statSize } ?: -1L
+                    val sizeText = if (sizeBytes >= 0) "${(sizeBytes / 1024).coerceAtLeast(1)} KB" else "No disponible"
+                    viewModel.onPdfSaved(savedName, destination.toString(), sizeText)
+                }
+                .onFailure {
+                    Toast.makeText(context, "No se pudo guardar el PDF: ${it.localizedMessage.orEmpty()}", Toast.LENGTH_LONG).show()
+                }
+        }
+    }
 
     ServiceVoucherPdfScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onZoomIn = viewModel::zoomIn,
         onZoomOut = viewModel::zoomOut,
-        onDownloadPdf = viewModel::onDownloadPdf,
+        onDownloadPdf = {
+            val safeVoucherNumber = uiState.voucherNumber
+                .replace(Regex("[^A-Za-z0-9._-]"), "_")
+                .ifBlank { "servicio" }
+            downloadLauncher.launch("ShiftIQ_Comprobante_$safeVoucherNumber.pdf")
+        },
         onShare = {
             val sendIntent = Intent().apply {
                 action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, "Comprobante electrónico ShiftIq: ${uiState.voucherNumber} por S/ ${uiState.totalPaid} PEN.")
+                putExtra(Intent.EXTRA_TEXT, "Comprobante ${uiState.voucherNumber} · ${uiState.status} · ${uiState.totalPaid?.let { "S/ $it" } ?: "monto no disponible"} ${uiState.pdfUrl.orEmpty()}")
                 type = "text/plain"
             }
             context.startActivity(Intent.createChooser(sendIntent, "Compartir comprobante"))
@@ -123,27 +194,28 @@ fun ServiceVoucherPdfScreen(
             statusBarPadding = statusBarPadding
         )
 
-        PdfViewerControlsBar(
-            zoomPercent = uiState.zoomPercent,
-            onZoomIn = onZoomIn,
-            onZoomOut = onZoomOut
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(spacing.medium),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
-        ) {
-            FacturaSheetCard(uiState = uiState)
-            Spacer(modifier = Modifier.height(spacing.medium))
+        when {
+            uiState.isLoading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator(color = PrimaryBlue)
+            }
+            uiState.errorMessage != null -> Box(Modifier.weight(1f).fillMaxWidth().padding(spacing.large), contentAlignment = Alignment.Center) {
+                Text(uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+            }
+            uiState.isLoaded -> Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            ) {
+                VoucherDetailsCard(uiState)
+                Spacer(modifier = Modifier.height(spacing.medium))
+            }
         }
 
-        PdfFixedActionFooter(
-            onDownloadPdf = onDownloadPdf,
-            onShare = onShare
-        )
+        if (uiState.isLoaded) {
+            PdfFixedActionFooter(onDownloadPdf = onDownloadPdf, onShare = onShare)
+        }
     }
 
     if (uiState.isSavedConfirmationVisible) {
@@ -154,6 +226,54 @@ fun ServiceVoucherPdfScreen(
             fileFormatText = uiState.fileFormatText,
             onDismiss = onDismissConfirmation
         )
+    }
+}
+
+@Composable
+private fun VoucherDetailsCard(state: ServiceVoucherPdfUiState) {
+    val spacing = MaterialTheme.spacing
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusMedium),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(spacing.small)
+        ) {
+            Text("Comprobante de servicio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(listOf(state.companyName, state.tradeName).filter(String::isNotBlank).joinToString(" · ").ifBlank { "Emisor no disponible" }, style = MaterialTheme.typography.bodyMedium)
+            if (state.ruc.isNotBlank()) Text("RUC: ${state.ruc}", style = MaterialTheme.typography.bodySmall, color = Slate500)
+            if (state.address.isNotBlank()) Text(state.address, style = MaterialTheme.typography.bodySmall, color = Slate500)
+            HorizontalDivider(color = Slate200)
+            Text("${state.voucherType.ifBlank { "Comprobante" }} ${state.voucherNumber}".trim(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("Estado: ${state.status}", style = MaterialTheme.typography.bodySmall, color = PrimaryBlue)
+            Text("Cliente: ${state.clientName.ifBlank { "No disponible" }}", style = MaterialTheme.typography.bodySmall)
+            if (state.clientDni.isNotBlank()) Text("Documento: ${state.clientDni}", style = MaterialTheme.typography.bodySmall)
+            if (state.vehicleInfo.isNotBlank()) Text("Vehículo: ${state.vehicleInfo}", style = MaterialTheme.typography.bodySmall)
+            state.odometerKm?.let { Text("Odómetro: $it km", style = MaterialTheme.typography.bodySmall) }
+            if (state.serviceReason.isNotBlank()) Text("Servicio: ${state.serviceReason}", style = MaterialTheme.typography.bodySmall)
+
+            if (state.items.isNotEmpty()) {
+                HorizontalDivider(color = Slate200)
+                Text("Detalle", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                state.items.forEach { item ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("${item.quantity} × ${item.description}", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                        Text("S/ ${String.format(java.util.Locale.US, "%.2f", item.totalPrice)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            } else {
+                Text("The backend did not return line items for this voucher.", style = MaterialTheme.typography.bodySmall, color = Slate500)
+            }
+
+            HorizontalDivider(color = Slate200)
+            state.totalPaid?.let { Text("Pagado: S/ ${String.format(java.util.Locale.US, "%.2f", it)}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold) }
+            state.balance?.let { Text("Saldo: S/ ${String.format(java.util.Locale.US, "%.2f", it)}", style = MaterialTheme.typography.bodySmall) }
+            if (state.paymentInfo.isNotBlank()) Text("Pagos: ${state.paymentInfo}", style = MaterialTheme.typography.bodySmall, color = Slate500)
+            if (state.pdfUrl.isNullOrBlank()) Text("No hay un PDF adjunto en el backend; puedes guardar una copia con los datos del comprobante.", style = MaterialTheme.typography.bodySmall, color = Slate500)
+        }
     }
 }
 
@@ -819,7 +939,25 @@ private fun PdfFixedActionFooter(
 private fun ServiceVoucherPdfScreenPreview() {
     ShiftIQTheme {
         ServiceVoucherPdfScreen(
-            uiState = ServiceVoucherPdfUiState(),
+            uiState = ServiceVoucherPdfUiState(
+                companyName = "Taller de demostración",
+                tradeName = "Vista previa",
+                ruc = "20600000000",
+                address = "Dirección de ejemplo",
+                voucherType = "INVOICE",
+                voucherNumber = "F001-0001",
+                status = "PAID",
+                clientName = "Cliente de ejemplo",
+                clientDni = "00000000",
+                vehicleInfo = "Vehículo de ejemplo",
+                odometerKm = 45102,
+                serviceReason = "Mantenimiento preventivo de ejemplo",
+                items = listOf(VoucherTableItem(1, "Servicio de ejemplo", 180.0, 180.0)),
+                totalPaid = 180.0,
+                balance = 0.0,
+                isLoading = false,
+                isLoaded = true
+            ),
             onNavigateBack = {},
             onZoomIn = {},
             onZoomOut = {},

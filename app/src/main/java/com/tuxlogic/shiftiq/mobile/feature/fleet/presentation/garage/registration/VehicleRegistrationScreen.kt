@@ -62,26 +62,41 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.components.DiscoveredObdDevice
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.components.ObdPairingBottomSheet
 
+data class VehicleRegistrationInitialValues(
+    val ownerName: String = "",
+    val documentId: String = "",
+    val phone: String = "",
+    val email: String = "",
+    val notificationsConsent: Boolean = false,
+    val brand: String = "",
+    val model: String = "",
+    val year: String = "",
+    val plateNumber: String = "",
+    val vin: String = "",
+    val pairedDongle: String? = null
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleRegistrationScreen(
     onNavigateBack: () -> Unit,
     onRegistrationComplete: () -> Unit,
+    initialValues: VehicleRegistrationInitialValues = VehicleRegistrationInitialValues(),
     modifier: Modifier = Modifier
 ) {
     var currentStep by rememberSaveable { mutableIntStateOf(1) }
-    var ownerName by rememberSaveable { mutableStateOf("Carlos Mendoza") }
-    var documentId by rememberSaveable { mutableStateOf("45892104") }
-    var phone by rememberSaveable { mutableStateOf("987 654 321") }
-    var email by rememberSaveable { mutableStateOf("carlos.mendoza@shiftiq.pe") }
-    var notificationsConsent by rememberSaveable { mutableStateOf(true) }
+    var ownerName by rememberSaveable { mutableStateOf(initialValues.ownerName) }
+    var documentId by rememberSaveable { mutableStateOf(initialValues.documentId) }
+    var phone by rememberSaveable { mutableStateOf(initialValues.phone) }
+    var email by rememberSaveable { mutableStateOf(initialValues.email) }
+    var notificationsConsent by rememberSaveable { mutableStateOf(initialValues.notificationsConsent) }
 
-    var brand by rememberSaveable { mutableStateOf("Kia") }
-    var model by rememberSaveable { mutableStateOf("Rio") }
-    var year by rememberSaveable { mutableStateOf("2019") }
-    var plateNumber by rememberSaveable { mutableStateOf("ABC-123") }
-    var vin by rememberSaveable { mutableStateOf("KNADE1234567890") }
-    var pairedDongle by rememberSaveable { mutableStateOf<String?>("OBD2-BT-9821") }
+    var brand by rememberSaveable { mutableStateOf(initialValues.brand) }
+    var model by rememberSaveable { mutableStateOf(initialValues.model) }
+    var year by rememberSaveable { mutableStateOf(initialValues.year) }
+    var plateNumber by rememberSaveable { mutableStateOf(initialValues.plateNumber) }
+    var vin by rememberSaveable { mutableStateOf(initialValues.vin) }
+    var pairedDongle by rememberSaveable { mutableStateOf(initialValues.pairedDongle) }
 
     var showPairingSheet by rememberSaveable { mutableStateOf(false) }
 
@@ -714,7 +729,20 @@ private fun VehicleRegistrationScreenPreview() {
     ShiftIQTheme {
         VehicleRegistrationScreen(
             onNavigateBack = {},
-            onRegistrationComplete = {}
+            onRegistrationComplete = {},
+            initialValues = VehicleRegistrationInitialValues(
+                ownerName = "Carlos Mendoza",
+                documentId = "45892104",
+                phone = "987 654 321",
+                email = "carlos.mendoza@shiftiq.pe",
+                notificationsConsent = true,
+                brand = "Kia",
+                model = "Rio",
+                year = "2019",
+                plateNumber = "ABC-123",
+                vin = "KNADE1234567890",
+                pairedDongle = "OBD2-BT-9821"
+            )
         )
     }
 }

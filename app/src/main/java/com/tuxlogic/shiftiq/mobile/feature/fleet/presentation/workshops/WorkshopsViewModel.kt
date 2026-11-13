@@ -2,10 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.database.dao.VehicleDao
-import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.CreateAppointmentUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.WorkshopItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,15 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkshopsViewModel @Inject constructor(
-    private val createAppointmentUseCase: CreateAppointmentUseCase,
-    private val vehicleDao: VehicleDao,
-    private val sessionDataStore: SessionDataStore
+    private val vehicleDao: VehicleDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WorkshopsUiState())
@@ -188,39 +184,20 @@ class WorkshopsViewModel @Inject constructor(
     fun confirmBooking() {
         val workshop = _uiState.value.selectedWorkshopForBooking ?: return
         val vehicle = _uiState.value.selectedVehicle ?: return
+        val bookingState = _uiState.value
 
         _uiState.update { it.copy(isBookingLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val session = sessionDataStore.sessionState.firstOrNull()
-            val customerId = session?.userId?.value ?: UUID.randomUUID()
-            val branchId = session?.activeBranchId?.value ?: UUID.randomUUID()
-            val vehicleId = try {
-                UUID.fromString(vehicle.id)
-            } catch (_: Exception) {
-                UUID.randomUUID()
-            }
-
-            // Llamada al backend si está disponible
-            val result = createAppointmentUseCase(
-                branchId = branchId,
-                customerId = customerId,
-                vehicleId = vehicleId,
-                scheduledStart = "2026-11-12T15:30:00Z",
-                notes = _uiState.value.bookingReason
-            )
-
-            val voucherCode = if (result is AppResult.Success) {
-                "SQ-${result.data.id.toString().take(8).uppercase()}"
-            } else {
-                "SQ-APPT-${UUID.randomUUID().toString().take(6).uppercase()}"
-            }
+            delay(450)
+            // Demo local: no se crea una cita en el backend.
+            val voucherCode = "SQ-APPT-${UUID.randomUUID().toString().take(6).uppercase()}"
 
             val voucher = BookingVoucher(
                 appointmentCode = voucherCode,
                 workshopName = workshop.name,
                 district = workshop.district,
-                scheduledDateTime = "${_uiState.value.selectedDate} • ${_uiState.value.selectedTimeSlot}",
+                scheduledDateTime = "${bookingState.selectedDate} • ${bookingState.selectedTimeSlot}",
                 vehiclePlate = vehicle.plateNumber,
                 bayNumber = "Bahía 2 (Elevador Hidráulico)",
                 estimatedTotalPen = workshop.estimatedCostMinPen + 20.0
