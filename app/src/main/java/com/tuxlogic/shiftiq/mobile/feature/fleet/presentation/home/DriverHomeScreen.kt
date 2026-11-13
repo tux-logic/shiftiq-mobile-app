@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.window.Dialog
@@ -64,7 +65,7 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.Li
 @Composable
 fun DriverHomeRoute(
     onNavigateToWorkshops: () -> Unit,
-    onNavigateToDiagnostic: () -> Unit,
+    onNavigateToDtcDetail: (String) -> Unit,
     onNavigateToGarage: () -> Unit,
     onOpenDrawer: () -> Unit,
     onViewLiveOrder: (String) -> Unit = {},
@@ -75,7 +76,7 @@ fun DriverHomeRoute(
     DriverHomeScreen(
         uiState = uiState,
         onNavigateToWorkshops = onNavigateToWorkshops,
-        onNavigateToDiagnostic = onNavigateToDiagnostic,
+        onNavigateToDtcDetail = onNavigateToDtcDetail,
         onNavigateToGarage = onNavigateToGarage,
         onOpenDrawer = onOpenDrawer,
         onViewLiveOrder = onViewLiveOrder,
@@ -90,7 +91,7 @@ fun DriverHomeRoute(
 fun DriverHomeScreen(
     uiState: DriverHomeUiState,
     onNavigateToWorkshops: () -> Unit,
-    onNavigateToDiagnostic: () -> Unit,
+    onNavigateToDtcDetail: (String) -> Unit,
     onNavigateToGarage: () -> Unit,
     onOpenDrawer: () -> Unit,
     onToggleVehicleSelector: () -> Unit,
@@ -144,7 +145,9 @@ fun DriverHomeScreen(
 
             DtcAlertBanner(
                 alert = uiState.activeDtcAlert,
-                onViewDiagnosticDetail = onNavigateToDiagnostic
+                onViewDiagnosticDetail = {
+                    uiState.activeDtcAlert?.let { alert -> onNavigateToDtcDetail(alert.code) }
+                }
             )
 
             FullScanButton(onClick = onStartFullScan)
@@ -249,19 +252,22 @@ private fun DriverGreetingCard(
         border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(spacing.medium),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             DriverGreetingInfo(
                 driverName = driverName,
                 driverRole = driverRole,
-                avatarInitial = avatarInitial
+                avatarInitial = avatarInitial,
+                modifier = Modifier.fillMaxWidth()
             )
-            DriverObdBadge(isConnected = isObdConnected)
+            DriverObdBadge(
+                isConnected = isObdConnected,
+                modifier = Modifier.align(Alignment.End)
+            )
         }
     }
 }
@@ -293,18 +299,22 @@ private fun DriverGreetingInfo(
             )
         }
         Spacer(modifier = Modifier.width(spacing.smallMedium))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "¡Hola, $driverName!",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(spacing.micro))
             Text(
                 text = driverRole,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -570,7 +580,7 @@ private fun DriverHomeScreenPreview() {
                 )
             ),
             onNavigateToWorkshops = {},
-            onNavigateToDiagnostic = {},
+            onNavigateToDtcDetail = {},
             onNavigateToGarage = {},
             onOpenDrawer = {},
             onToggleVehicleSelector = {},
