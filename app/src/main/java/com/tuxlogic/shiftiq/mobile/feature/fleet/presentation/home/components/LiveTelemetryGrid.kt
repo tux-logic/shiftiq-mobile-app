@@ -44,7 +44,7 @@ fun LiveTelemetryGrid(
 ) {
     val spacing = MaterialTheme.spacing
     Column(modifier = modifier.fillMaxWidth()) {
-        LiveTelemetryHeader()
+        LiveTelemetryHeader(isSynchronized = telemetry.isSynchronized)
         Spacer(modifier = Modifier.height(spacing.smallMedium))
         LiveTelemetryRow(
             firstTitle = "Régimen Motor",
@@ -73,7 +73,10 @@ fun LiveTelemetryGrid(
 }
 
 @Composable
-private fun LiveTelemetryHeader(modifier: Modifier = Modifier) {
+private fun LiveTelemetryHeader(
+    isSynchronized: Boolean,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -86,17 +89,26 @@ private fun LiveTelemetryHeader(modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
-        LiveTelemetrySyncBadge()
+        LiveTelemetrySyncBadge(isSynchronized = isSynchronized)
     }
 }
 
 @Composable
-private fun LiveTelemetrySyncBadge(modifier: Modifier = Modifier) {
+private fun LiveTelemetrySyncBadge(
+    isSynchronized: Boolean,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
+    val badgeColor = if (isSynchronized) {
+        ShiftIQSuccess.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
+    val indicatorColor = if (isSynchronized) ShiftIQSuccess else MaterialTheme.colorScheme.onSecondaryContainer
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(spacing.radiusMedium))
-            .background(ShiftIQSuccess.copy(alpha = 0.15f))
+            .background(badgeColor)
             .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -104,14 +116,14 @@ private fun LiveTelemetrySyncBadge(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(spacing.indicatorHeight)
                 .clip(CircleShape)
-                .background(ShiftIQSuccess)
+                .background(indicatorColor)
         )
         Spacer(modifier = Modifier.width(spacing.extraSmall))
         Text(
-            text = "Sincronizado",
+            text = if (isSynchronized) "Sincronizado" else "Demo IoT",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = ShiftIQSuccess
+            color = indicatorColor
         )
     }
 }
