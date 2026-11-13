@@ -3,7 +3,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model
 data class DriverVehicleHealth(
     val score: Int = 94,
     val title: String = "Salud General del Vehículo",
-    val description: String = "Todos los sensores en rango óptimo • Sin alertas críticas",
+    val description: String = "Datos IoT de demostración",
     val hasCriticalAlerts: Boolean = false
 )
 
@@ -14,19 +14,19 @@ data class DriverLiveTelemetry(
     val odometerKm: Int = 48120,
     val fuelPercent: Double = 68.0,
     val speedKmh: Double = 0.0,
-    val isSynchronized: Boolean = true
+    val isSynchronized: Boolean = false
 )
 
 data class ActiveServiceCardData(
     val workOrderId: String,
-    val workshopName: String,
+    val workshopName: String? = null,
     val phaseText: String,
-    val mechanicName: String,
+    val mechanicName: String? = null,
     val currentJob: String,
-    val remainingMinutes: Int,
-    val currentPhaseIndex: Int = 3,
-    val totalPhases: Int = 4,
-    val startedAt: String = "08:30 AM"
+    val remainingMinutes: Int? = null,
+    val currentPhaseIndex: Int? = null,
+    val totalPhases: Int? = null,
+    val startedAt: String? = null
 )
 
 data class DriverDtcAlert(
@@ -34,7 +34,7 @@ data class DriverDtcAlert(
     val title: String = "Alerta Leve: Sensor de Oxígeno",
     val severity: String = "Media",
     val suggestedReviewKm: Int = 500,
-    val description: String = "Lectura intermitente en circuito de precalentador del banco 1."
+    val description: String = "Lectura IoT ficticia para demostración; no proviene de un dongle OBD-II real."
 )
 
 data class B2CVehicleItem(
@@ -45,11 +45,11 @@ data class B2CVehicleItem(
     val plateNumber: String,
     val vin: String,
     val photoUrl: String? = null,
-    val isMonitored: Boolean = true,
-    val batteryVoltage: Double = 13.8,
-    val isPrimary: Boolean = true,
-    val nextServiceKm: Int = 50000,
-    val oilLifePercent: Int = 78
+    val isMonitored: Boolean = false,
+    val batteryVoltage: Double? = null,
+    val isPrimary: Boolean = false,
+    val nextServiceKm: Int? = null,
+    val oilLifePercent: Int? = null
 )
 
 data class MaintenanceHistoryItem(
