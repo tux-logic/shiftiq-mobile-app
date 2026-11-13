@@ -139,8 +139,7 @@ fun StockAdjustmentScreen(
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = Slate900,
                     selectedLabelColor = Color.White,
-                    disabledSelectedContainerColor = Slate900,
-                    disabledSelectedLabelColor = Color.White
+                    disabledSelectedContainerColor = Slate900
                 )
             )
 
