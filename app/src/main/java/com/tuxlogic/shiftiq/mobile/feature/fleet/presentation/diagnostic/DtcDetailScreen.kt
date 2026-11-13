@@ -1,5 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -47,11 +49,90 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
+
+private data class DtcDemoDetails(
+    val title: String,
+    val severity: String,
+    val suggestedReviewKm: Int,
+    val plainLanguage: String,
+    val consumptionImpact: String,
+    val checkEngineImpact: String,
+    val safetyImpact: String,
+    val location: String,
+    val part: String,
+    val recommendation: String
+)
+
+private fun demoDetailsForDtc(code: String): DtcDemoDetails = when (code.uppercase()) {
+    "P0135" -> DtcDemoDetails(
+        title = "Circuito calefactor del sensor de oxígeno",
+        severity = "Media · preventiva",
+        suggestedReviewKm = 500,
+        plainLanguage = "La simulación representa una falla del circuito que precalienta el sensor de oxígeno. No es una lectura real del vehículo.",
+        consumptionImpact = "Puede aumentar en frío",
+        checkEngineImpact = "Luz activa simulada",
+        safetyImpact = "Sin riesgo simulado inmediato",
+        location = "Escape, Banco 1 · Sensor 1",
+        part = "Sensor de oxígeno / circuito calefactor",
+        recommendation = "Verificar el sensor y su circuito con un escáner OBD-II real."
+    )
+    "P0420" -> DtcDemoDetails(
+        title = "Eficiencia del catalizador baja",
+        severity = "Media · revisar",
+        suggestedReviewKm = 250,
+        plainLanguage = "La simulación indica que el catalizador trabaja por debajo del umbral esperado. El código es ficticio y no confirma una falla.",
+        consumptionImpact = "Emisiones elevadas simuladas",
+        checkEngineImpact = "Luz activa simulada",
+        safetyImpact = "Revisión recomendada",
+        location = "Sistema de escape · catalizador",
+        part = "Catalizador y sensores de oxígeno",
+        recommendation = "Comprobar sensores y escape antes de reemplazar piezas."
+    )
+    "P0301" -> DtcDemoDetails(
+        title = "Falla de combustión en cilindro 1",
+        severity = "Alta · atención pronta",
+        suggestedReviewKm = 100,
+        plainLanguage = "La simulación detectó una combustión irregular en el cilindro 1. Es un dato ficticio para probar las alertas.",
+        consumptionImpact = "Consumo irregular simulado",
+        checkEngineImpact = "Luz activa simulada",
+        safetyImpact = "Evita exigir el motor",
+        location = "Motor · cilindro 1",
+        part = "Bujía, bobina e inyector del cilindro 1",
+        recommendation = "Solicitar una inspección técnica; no sustituir piezas solo por esta demo."
+    )
+    "P0171" -> DtcDemoDetails(
+        title = "Mezcla de combustible demasiado pobre",
+        severity = "Media · revisar",
+        suggestedReviewKm = 300,
+        plainLanguage = "La simulación representa una mezcla con más aire del esperado. No es una lectura real del motor.",
+        consumptionImpact = "Rendimiento irregular simulado",
+        checkEngineImpact = "Luz activa simulada",
+        safetyImpact = "Revisión preventiva",
+        location = "Admisión · Banco 1",
+        part = "Admisión de aire y sensores de mezcla",
+        recommendation = "Revisar admisión y sensores con equipo de diagnóstico."
+    )
+    else -> DtcDemoDetails(
+        title = "Código de diagnóstico $code",
+        severity = "Demo · validar",
+        suggestedReviewKm = 500,
+        plainLanguage = "Este código se muestra como ejemplo IoT. Confírmalo con una lectura OBD-II real antes de tomar decisiones.",
+        consumptionImpact = "No disponible en demo",
+        checkEngineImpact = "Código de ejemplo",
+        safetyImpact = "No evaluado",
+        location = "No disponible para este código",
+        part = "No se asigna una pieza automáticamente",
+        recommendation = "Confirmar la definición del código con un escáner OBD-II real."
+    )
+}
 
 @Composable
 fun DtcDetailRoute(
@@ -60,10 +141,38 @@ fun DtcDetailRoute(
     onNavigateToWorkshops: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val details = demoDetailsForDtc(dtcCode)
+    val reportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { destination ->
+        if (destination != null) {
+            val reportLines = listOf(
+                "Fecha: ${java.time.LocalDateTime.now()}",
+                "Origen: datos IoT ficticios de demostración; no son una lectura real del vehículo.",
+                "Código DTC: $dtcCode",
+                "Descripción: ${details.title}",
+                "Severidad de demostración: ${details.severity}.",
+                "Ventana sugerida de revisión: próximos ${details.suggestedReviewKm} km.",
+                "Interpretación: ${details.plainLanguage}",
+                "Recomendación: ${details.recommendation}"
+            )
+            PdfDocumentExporter.write(context, destination, "Informe DTC $dtcCode", reportLines)
+                .onSuccess {
+                    Toast.makeText(context, "Informe PDF guardado", Toast.LENGTH_LONG).show()
+                }
+                .onFailure {
+                    Toast.makeText(context, "No se pudo guardar el PDF: ${it.localizedMessage.orEmpty()}", Toast.LENGTH_LONG).show()
+                }
+        }
+    }
     DtcDetailScreen(
         dtcCode = dtcCode,
         onNavigateBack = onNavigateBack,
         onNavigateToWorkshops = onNavigateToWorkshops,
+        onDownloadReport = {
+            reportLauncher.launch("ShiftIQ_DTC_${dtcCode}_${System.currentTimeMillis()}.pdf")
+        },
         modifier = modifier
     )
 }
@@ -73,9 +182,11 @@ fun DtcDetailScreen(
     dtcCode: String,
     onNavigateBack: () -> Unit,
     onNavigateToWorkshops: () -> Unit,
+    onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
+    val details = demoDetailsForDtc(dtcCode)
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
@@ -96,14 +207,14 @@ fun DtcDetailScreen(
                 .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
-            DtcAlertOverviewCard(dtcCode = dtcCode)
-            PlainLanguageTranslationCard()
-            DrivingImpactSection()
-            TechnicalSpecCard()
+            DtcAlertOverviewCard(dtcCode = dtcCode, details = details)
+            PlainLanguageTranslationCard(details = details)
+            DrivingImpactSection(details = details)
+            TechnicalSpecCard(details = details)
             EstimateTwinCards()
             DtcActionButtons(
                 onFindWorkshop = onNavigateToWorkshops,
-                onDownloadReport = {}
+                onDownloadReport = onDownloadReport
             )
             Spacer(modifier = Modifier.height(spacing.medium))
         }
@@ -166,6 +277,7 @@ private fun DtcDetailTopBar(
 @Composable
 private fun DtcAlertOverviewCard(
     dtcCode: String,
+    details: DtcDemoDetails,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -210,17 +322,17 @@ private fun DtcAlertOverviewCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Circuito Calefactor Sensor O2",
+                            text = details.title,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                DtcUrgencyPill()
+                DtcUrgencyPill(severity = details.severity)
             }
             Spacer(modifier = Modifier.height(spacing.smallMedium))
             Text(
-                text = "Ventana sugerida de intervención: Próximos 500 km",
+                text = "Lectura ficticia · revisar en ${details.suggestedReviewKm} km",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = ShiftIQWarning
@@ -230,7 +342,7 @@ private fun DtcAlertOverviewCard(
 }
 
 @Composable
-private fun DtcUrgencyPill(modifier: Modifier = Modifier) {
+private fun DtcUrgencyPill(severity: String, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Box(
         modifier = modifier
@@ -239,7 +351,7 @@ private fun DtcUrgencyPill(modifier: Modifier = Modifier) {
             .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
     ) {
         Text(
-            text = "MODERADO / PREVENTIVO",
+            text = severity.uppercase(),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = ShiftIQWarning
@@ -248,7 +360,7 @@ private fun DtcUrgencyPill(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlainLanguageTranslationCard(modifier: Modifier = Modifier) {
+private fun PlainLanguageTranslationCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -269,7 +381,7 @@ private fun PlainLanguageTranslationCard(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(spacing.small))
             Text(
-                text = "La resistencia interna que precalienta la sonda de oxígeno (sensor lambda) tarda más de lo normal en alcanzar la temperatura óptima. El motor sigue funcionando de forma segura, pero consume más combustible al arrancar y emite mayores emisiones durante los primeros 5 minutos.",
+                text = details.plainLanguage,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -278,7 +390,7 @@ private fun PlainLanguageTranslationCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun DrivingImpactSection(modifier: Modifier = Modifier) {
+private fun DrivingImpactSection(details: DtcDemoDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -295,19 +407,19 @@ private fun DrivingImpactSection(modifier: Modifier = Modifier) {
             ImpactCard(
                 icon = Icons.Default.LocalGasStation,
                 title = "Consumo",
-                desc = "+15% en frío",
+                desc = details.consumptionImpact,
                 modifier = Modifier.weight(1f)
             )
             ImpactCard(
                 icon = Icons.Default.Warning,
                 title = "Check Engine",
-                desc = "Luz activa",
+                desc = details.checkEngineImpact,
                 modifier = Modifier.weight(1f)
             )
             ImpactCard(
                 icon = Icons.Default.CheckCircle,
                 title = "Seguridad",
-                desc = "Seguro conducir",
+                desc = details.safetyImpact,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -357,7 +469,7 @@ private fun ImpactCard(
 }
 
 @Composable
-private fun TechnicalSpecCard(modifier: Modifier = Modifier) {
+private fun TechnicalSpecCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -378,12 +490,12 @@ private fun TechnicalSpecCard(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(spacing.small))
             Text(
-                text = "Ubicación: Colector de escape antes del catalizador (Banco 1, Sensor 1)",
+                text = "Ubicación: ${details.location}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "Número de Parte OEM: 39210-2B100 (Bosch / Mobis)",
+                text = "Componente a verificar: ${details.part}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -400,13 +512,13 @@ private fun EstimateTwinCards(modifier: Modifier = Modifier) {
     ) {
         EstimateMetricCard(
             title = "Presupuesto Estimado",
-            value = "S/ 140 - S/ 190",
+            value = "No disponible",
             icon = Icons.Default.Build,
             modifier = Modifier.weight(1f)
         )
         EstimateMetricCard(
             title = "Tiempo en Bahía",
-            value = "45 min",
+            value = "Por confirmar",
             icon = Icons.Default.Schedule,
             modifier = Modifier.weight(1f)
         )

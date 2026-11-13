@@ -1,17 +1,19 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
-import com.tuxlogic.shiftiq.mobile.core.database.dao.TelemetryDao
-import com.tuxlogic.shiftiq.mobile.core.database.dao.VehicleDao
-import com.tuxlogic.shiftiq.mobile.core.database.entity.VehicleEntity
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
+import com.tuxlogic.shiftiq.mobile.core.model.VehicleId
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.ActiveServiceCardData
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverDtcAlert
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverVehicleHealth
+import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.Vehicle
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.repository.IotRepository
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.TaskStatus
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.WorkOrderStatus
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.repository.WorkOrderRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -21,185 +23,112 @@ import javax.inject.Inject
 data class DriverDashboardData(
     val driverName: String,
     val driverEmail: String = "",
-    val driverRole: String = "Conductor Particular",
+    val driverRole: String = "",
     val selectedVehicle: B2CVehicleItem?,
     val availableVehicles: List<B2CVehicleItem>,
     val vehicleHealth: DriverVehicleHealth,
     val liveTelemetry: DriverLiveTelemetry,
     val activeService: ActiveServiceCardData?,
     val activeDtcAlert: DriverDtcAlert?,
-    val isObdConnected: Boolean = true
+    val isObdConnected: Boolean = false
 )
 
 class GetDriverDashboardUseCase @Inject constructor(
     private val sessionDataStore: SessionDataStore,
-    private val vehicleDao: VehicleDao,
-    private val telemetryDao: TelemetryDao,
     private val iotRepository: IotRepository,
     private val workOrderRepository: WorkOrderRepository,
-    private val getCustomerByUserIdUseCase: com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
+    private val coreRepository: CoreRepository,
+    private val getCustomerByUserId: GetCustomerByUserIdUseCase
 ) {
     suspend operator fun invoke(): DriverDashboardData {
         val session = sessionDataStore.sessionState.firstOrNull()
-        val userId = session?.userId
         val userEmail = session?.userEmail.orEmpty()
-
-        // 0. Obtener nombre real del conductor desde perfil de Core o derivado del email
         var driverName = ""
-        if (userId != null) {
-            try {
-                val customerResult = getCustomerByUserIdUseCase(userId.value.toString())
-                if (customerResult is AppResult.Success) {
-                    val customer = customerResult.data
-                    val name = customer.firstName?.ifBlank { null }
-                        ?: customer.displayName.ifBlank { null }
-                    if (!name.isNullOrBlank()) {
-                        driverName = name
+        var remoteVehicles: List<Vehicle> = emptyList()
+
+        session?.userId?.let { userId ->
+            when (val profileResult = getCustomerByUserId(userId.value.toString())) {
+                is AppResult.Success -> {
+                    val customer = profileResult.data
+                    driverName = customer.displayName
+                    remoteVehicles = when (val result = iotRepository.getCustomerVehicles(CustomerId(customer.id))) {
+                        is AppResult.Success -> result.data
+                        is AppResult.Failure -> emptyList()
                     }
                 }
-            } catch (_: Exception) {
-                // Silencioso en modo offline
+
+                is AppResult.Failure -> Unit
             }
         }
 
         if (driverName.isBlank() && userEmail.isNotBlank()) {
-            val emailPart = userEmail.substringBefore("@")
+            driverName = userEmail.substringBefore("@")
                 .split(".", "_", "-")
                 .firstOrNull()
-                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-            if (!emailPart.isNullOrBlank()) {
-                driverName = emailPart
-            }
+                .orEmpty()
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         }
+        if (driverName.isBlank()) driverName = "Conductor"
 
-        if (driverName.isBlank()) {
-            driverName = "Conductor"
-        }
+        val vehicles = remoteVehicles.map { it.toB2CVehicleItem() }
+        val primaryVehicle = vehicles.firstOrNull()
 
-        // 1. Obtener vehículos desde Room (offline first)
-        val cachedVehicles = vehicleDao.getAllVehicles().firstOrNull().orEmpty()
-        var vehicles = cachedVehicles.map { it.toB2CVehicleItem() }
-
-        // 2. Si hay conexión y customerId, intentar refrescar desde la API remota
-        val customerIdStr = session?.activeBranchId?.value?.toString() // o derivado
-        if (vehicles.isEmpty()) {
-            val fallbackVehicle = B2CVehicleItem(
-                id = UUID.randomUUID().toString(),
-                brand = "Kia",
-                model = "Rio",
-                year = 2019,
-                plateNumber = "ABC-123",
-                vin = "9BWCA21102P012984",
-                isMonitored = true,
-                batteryVoltage = 13.8,
-                isPrimary = true
-            )
-            vehicles = listOf(fallbackVehicle)
-            vehicleDao.insertVehicle(fallbackVehicle.toEntity())
-        }
-
-        val primaryVehicle = vehicles.firstOrNull { it.isPrimary } ?: vehicles.firstOrNull()
-
-        // 3. Revisar orden de trabajo activa para el vehículo
-        var activeService: ActiveServiceCardData? = null
-        if (primaryVehicle != null) {
-            try {
-                val vehicleIdObj = com.tuxlogic.shiftiq.mobile.core.model.VehicleId(UUID.fromString(primaryVehicle.id))
-                val woResult = workOrderRepository.getWorkOrders(vehicleId = vehicleIdObj)
-                if (woResult is AppResult.Success) {
-                    val activeWo = woResult.data.firstOrNull { it.status == WorkOrderStatus.IN_PROGRESS }
-                    if (activeWo != null) {
-                        activeService = ActiveServiceCardData(
-                            workOrderId = activeWo.id.value.toString(),
-                            workshopName = "Taller Silva",
-                            phaseText = "Fase 3 de 4: En Rampa (Bahía 2) • Téc. Roberto Silva",
-                            mechanicName = "Roberto Silva",
-                            currentJob = activeWo.diagnosticSummary.ifBlank { "Reemplazo de Sensor O2 Bosch (45 min restantes)" },
-                            remainingMinutes = 45,
-                            currentPhaseIndex = 3,
-                            totalPhases = 4,
-                            startedAt = "08:30 AM"
-                        )
-                    }
+        val activeService = primaryVehicle?.let { vehicle ->
+            runCatching {
+                val vehicleId = VehicleId(UUID.fromString(vehicle.id))
+                val orders = workOrderRepository.getWorkOrders(vehicleId = vehicleId)
+                val activeOrder = (orders as? AppResult.Success)?.data
+                    ?.firstOrNull { it.status == WorkOrderStatus.IN_PROGRESS }
+                activeOrder?.let { order ->
+                    val branch = (coreRepository.getBranchById(order.branchId.value.toString()) as? AppResult.Success)?.data
+                    val activeTask = order.tasks.firstOrNull { it.status == TaskStatus.DOING }
+                    val completedTasks = order.tasks.count { it.status == TaskStatus.COMPLETED }
+                    ActiveServiceCardData(
+                        workOrderId = order.id.value.toString(),
+                        workshopName = branch?.name,
+                        phaseText = order.status.name,
+                        mechanicName = activeTask?.assignedMechanicName,
+                        currentJob = activeTask?.description?.takeIf(String::isNotBlank)
+                            ?: order.diagnosticSummary.ifBlank { "No work details are available." },
+                        remainingMinutes = null,
+                        currentPhaseIndex = if (order.tasks.isEmpty()) null else (completedTasks + 1).coerceAtMost(order.tasks.size),
+                        totalPhases = order.tasks.size.takeIf { it > 0 },
+                        startedAt = order.createdAt
+                    )
                 }
-            } catch (_: Exception) {
-                // Silencioso: si no hay OTs remotas, activeService queda nulo para mostrar el estado neutral
-            }
+            }.getOrNull()
         }
 
-        // 4. Última telemetría guardada en Room
-        val cachedTelemetry = primaryVehicle?.let { telemetryDao.getLatestTelemetry(it.id).firstOrNull() }
-        val liveTelemetry = if (cachedTelemetry != null) {
-            DriverLiveTelemetry(
-                rpm = cachedTelemetry.rpm,
-                temperatureCelsius = cachedTelemetry.temperatureCelsius,
-                batteryVoltage = cachedTelemetry.batteryVoltage,
-                odometerKm = cachedTelemetry.odometerKm,
-                fuelPercent = cachedTelemetry.fuelLevelPercent,
-                speedKmh = cachedTelemetry.speedKmh,
-                isSynchronized = true
-            )
-        } else {
-            DriverLiveTelemetry(
-                rpm = 850,
-                temperatureCelsius = 88,
-                batteryVoltage = 13.8,
-                odometerKm = 48120,
-                fuelPercent = 68.0,
-                speedKmh = 0.0,
-                isSynchronized = true
-            )
-        }
-
-        // 5. Alerta DTC (Mock leve representativo para la demo o nulo si no hay)
-        val alert = DriverDtcAlert(
-            code = "P0135",
-            title = "Alerta Leve: Sensor de Oxígeno",
-            severity = "Media",
-            suggestedReviewKm = 500,
-            description = "Lectura intermitente en circuito de precalentador del banco 1."
-        )
+        // Every vehicle gets its own clearly identified demo profile until a real OBD-II device is available.
+        val demoProfile = DemoVehicleIoTProfiles.forVehicle(primaryVehicle, vehicles)
 
         return DriverDashboardData(
             driverName = driverName,
             driverEmail = userEmail,
-            driverRole = "Conductor Particular",
+            driverRole = session?.userRole?.displayName.orEmpty(),
             selectedVehicle = primaryVehicle,
             availableVehicles = vehicles,
-            vehicleHealth = DriverVehicleHealth(
-                score = 94,
-                title = "Salud General del Vehículo",
-                description = "Todos los sensores en rango óptimo • Sin alertas críticas",
+            vehicleHealth = demoProfile?.health ?: DriverVehicleHealth(
+                description = "Datos IoT de demostración · agrega un vehículo para ver un perfil.",
                 hasCriticalAlerts = false
             ),
-            liveTelemetry = liveTelemetry,
+            liveTelemetry = demoProfile?.telemetry ?: DriverLiveTelemetry(isSynchronized = false),
             activeService = activeService,
-            activeDtcAlert = alert,
-            isObdConnected = true
+            activeDtcAlert = demoProfile?.alert,
+            isObdConnected = false
         )
     }
 
-    private fun VehicleEntity.toB2CVehicleItem(): B2CVehicleItem = B2CVehicleItem(
-        id = id,
+    private fun Vehicle.toB2CVehicleItem(): B2CVehicleItem = B2CVehicleItem(
+        id = id.toString(),
         brand = brand,
         model = model,
         year = year,
-        plateNumber = plateNumber,
-        vin = vin,
+        plateNumber = plateNumber.value,
+        vin = vin.value,
         photoUrl = photoUrl,
-        isMonitored = true,
-        batteryVoltage = 13.8,
-        isPrimary = isPrimary
-    )
-
-    private fun B2CVehicleItem.toEntity(): VehicleEntity = VehicleEntity(
-        id = id,
-        brand = brand,
-        model = model,
-        year = year,
-        plateNumber = plateNumber,
-        vin = vin,
-        photoUrl = photoUrl,
-        isPrimary = isPrimary
+        isMonitored = false,
+        batteryVoltage = null,
+        isPrimary = false
     )
 }

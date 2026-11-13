@@ -574,10 +574,10 @@ private fun RealTimeTelemetryHeader(modifier: Modifier = Modifier) {
 
 @Composable
 private fun GarageTelemetryKpiGrid(
-    odometerKm: Int,
-    nextServiceKm: Int,
-    batteryVoltage: Double,
-    oilLifePercent: Int,
+    odometerKm: Int?,
+    nextServiceKm: Int?,
+    batteryVoltage: Double?,
+    oilLifePercent: Int?,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -589,13 +589,13 @@ private fun GarageTelemetryKpiGrid(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
         ) {
-            val formattedOdo = String.format(java.util.Locale.US, "%,d", odometerKm)
-            val formattedNext = String.format(java.util.Locale.US, "%,d", nextServiceKm)
+            val formattedOdo = odometerKm?.let { String.format(java.util.Locale.US, "%,d", it) } ?: "—"
+            val formattedNext = nextServiceKm?.let { String.format(java.util.Locale.US, "%,d", it) } ?: "—"
             GarageMetricCard(
                 title = "Odómetro Actual",
                 value = formattedOdo,
                 unit = "km",
-                subtitle = "+45 km esta semana",
+                subtitle = if (odometerKm == null) "Sin lectura disponible" else "Última lectura recibida",
                 subtitleColor = ShiftIQSuccess,
                 icon = Icons.Default.Speed,
                 modifier = Modifier.weight(1f)
@@ -604,7 +604,7 @@ private fun GarageTelemetryKpiGrid(
                 title = "Próx. Servicio",
                 value = formattedNext,
                 unit = "km",
-                subtitle = "En 1,880 km",
+                subtitle = if (nextServiceKm == null) "Sin dato disponible" else "Intervalo informado",
                 subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 icon = Icons.Default.CalendarToday,
                 modifier = Modifier.weight(1f)
@@ -614,21 +614,21 @@ private fun GarageTelemetryKpiGrid(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing.smallMedium)
         ) {
-            val formattedBat = String.format(java.util.Locale.US, "%.1f", batteryVoltage)
+            val formattedBat = batteryVoltage?.let { String.format(java.util.Locale.US, "%.1f", it) } ?: "—"
             GarageMetricCard(
                 title = "Salud Batería",
                 value = formattedBat,
                 unit = "V",
-                subtitle = "Estado Óptimo",
+                subtitle = if (batteryVoltage == null) "Sin lectura disponible" else "Última lectura recibida",
                 subtitleColor = ShiftIQSuccess,
                 icon = Icons.Default.ElectricBolt,
                 modifier = Modifier.weight(1f)
             )
             GarageMetricCard(
                 title = "Aceite Motor",
-                value = "$oilLifePercent%",
+                value = oilLifePercent?.let { "$it%" } ?: "—",
                 unit = "vida",
-                subtitle = "Nivel Adecuado",
+                subtitle = if (oilLifePercent == null) "Sin dato disponible" else "Dato del vehículo",
                 subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 icon = Icons.Default.Opacity,
                 modifier = Modifier.weight(1f)

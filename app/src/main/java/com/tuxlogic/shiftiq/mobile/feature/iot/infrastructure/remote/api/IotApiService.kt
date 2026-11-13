@@ -6,6 +6,7 @@ import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.LinkDev
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.Obd2DeviceResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.RegisterDeviceRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.RegisterVehicleRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.RegisterVehicleResponseDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.TelemetryBatchRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.TelemetryBatchResponseDto
 import com.tuxlogic.shiftiq.mobile.feature.iot.infrastructure.remote.dto.TelemetrySnapshotResourceDto
@@ -30,7 +31,7 @@ interface IotApiService {
     @POST("api/v1/vehicles")
     suspend fun registerVehicle(
         @Body request: RegisterVehicleRequestDto
-    ): Response<VehicleResourceDto>
+    ): Response<RegisterVehicleResponseDto>
 
     @GET("api/v1/vehicles")
     suspend fun getVehicles(

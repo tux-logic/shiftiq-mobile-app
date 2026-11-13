@@ -3,20 +3,16 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
-import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetWorkshopByIdUseCase
-import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkshopDetailViewModel @Inject constructor(
-    private val getWorkshopByIdUseCase: GetWorkshopByIdUseCase,
-    private val coreRepository: CoreRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -32,64 +28,26 @@ class WorkshopDetailViewModel @Inject constructor(
     fun loadWorkshopDetail(id: String) {
         _uiState.value = WorkshopDetailUiState.Loading
         viewModelScope.launch {
-            val result = getWorkshopByIdUseCase(id)
-            if (result is AppResult.Success) {
-                val workshop = result.data
-                val specialtiesResult = coreRepository.getSpecialties(workshop.id)
-                val specialties = if (specialtiesResult is AppResult.Success) {
-                    specialtiesResult.data.map {
-                        WorkshopSpecialtyItem(
-                            id = it.id,
-                            name = it.name,
-                            description = it.description ?: "Servicio integral con scanner y herramientas certificadas.",
-                            estimatedPricePen = 120.0,
-                            estimatedDurationMinutes = 60,
-                            warrantyDays = 30
-                        )
-                    }
-                } else {
-                    defaultSpecialties()
-                }
-
-                _uiState.value = WorkshopDetailUiState.Success(
-                    WorkshopDetailData(
-                        id = workshop.id,
-                        name = workshop.businessName.ifBlank { workshop.brandName },
-                        rating = 4.8,
-                        reviewCount = 115,
-                        address = "Av. La Marina 2450, San Miguel",
-                        district = "San Miguel",
-                        phone = "+51 987 654 321",
-                        openingHours = "Lun - Sáb: 08:00 AM - 06:30 PM",
-                        isOpenNow = true,
-                        compatibilityNotice = "Este taller cuenta con osciloscopio automotriz, scanner CAN-BUS avanzado y repuestos homologados en almacén inmediato.",
-                        activeBaysCount = 3,
-                        certifiedTechniciansCount = 4,
-                        isFavorite = false,
-                        specialties = specialties.ifEmpty { defaultSpecialties() }
-                    )
+            delay(250)
+            val isExpress = id == "w2"
+            _uiState.value = WorkshopDetailUiState.Success(
+                WorkshopDetailData(
+                    id = id,
+                    name = if (isExpress) "AutoService Express - Mecánica Rápida" else "Taller Automotriz Silva - Sede San Miguel",
+                    rating = if (isExpress) 4.6 else 4.8,
+                    reviewCount = if (isExpress) 89 else 115,
+                    address = if (isExpress) "Av. Sucre 820, Pueblo Libre, Lima" else "Av. La Marina 2450, San Miguel, Lima",
+                    district = if (isExpress) "Pueblo Libre" else "San Miguel",
+                    phone = if (isExpress) "+51 987 111 222" else "+51 987 654 321",
+                    openingHours = "Lun - Sáb: 08:00 AM - 06:30 PM",
+                    isOpenNow = true,
+                    compatibilityNotice = "Taller de demostración para el flujo de reservas.",
+                    activeBaysCount = if (isExpress) 2 else 3,
+                    certifiedTechniciansCount = if (isExpress) 3 else 4,
+                    isFavorite = false,
+                    specialties = defaultSpecialties()
                 )
-            } else {
-                // Mockup default data matching Frame 234:20814
-                _uiState.value = WorkshopDetailUiState.Success(
-                    WorkshopDetailData(
-                        id = id,
-                        name = if (id == "w2") "AutoService Express - Mecánica Rápida" else "Taller Automotriz Silva - Sede San Miguel",
-                        rating = 4.8,
-                        reviewCount = 115,
-                        address = "Av. La Marina 2450, San Miguel, Lima",
-                        district = "San Miguel",
-                        phone = "+51 987 654 321",
-                        openingHours = "Lun - Sáb: 08:00 AM - 06:30 PM",
-                        isOpenNow = true,
-                        compatibilityNotice = "Este taller cuenta con osciloscopio automotriz, scanner CAN-BUS avanzado y el repuesto original compatible con tu Kia Rio 2019 en almacén inmediato.",
-                        activeBaysCount = 3,
-                        certifiedTechniciansCount = 4,
-                        isFavorite = false,
-                        specialties = defaultSpecialties()
-                    )
-                )
-            }
+            )
         }
     }
 

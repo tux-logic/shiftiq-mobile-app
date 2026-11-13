@@ -1,5 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,8 +48,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
+import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
@@ -73,6 +78,37 @@ fun DiagnosticsRoute(
     viewModel: DiagnosticViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val reportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { destination ->
+        if (destination != null) {
+            val alert = uiState.activeDtcAlert
+            val telemetry = uiState.telemetry
+            val reportLines = listOf(
+                "Fecha: ${java.time.LocalDateTime.now()}",
+                "Origen: datos de demostración IoT; no son una lectura real de un dongle OBD-II.",
+                "Estado OBD-II: ${if (uiState.isObdConnected) "Conectado en la demostración" else "Sin conexión"}",
+                "RPM: ${telemetry.rpm}",
+                "Temperatura del motor: ${telemetry.temperatureCelsius} °C",
+                "Voltaje de batería: ${telemetry.batteryVoltage} V",
+                "Velocidad: ${telemetry.speedKmh} km/h",
+                "Odómetro: ${telemetry.odometerKm} km",
+                "Combustible: ${telemetry.fuelPercent}%",
+                "Carga del motor: ${uiState.engineLoadPercent}%",
+                "Código DTC: ${alert?.code ?: "Sin códigos activos"}",
+                alert?.let { "Alerta: ${it.title} · Severidad ${it.severity}" }.orEmpty(),
+                alert?.description.orEmpty()
+            )
+            PdfDocumentExporter.write(context, destination, "Reporte de diagnóstico OBD-II", reportLines)
+                .onSuccess {
+                    Toast.makeText(context, "Reporte PDF guardado", Toast.LENGTH_LONG).show()
+                }
+                .onFailure {
+                    Toast.makeText(context, "No se pudo guardar el PDF: ${it.localizedMessage.orEmpty()}", Toast.LENGTH_LONG).show()
+                }
+        }
+    }
     DiagnosticsScreen(
         uiState = uiState,
         onNavigateToWorkshops = onNavigateToWorkshops,
@@ -80,6 +116,9 @@ fun DiagnosticsRoute(
         onNavigateToOfflineMode = onNavigateToOfflineMode,
         onStartScan = viewModel::startDiagnosticScan,
         onClearCodes = viewModel::clearDtcCodes,
+        onDownloadReport = {
+            reportLauncher.launch("ShiftIQ_Diagnostico_${System.currentTimeMillis()}.pdf")
+        },
         modifier = modifier
     )
 }
@@ -109,6 +148,7 @@ fun DiagnosticsScreen(
     onNavigateToOfflineMode: () -> Unit,
     onStartScan: () -> Unit,
     onClearCodes: () -> Unit,
+    onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val sampleEcus = listOf(
@@ -146,7 +186,7 @@ fun DiagnosticsScreen(
             DiagnosticsActionButtons(
                 onStopScan = onStartScan,
                 onOfflineClick = onNavigateToOfflineMode,
-                onDownloadReport = {}
+                onDownloadReport = onDownloadReport
             )
             Spacer(modifier = Modifier.height(spacing.medium))
         }
@@ -501,7 +541,8 @@ private fun DiagnosticsScreenPreview() {
             onNavigateToDtcDetail = {},
             onNavigateToOfflineMode = {},
             onStartScan = {},
-            onClearCodes = {}
+            onClearCodes = {},
+            onDownloadReport = {}
         )
     }
 }

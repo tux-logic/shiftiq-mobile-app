@@ -114,10 +114,14 @@ fun ActiveServiceCardContent(
                 phaseText = service.phaseText,
             )
             ActiveServiceJobDetail(currentJob = service.currentJob)
-            ActiveServiceProgressBar(
-                currentPhaseIndex = service.currentPhaseIndex,
-                totalPhases = service.totalPhases,
-            )
+            val currentPhase = service.currentPhaseIndex
+            val phaseCount = service.totalPhases
+            if (currentPhase != null && phaseCount != null && phaseCount > 0) {
+                ActiveServiceProgressBar(
+                    currentPhaseIndex = currentPhase,
+                    totalPhases = phaseCount,
+                )
+            }
             ActiveServiceActionButton(onClick = onViewLiveOrder)
         }
     }
@@ -125,7 +129,7 @@ fun ActiveServiceCardContent(
 
 @Composable
 private fun ActiveServiceBadgeHeader(
-    startedAt: String,
+    startedAt: String?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -153,18 +157,20 @@ private fun ActiveServiceBadgeHeader(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        Text(
-            text = "Iniciado: $startedAt",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (!startedAt.isNullOrBlank()) {
+            Text(
+                text = "Iniciado: $startedAt",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
 @Composable
 private fun ActiveServiceTitleSection(
-    workshopName: String,
-    phaseText: String,
+    workshopName: String?,
+    phaseText: String?,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -172,7 +178,7 @@ private fun ActiveServiceTitleSection(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.compact),
     ) {
         Text(
-            text = "Tu auto está en reparación en $workshopName",
+            text = "Tu auto está en reparación en ${workshopName?.takeIf(String::isNotBlank) ?: "taller no disponible"}",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -190,7 +196,7 @@ private fun ActiveServiceTitleSection(
                 modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
             )
             Text(
-                text = phaseText,
+                text = phaseText?.takeIf(String::isNotBlank) ?: "Estado no disponible",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

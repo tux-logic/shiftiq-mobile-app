@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.database.dao.TelemetryDao
 import com.tuxlogic.shiftiq.mobile.core.database.entity.TelemetrySnapshotEntity
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.DemoVehicleIoTProfiles
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetDriverDashboardUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -71,49 +73,56 @@ class DriverHomeViewModel @Inject constructor(
         telemetrySimulationJob = viewModelScope.launch {
             while (isActive) {
                 delay(2000)
-                val current = _uiState.value.liveTelemetry
-                val randomRpmOffset = Random.nextInt(-20, 25)
-                val newRpm = (850 + randomRpmOffset).coerceIn(820, 920)
-                val randomTempOffset = Random.nextInt(-1, 2)
-                val newTemp = (88 + randomTempOffset).coerceIn(86, 91)
-                val randomBatteryOffset = (Random.nextInt(-1, 2)) * 0.1
-                val newBattery = ((13.8 + randomBatteryOffset) * 10).toInt() / 10.0
-
-                val updatedTelemetry = current.copy(
-                    rpm = newRpm,
-                    temperatureCelsius = newTemp,
-                    batteryVoltage = newBattery
+                val currentState = _uiState.value
+                val vehicle = currentState.selectedVehicle ?: continue
+                val profileTelemetry = DemoVehicleIoTProfiles
+                    .forVehicle(vehicle, currentState.availableVehicles)
+                    ?.telemetry
+                    ?: continue
+                val updatedTelemetry = profileTelemetry.copy(
+                    rpm = (profileTelemetry.rpm + Random.nextInt(-18, 19)).coerceAtLeast(500),
+                    temperatureCelsius = (profileTelemetry.temperatureCelsius + Random.nextInt(-1, 2))
+                        .coerceIn(70, 120),
+                    batteryVoltage = (profileTelemetry.batteryVoltage + Random.nextInt(-1, 2) * 0.1)
+                        .coerceIn(11.5, 14.8)
                 )
 
-                _uiState.update { it.copy(liveTelemetry = updatedTelemetry) }
+                _uiState.update { state ->
+                    if (state.selectedVehicle?.id == vehicle.id) {
+                        state.copy(liveTelemetry = updatedTelemetry)
+                    } else state
+                }
 
-                // Persistir en Room para offline cache
-                _uiState.value.selectedVehicle?.let { vehicle ->
-                    try {
-                        telemetryDao.insertTelemetry(
-                            TelemetrySnapshotEntity(
-                                vehicleId = vehicle.id,
-                                rpm = newRpm,
-                                temperatureCelsius = newTemp,
-                                speedKmh = updatedTelemetry.speedKmh,
-                                odometerKm = updatedTelemetry.odometerKm,
-                                fuelLevelPercent = updatedTelemetry.fuelPercent,
-                                batteryVoltage = newBattery
-                            )
+                try {
+                    telemetryDao.insertTelemetry(
+                        TelemetrySnapshotEntity(
+                            vehicleId = vehicle.id,
+                            rpm = updatedTelemetry.rpm,
+                            temperatureCelsius = updatedTelemetry.temperatureCelsius,
+                            speedKmh = updatedTelemetry.speedKmh,
+                            odometerKm = updatedTelemetry.odometerKm,
+                            fuelLevelPercent = updatedTelemetry.fuelPercent,
+                            batteryVoltage = updatedTelemetry.batteryVoltage
                         )
-                    } catch (_: Exception) {
-                        // Persistencia secundaria sin bloquear UI
-                    }
+                    )
+                } catch (_: Exception) {
+                    // Demo telemetry is best effort and must not block the dashboard.
                 }
             }
         }
     }
 
     fun onSelectVehicle(vehicle: B2CVehicleItem) {
+        val currentState = _uiState.value
+        val profile = DemoVehicleIoTProfiles.forVehicle(vehicle, currentState.availableVehicles)
         _uiState.update {
             it.copy(
                 selectedVehicle = vehicle,
-                isVehicleSelectorOpen = false
+                isVehicleSelectorOpen = false,
+                liveTelemetry = profile?.telemetry ?: DriverLiveTelemetry(isSynchronized = false),
+                vehicleHealth = profile?.health ?: it.vehicleHealth,
+                activeDtcAlert = profile?.alert,
+                isObdConnected = false
             )
         }
     }
@@ -123,18 +132,32 @@ class DriverHomeViewModel @Inject constructor(
     }
 
     fun onStartFullScan() {
+        val initialState = _uiState.value
+        if (initialState.isScanning) return
+        val selectedVehicle = initialState.selectedVehicle ?: return
+        val profile = DemoVehicleIoTProfiles.forVehicle(selectedVehicle, initialState.availableVehicles)
+            ?: return
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isScanning = true, scanProgressMessage = "Iniciando escaneo OBD-II...") }
+            _uiState.update { it.copy(isScanning = true, scanProgressMessage = "Iniciando escaneo IoT de demostración...") }
             delay(1200)
-            _uiState.update { it.copy(scanProgressMessage = "Leyendo parámetros de ECU y bus CAN...") }
+            _uiState.update { it.copy(scanProgressMessage = "Simulando telemetría para el vehículo seleccionado...") }
             delay(1500)
-            _uiState.update { it.copy(scanProgressMessage = "Comprobando códigos DTC de tren motriz...") }
+            _uiState.update { it.copy(scanProgressMessage = "Generando alertas DTC de demostración...") }
             delay(1500)
             _uiState.update {
-                it.copy(
-                    isScanning = false,
-                    scanProgressMessage = null
-                )
+                if (it.selectedVehicle?.id != selectedVehicle.id) {
+                    it.copy(isScanning = false, scanProgressMessage = null)
+                } else {
+                    it.copy(
+                        isScanning = false,
+                        scanProgressMessage = null,
+                        liveTelemetry = profile.telemetry,
+                        vehicleHealth = profile.health,
+                        activeDtcAlert = profile.alert,
+                        isObdConnected = false
+                    )
+                }
             }
         }
     }

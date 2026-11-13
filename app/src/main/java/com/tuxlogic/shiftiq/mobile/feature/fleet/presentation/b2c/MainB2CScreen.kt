@@ -72,20 +72,22 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.DiagnosticsRoute
-import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.DtcDetailScreen
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.DtcDetailRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.diagnostic.OfflineTelemetryScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.GarageScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.external.ExternalServiceRegistrationRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.history.ServiceVoucherPdfRoute
+import com.tuxlogic.shiftiq.mobile.feature.core.presentation.customer.CustomerAccountRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.history.TechnicalInterventionDetailRoute
-import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.garage.registration.VehicleRegistrationScreen
+import com.tuxlogic.shiftiq.mobile.feature.iot.presentation.vehicles.CustomerVehiclesScreen
+import com.tuxlogic.shiftiq.mobile.feature.iot.presentation.vehicles.CustomerVehiclesViewModel
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.DriverHomeRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.DriverHomeViewModel
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.AppointmentBookingRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.WorkshopsScreen
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.appointments.MyAppointmentsRoute
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.detail.WorkshopDetailRoute
-import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorder.LiveWorkOrderScreen
+import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorder.LiveWorkOrderRoute
 import kotlinx.coroutines.launch
 
 enum class B2CTab(val title: String, val icon: ImageVector) {
@@ -107,7 +109,6 @@ fun MainB2CScreen(
     val scope = rememberCoroutineScope()
 
     var showLogoutConfirmation by rememberSaveable { mutableStateOf(false) }
-    var showProfileModal by rememberSaveable { mutableStateOf(false) }
     var showSettingsModal by rememberSaveable { mutableStateOf(false) }
     var activeChildScreen by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -174,27 +175,29 @@ fun MainB2CScreen(
                             Spacer(modifier = Modifier.height(spacing.small))
 
                             // Rol del Conductor con Check Verde
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(spacing.radiusMedium))
-                                    .background(TelematicsGreen.copy(alpha = 0.2f))
-                                    .border(spacing.strokeThin, TelematicsGreen.copy(alpha = 0.4f), RoundedCornerShape(spacing.radiusMedium))
-                                    .padding(horizontal = spacing.small, vertical = spacing.micro)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = TelematicsGreen,
-                                        modifier = Modifier.size(spacing.timelineDotSize)
-                                    )
-                                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                                    Text(
-                                        text = homeUiState.driverRole,
-                                        color = TelematicsGreen,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                            if (homeUiState.driverRole.isNotBlank()) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(spacing.radiusMedium))
+                                        .background(TelematicsGreen.copy(alpha = 0.2f))
+                                        .border(spacing.strokeThin, TelematicsGreen.copy(alpha = 0.4f), RoundedCornerShape(spacing.radiusMedium))
+                                        .padding(horizontal = spacing.small, vertical = spacing.micro)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = TelematicsGreen,
+                                            modifier = Modifier.size(spacing.timelineDotSize)
+                                        )
+                                        Spacer(modifier = Modifier.width(spacing.extraSmall))
+                                        Text(
+                                            text = homeUiState.driverRole,
+                                            color = TelematicsGreen,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -217,7 +220,7 @@ fun MainB2CScreen(
                             selected = false,
                             onClick = {
                                 scope.launch { drawerState.close() }
-                                showProfileModal = true
+                                activeChildScreen = "customer_profile"
                             },
                             shape = RoundedCornerShape(spacing.radiusMedium),
                             colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
@@ -310,15 +313,22 @@ fun MainB2CScreen(
         }
     ) {
         when {
-            activeChildScreen == "vehicle_registration" -> {
-                VehicleRegistrationScreen(
-                    onNavigateBack = { activeChildScreen = null },
-                    onRegistrationComplete = { activeChildScreen = null }
+            activeChildScreen == "customer_vehicles" -> {
+                val vehiclesViewModel: CustomerVehiclesViewModel = hiltViewModel()
+                CustomerVehiclesScreen(
+                    viewModel = vehiclesViewModel,
+                    onNavigateBack = {
+                        activeChildScreen = null
+                        driverHomeViewModel.loadDashboardData()
+                    }
                 )
+            }
+            activeChildScreen == "customer_profile" -> {
+                CustomerAccountRoute(onNavigateBack = { activeChildScreen = null })
             }
             activeChildScreen?.startsWith("dtc_detail:") == true -> {
                 val code = activeChildScreen?.removePrefix("dtc_detail:") ?: "P0135"
-                DtcDetailScreen(
+                DtcDetailRoute(
                     dtcCode = code,
                     onNavigateBack = { activeChildScreen = null },
                     onNavigateToWorkshops = {
@@ -333,7 +343,7 @@ fun MainB2CScreen(
                 )
             }
             activeChildScreen?.startsWith("workshop_detail:") == true -> {
-                val workshopId = activeChildScreen?.removePrefix("workshop_detail:") ?: "w1"
+                val workshopId = activeChildScreen?.removePrefix("workshop_detail:").orEmpty()
                 WorkshopDetailRoute(
                     workshopId = workshopId,
                     onNavigateBack = { activeChildScreen = null },
@@ -346,7 +356,7 @@ fun MainB2CScreen(
                 )
             }
             activeChildScreen?.startsWith("appointment_booking:") == true -> {
-                val workshopId = activeChildScreen?.removePrefix("appointment_booking:") ?: "workshop-1"
+                val workshopId = activeChildScreen?.removePrefix("appointment_booking:").orEmpty()
                 AppointmentBookingRoute(
                     workshopId = workshopId,
                     onNavigateBack = { activeChildScreen = null },
@@ -360,8 +370,8 @@ fun MainB2CScreen(
                 )
             }
             activeChildScreen?.startsWith("live_work_order:") == true -> {
-                val orderId = activeChildScreen?.removePrefix("live_work_order:") ?: "OT-2026-0418"
-                LiveWorkOrderScreen(
+                val orderId = activeChildScreen?.removePrefix("live_work_order:").orEmpty()
+                LiveWorkOrderRoute(
                     workOrderId = orderId,
                     onNavigateBack = { activeChildScreen = null }
                 )
@@ -372,7 +382,7 @@ fun MainB2CScreen(
                 )
             }
             activeChildScreen?.startsWith("intervention_detail:") == true -> {
-                val interventionId = activeChildScreen?.removePrefix("intervention_detail:") ?: "hist-2"
+                val interventionId = activeChildScreen?.removePrefix("intervention_detail:").orEmpty()
                 TechnicalInterventionDetailRoute(
                     interventionId = interventionId,
                     onNavigateBack = { activeChildScreen = null },
@@ -382,7 +392,7 @@ fun MainB2CScreen(
                 )
             }
             activeChildScreen?.startsWith("voucher_pdf:") == true -> {
-                val voucherId = activeChildScreen?.removePrefix("voucher_pdf:") ?: "v-0004921"
+                val voucherId = activeChildScreen?.removePrefix("voucher_pdf:").orEmpty()
                 ServiceVoucherPdfRoute(
                     voucherId = voucherId,
                     onNavigateBack = { activeChildScreen = null }
@@ -406,7 +416,7 @@ fun MainB2CScreen(
                             0 -> DriverHomeRoute(
                                 viewModel = driverHomeViewModel,
                                 onNavigateToWorkshops = { selectedTab = 2 },
-                                onNavigateToDiagnostic = { selectedTab = 1 },
+                                onNavigateToDtcDetail = { code -> activeChildScreen = "dtc_detail:$code" },
                                 onNavigateToGarage = { selectedTab = 3 },
                                 onOpenDrawer = { scope.launch { drawerState.open() } },
                                 onViewLiveOrder = { orderId -> activeChildScreen = "live_work_order:$orderId" }
@@ -422,8 +432,8 @@ fun MainB2CScreen(
                                 onNavigateToMyAppointments = { activeChildScreen = "my_appointments" }
                             )
                             3 -> GarageScreen(
-                                onAddVehicle = { activeChildScreen = "vehicle_registration" },
-                                onNavigateToProfile = { showProfileModal = true },
+                                onAddVehicle = { activeChildScreen = "customer_vehicles" },
+                                onNavigateToProfile = { activeChildScreen = "customer_profile" },
                                 onNavigateToExternalServiceRegistration = {
                                     activeChildScreen = "external_service_registration"
                                 },
@@ -480,77 +490,6 @@ fun MainB2CScreen(
                     shape = RoundedCornerShape(spacing.radiusMedium)
                 ) {
                     Text("Cancelar", color = Slate700)
-                }
-            },
-            shape = RoundedCornerShape(spacing.radiusLarge),
-            containerColor = ShiftIQSurfaceLight
-        )
-    }
-
-    // =========================================================================
-    // DIÁLOGO DE MI PERFIL
-    // =========================================================================
-    if (showProfileModal) {
-        AlertDialog(
-            onDismissRequest = { showProfileModal = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(spacing.avatarCompact)
-                            .clip(CircleShape)
-                            .background(PrimaryBlue),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = homeUiState.avatarInitial,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(spacing.smallMedium))
-                    Text(
-                        text = "Mi Perfil de Conductor",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Slate900
-                    )
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = spacing.extraSmall),
-                    verticalArrangement = Arrangement.spacedBy(spacing.smallMedium)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(spacing.radiusMedium))
-                            .background(Slate100)
-                            .padding(spacing.smallMedium)
-                    ) {
-                        Column {
-                            Text("Nombre Completo:", style = MaterialTheme.typography.labelSmall, color = Slate500)
-                            Text(homeUiState.driverName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Slate900)
-                            Spacer(modifier = Modifier.height(spacing.compact))
-                            Text("Correo Electrónico:", style = MaterialTheme.typography.labelSmall, color = Slate500)
-                            Text(homeUiState.driverEmail.ifBlank { "No registrado" }, style = MaterialTheme.typography.bodyMedium, color = Slate700)
-                            Spacer(modifier = Modifier.height(spacing.compact))
-                            Text("Rol Asignado:", style = MaterialTheme.typography.labelSmall, color = Slate500)
-                            Text(homeUiState.driverRole, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showProfileModal = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(spacing.radiusMedium)
-                ) {
-                    Text("Cerrar", fontWeight = FontWeight.Bold)
                 }
             },
             shape = RoundedCornerShape(spacing.radiusLarge),

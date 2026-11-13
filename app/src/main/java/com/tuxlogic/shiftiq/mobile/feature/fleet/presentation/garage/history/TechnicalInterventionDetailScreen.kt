@@ -37,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -104,26 +105,38 @@ fun TechnicalInterventionDetailScreen(
             statusBarPadding = statusBarPadding
         )
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(spacing.medium),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
-        ) {
-            MetadataSubBar(expNumber = uiState.expNumber)
-            InterventionSummaryCard(uiState = uiState)
-            LaserCalibrationSection(calibrations = uiState.laserCalibrations)
-            ExecutedOperationsSection(operations = uiState.protocolOperations)
-            SuppliesUsedSection(supplies = uiState.usedSupplies)
-            TechnicianObservationSection(
-                observation = uiState.technicianObservation,
-                warrantyPolicy = uiState.warrantyPolicy
-            )
-            Spacer(modifier = Modifier.height(spacing.medium))
+        when {
+            uiState.isLoading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+            uiState.errorMessage != null -> Box(Modifier.weight(1f).fillMaxWidth().padding(spacing.large), contentAlignment = Alignment.Center) {
+                Text(uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+            }
+            uiState.isLoaded -> Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            ) {
+                MetadataSubBar(expNumber = uiState.expNumber)
+                InterventionSummaryCard(uiState = uiState)
+                if (uiState.laserCalibrations.isNotEmpty()) LaserCalibrationSection(calibrations = uiState.laserCalibrations)
+                if (uiState.protocolOperations.isNotEmpty()) ExecutedOperationsSection(operations = uiState.protocolOperations)
+                if (uiState.usedSupplies.isNotEmpty()) SuppliesUsedSection(supplies = uiState.usedSupplies)
+                if (uiState.technicianObservation.isNotBlank() || uiState.warrantyPolicy.isNotBlank()) {
+                    TechnicianObservationSection(
+                        observation = uiState.technicianObservation,
+                        warrantyPolicy = uiState.warrantyPolicy
+                    )
+                }
+                Spacer(modifier = Modifier.height(spacing.medium))
+            }
         }
 
-        FixedBottomActionFooter(onNavigateToVoucherPdf = onNavigateToVoucherPdf)
+        if (!uiState.isLoading && uiState.errorMessage == null && uiState.voucherId.isNotBlank()) {
+            FixedBottomActionFooter(onNavigateToVoucherPdf = onNavigateToVoucherPdf)
+        }
     }
 }
 
@@ -257,7 +270,7 @@ private fun InterventionSummaryCard(
                         color = ShiftIQSuccess
                     )
                 }
-                Text(
+                if (uiState.odometerKm > 0) Text(
                     text = "ODÓM: ${uiState.odometerKm} km",
                     style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace,
@@ -265,13 +278,13 @@ private fun InterventionSummaryCard(
                     color = Slate700
                 )
             }
-            Text(
+            if (uiState.serviceTitle.isNotBlank()) Text(
                 text = uiState.serviceTitle,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            if (uiState.executionDate.isNotBlank()) Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = null,
@@ -286,21 +299,19 @@ private fun InterventionSummaryCard(
                     color = Slate500
                 )
             }
-            InterventionEntityRow(
-                icon = Icons.Default.Place,
-                title = uiState.workshopName,
-                subtitle = uiState.workshopAddress
-            )
-            InterventionEntityRow(
-                icon = Icons.Default.Engineering,
-                title = "TÉCNICO ESPECIALISTA",
-                subtitle = "${uiState.technicianName} (${uiState.technicianCert})"
-            )
-            HorizontalDivider(color = Slate100, thickness = spacing.strokeThin)
-            CostLiquidationFooter(
-                totalCost = uiState.totalCostPen,
-                paymentMethod = uiState.paymentMethod
-            )
+            if (uiState.workshopName.isNotBlank() || uiState.workshopAddress.isNotBlank()) {
+                InterventionEntityRow(Icons.Default.Place, uiState.workshopName, uiState.workshopAddress)
+            }
+            if (uiState.technicianName.isNotBlank() || uiState.technicianCert.isNotBlank()) {
+                InterventionEntityRow(Icons.Default.Engineering, "TÉCNICO ESPECIALISTA", listOf(uiState.technicianName, uiState.technicianCert).filter(String::isNotBlank).joinToString(" · "))
+            }
+            if (uiState.totalCostPen != null) {
+                HorizontalDivider(color = Slate100, thickness = spacing.strokeThin)
+                CostLiquidationFooter(
+                    totalCost = uiState.totalCostPen,
+                    paymentMethod = uiState.paymentMethod
+                )
+            }
         }
     }
 }
@@ -372,7 +383,7 @@ private fun CostLiquidationFooter(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
+            if (paymentMethod.isNotBlank()) Text(
                 text = paymentMethod,
                 style = MaterialTheme.typography.bodySmall,
                 color = Slate400
@@ -755,7 +766,21 @@ private fun FixedBottomActionFooter(
 private fun TechnicalInterventionDetailScreenPreview() {
     ShiftIQTheme {
         TechnicalInterventionDetailScreen(
-            uiState = TechnicalInterventionDetailUiState(),
+            uiState = TechnicalInterventionDetailUiState(
+                expNumber = "OT-2026-0418",
+                isSealed = true,
+                statusText = "COMPLETED",
+                odometerKm = 45102,
+                serviceTitle = "Preventive maintenance",
+                executionDate = "12/11/2026",
+                workshopName = "Taller asignado",
+                totalCostPen = 280.0,
+                protocolOperations = listOf(ProtocolOperationItem("Inspection", "COMPLETED · S/ 80.00")),
+                usedSupplies = listOf(UsedSupplyItem("Oil filter", "1 × S/ 35.00")),
+                voucherId = "example-voucher-id",
+                isLoading = false,
+                isLoaded = true
+            ),
             onNavigateBack = {},
             onNavigateToVoucherPdf = {}
         )

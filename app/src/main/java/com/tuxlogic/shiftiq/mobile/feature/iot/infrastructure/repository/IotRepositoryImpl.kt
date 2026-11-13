@@ -59,9 +59,38 @@ class IotRepositoryImpl @Inject constructor(
             photoUrl = photoUrl,
             customerId = customerId?.toString()
         )
-        safeApiCall {
+        when (val response = safeApiCall {
             iotApiService.registerVehicle(request)
-        }.map { it.toDomain() }
+        }) {
+            is AppResult.Failure -> response
+            is AppResult.Success -> {
+                val registeredVehicleId = response.data.vehicleId
+                    ?.takeIf(String::isNotBlank)
+                    ?: response.data.id?.takeIf(String::isNotBlank)
+
+                if (registeredVehicleId == null) {
+                    AppResult.Failure(
+                        AppError.Server(
+                            message = "El servidor no devolvió el identificador del vehículo.",
+                            details = "POST /api/v1/vehicles response did not include vehicleId or id"
+                        )
+                    )
+                } else {
+                    AppResult.Success(
+                        Vehicle(
+                            id = VehicleId(registeredVehicleId),
+                            plateNumber = plateNumber,
+                            brand = brand,
+                            model = model,
+                            year = year,
+                            vin = vin,
+                            photoUrl = photoUrl,
+                            customerId = customerId
+                        )
+                    )
+                }
+            }
+        }
     }
 
     override suspend fun getVehicleById(id: VehicleId): AppResult<Vehicle> =
