@@ -52,6 +52,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -86,6 +90,15 @@ fun ExternalServiceRegistrationRoute(
     viewModel: ExternalServiceRegistrationViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val receiptPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+                ?: uri.lastPathSegment.orEmpty()
+            viewModel.onAttachReceipt(name)
+        }
+    }
     ExternalServiceRegistrationScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
@@ -95,11 +108,11 @@ fun ExternalServiceRegistrationRoute(
         onMileageChange = viewModel::onMileageChange,
         onTotalCostChange = viewModel::onTotalCostChange,
         onNotesChange = viewModel::onNotesChange,
-        onAttachReceipt = { viewModel.onAttachReceipt("factura_servicio_marzo_2026.pdf") },
+        onAttachReceipt = { receiptPicker.launch(arrayOf("application/pdf", "image/*")) },
         onRemoveReceipt = viewModel::onRemoveReceipt,
         onToggleUpdateBaseOdometer = viewModel::onToggleUpdateBaseOdometer,
         onToggleResetIntervalCounter = viewModel::onToggleResetIntervalCounter,
-        onSaveService = { viewModel.saveExternalService(onSuccess = onNavigateBack) },
+        onSaveService = viewModel::saveExternalService,
         modifier = modifier
     )
 }
@@ -184,6 +197,16 @@ fun ExternalServiceRegistrationScreen(
                 onToggleResetIntervalCounter = onToggleResetIntervalCounter,
                 currentMileage = uiState.mileage
             )
+
+            uiState.errorMessage?.let { message ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(spacing.radiusSmall)
+                ) {
+                    Text(message, modifier = Modifier.padding(spacing.smallMedium), color = MaterialTheme.colorScheme.onErrorContainer)
+                }
+            }
 
             ActionButtonsSection(
                 isLoading = uiState.isLoading,
@@ -777,7 +800,13 @@ private fun ActionButtonsSection(
 private fun ExternalServiceRegistrationScreenPreview() {
     ShiftIQTheme {
         ExternalServiceRegistrationScreen(
-            uiState = ExternalServiceRegistrationUiState(),
+            uiState = ExternalServiceRegistrationUiState(
+                serviceType = "Mantenimiento preventivo",
+                workshopName = "Taller registrado por el usuario",
+                serviceDate = "12/11/2026",
+                mileage = "48000",
+                totalCostPen = "250.00"
+            ),
             onNavigateBack = {},
             onServiceTypeChange = {},
             onWorkshopNameChange = {},
