@@ -99,7 +99,7 @@ fun PdfSavedConfirmationDialog(
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "El comprobante de servicio ha sido descargado y almacenado correctamente en la carpeta de descargas de tu dispositivo.",
+                        text = "El comprobante se guardó correctamente en la ubicación que elegiste.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate500,
                         textAlign = TextAlign.Center
@@ -202,7 +202,7 @@ private fun FileMetadataCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "ALMACENAMIENTO LOCAL",
+                    text = "GUARDADO EN DISPOSITIVO",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Slate500
@@ -214,7 +214,7 @@ private fun FileMetadataCard(
                         .padding(horizontal = spacing.compact, vertical = spacing.micro)
                 ) {
                     Text(
-                        text = "SHA-256 OK",
+                        text = "PDF",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -231,7 +231,7 @@ private fun FileMetadataCard(
                 )
                 Spacer(modifier = Modifier.width(spacing.extraSmall))
                 Text(
-                    text = "Firma Digital ShiftIq Validada",
+                    text = "Archivo disponible en la ubicación seleccionada",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = Slate700
