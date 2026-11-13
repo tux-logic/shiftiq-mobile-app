@@ -3,11 +3,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.booking
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.database.dao.VehicleDao
-import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.CreateAppointmentUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,15 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class AppointmentBookingViewModel @Inject constructor(
-    private val createAppointmentUseCase: CreateAppointmentUseCase,
     private val vehicleDao: VehicleDao,
-    private val sessionDataStore: SessionDataStore,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -130,59 +125,29 @@ class AppointmentBookingViewModel @Inject constructor(
     }
 
     fun confirmBooking() {
+        if (_uiState.value.isBookingLoading) return
+        val booking = _uiState.value
         _uiState.update { it.copy(isBookingLoading = true) }
 
         viewModelScope.launch {
-            val session = sessionDataStore.sessionState.firstOrNull()
-            val customerId = session?.userId?.value ?: UUID.randomUUID()
-            val branchId = session?.activeBranchId?.value ?: UUID.randomUUID()
-            val vehicle = _uiState.value.selectedVehicle
-            val vehicleId = try {
-                UUID.fromString(vehicle?.id)
-            } catch (_: Exception) {
-                UUID.randomUUID()
-            }
-
-            val result = createAppointmentUseCase(
-                branchId = branchId,
-                customerId = customerId,
-                vehicleId = vehicleId,
-                scheduledStart = "2026-11-12T15:30:00Z",
-                notes = _uiState.value.reasonNotes
-            )
-
-            if (result is AppResult.Failure && result.error is AppError.Conflict) {
-                // 409 Conflict handled as requested in Phase 2
-                _uiState.update {
-                    it.copy(
-                        isBookingLoading = false,
-                        showConfirmationModal = false,
-                        showConflictErrorDialog = true
-                    )
-                }
-                return@launch
-            }
-
-            val voucherCode = if (result is AppResult.Success) {
-                "RES-${_uiState.value.selectedBayId.uppercase()}-${result.data.id.toString().take(6).uppercase()}"
-            } else {
-                "RES-BAY2-02-2026"
-            }
-
-            val day = _uiState.value.availableDays[_uiState.value.selectedDayIndex]
-            val slot = _uiState.value.availableSlots[_uiState.value.selectedSlotIndex]
-            val selectedBay = _uiState.value.availableBays.firstOrNull { it.id == _uiState.value.selectedBayId }
+            delay(450)
+            // Demo local: no se envía la reserva al backend.
+            val voucherCode = "RES-${booking.selectedBayId.uppercase()}-${UUID.randomUUID().toString().take(6).uppercase()}"
+            val day = booking.availableDays.getOrNull(booking.selectedDayIndex).orEmpty()
+            val slot = booking.availableSlots.getOrNull(booking.selectedSlotIndex).orEmpty()
+            val selectedBay = booking.availableBays.firstOrNull { it.id == booking.selectedBayId }
+            val vehicle = booking.selectedVehicle
 
             val voucher = ConfirmedAppointmentVoucher(
                 reservationCode = voucherCode,
-                workshopName = _uiState.value.workshopName,
-                district = _uiState.value.workshopDistrict,
+                workshopName = booking.workshopName,
+                district = booking.workshopDistrict,
                 scheduledDate = day,
                 scheduledTime = slot,
                 bayName = selectedBay?.name ?: "Bahía 2 (Elevador Hidráulico)",
-                serviceTitle = _uiState.value.reasonNotes,
+                serviceTitle = booking.reasonNotes,
                 vehiclePlate = vehicle?.plateNumber ?: "ABC-123",
-                estimatedPen = _uiState.value.estimatedPricePen
+                estimatedPen = booking.estimatedPricePen
             )
 
             _uiState.update {
