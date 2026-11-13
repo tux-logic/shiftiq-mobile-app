@@ -2,27 +2,18 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.appoint
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
-import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.DeleteAppointmentUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetAppointmentsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class MyAppointmentsViewModel @Inject constructor(
-    private val getAppointmentsUseCase: GetAppointmentsUseCase,
-    private val deleteAppointmentUseCase: DeleteAppointmentUseCase,
-    private val sessionDataStore: SessionDataStore
-) : ViewModel() {
+class MyAppointmentsViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyAppointmentsUiState())
     val uiState: StateFlow<MyAppointmentsUiState> = _uiState.asStateFlow()
@@ -34,24 +25,9 @@ class MyAppointmentsViewModel @Inject constructor(
     fun loadAppointments() {
         _uiState.update { it.copy(isLoading = true, userMessage = null) }
         viewModelScope.launch {
-            val session = sessionDataStore.sessionState.firstOrNull()
-            val customerId = session?.userId?.value
-
-            val result = getAppointmentsUseCase(customerId = customerId)
-            if (result is AppResult.Success && result.data.isNotEmpty()) {
-                val mapped = result.data.map { mapToDisplayItem(it) }
-                val upcoming = mapped.filter { it.status == "PENDING" }
-                val history = mapped.filter { it.status != "PENDING" }
-                _uiState.update {
-                    it.copy(
-                        upcomingAppointments = upcoming,
-                        historyAppointments = history,
-                        isLoading = false
-                    )
-                }
-            } else {
-                // Seed data matching Figma Frame 234:17958
-                val defaultUpcoming = listOf(
+            delay(250)
+            // Citas de demostración locales; no se consultan ni modifican en el backend.
+            val defaultUpcoming = listOf(
                     AppointmentDisplayItem(
                         id = UUID.fromString("11111111-2222-3333-4444-555566667777"),
                         appointmentCode = "SQ-APPT-8429",
@@ -80,8 +56,8 @@ class MyAppointmentsViewModel @Inject constructor(
                         estimatedCostPen = "S/ 220 PEN",
                         status = "PENDING"
                     )
-                )
-                val defaultHistory = listOf(
+            )
+            val defaultHistory = listOf(
                     AppointmentDisplayItem(
                         id = UUID.fromString("33333333-4444-5555-6666-777788889999"),
                         appointmentCode = "SQ-APPT-5401",
@@ -96,14 +72,13 @@ class MyAppointmentsViewModel @Inject constructor(
                         estimatedCostPen = "S/ 120 PEN",
                         status = "COMPLETED"
                     )
+            )
+            _uiState.update {
+                it.copy(
+                    upcomingAppointments = defaultUpcoming,
+                    historyAppointments = defaultHistory,
+                    isLoading = false
                 )
-                _uiState.update {
-                    it.copy(
-                        upcomingAppointments = defaultUpcoming,
-                        historyAppointments = defaultHistory,
-                        isLoading = false
-                    )
-                }
             }
         }
     }
@@ -125,7 +100,7 @@ class MyAppointmentsViewModel @Inject constructor(
         _uiState.update { it.copy(isCanceling = true) }
 
         viewModelScope.launch {
-            val result = deleteAppointmentUseCase(item.id)
+            delay(250)
             val updatedCanceledItem = item.copy(status = "CANCELED")
 
             _uiState.update { current ->
@@ -146,25 +121,4 @@ class MyAppointmentsViewModel @Inject constructor(
         _uiState.update { it.copy(userMessage = null) }
     }
 
-    private fun mapToDisplayItem(appointment: Appointment): AppointmentDisplayItem {
-        val code = "SQ-${appointment.id.toString().take(8).uppercase()}"
-        val dateParts = appointment.scheduledStart.split("T")
-        val date = if (dateParts.isNotEmpty()) dateParts[0] else "Fecha acordada"
-        val time = if (dateParts.size > 1) dateParts[1].take(5) else "10:00 AM"
-
-        return AppointmentDisplayItem(
-            id = appointment.id,
-            appointmentCode = code,
-            workshopName = "Taller Afiliado ShiftIQ",
-            address = "Sede Principal asignada",
-            scheduledDate = date,
-            scheduledTime = time,
-            bayNumber = "Bahía Técnica",
-            vehiclePlate = "Vehículo Asignado",
-            vehicleDescription = "Flota Personal",
-            reasonOrService = appointment.notes ?: "Servicio Técnico Integral",
-            estimatedCostPen = "S/ 140 - S/ 180 PEN",
-            status = appointment.status.name
-        )
-    }
 }
