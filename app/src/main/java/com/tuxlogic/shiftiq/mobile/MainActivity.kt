@@ -4,10 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,12 +48,20 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var logoutUseCase: LogoutUseCase
 
+    @Volatile
+    private var isSessionReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splash = installSplashScreen()
+        splash.setKeepOnScreenCondition { !isSessionReady }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             ShiftIQTheme {
                 val sessionState by sessionDataStore.sessionState.collectAsState(initial = null)
+                LaunchedEffect(sessionState) {
+                    if (sessionState != null) isSessionReady = true
+                }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val session = sessionState
@@ -66,7 +81,31 @@ class MainActivity : ComponentActivity() {
                         NavHost(
                             navController = navController,
                             startDestination = startDestination,
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(innerPadding),
+                            enterTransition = {
+                                fadeIn(tween(280)) + slideInHorizontally(
+                                    initialOffsetX = { width -> width / 18 },
+                                    animationSpec = tween(280)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(tween(180)) + slideOutHorizontally(
+                                    targetOffsetX = { width -> -width / 24 },
+                                    animationSpec = tween(180)
+                                )
+                            },
+                            popEnterTransition = {
+                                fadeIn(tween(240)) + slideInHorizontally(
+                                    initialOffsetX = { width -> -width / 18 },
+                                    animationSpec = tween(240)
+                                )
+                            },
+                            popExitTransition = {
+                                fadeOut(tween(180)) + slideOutHorizontally(
+                                    targetOffsetX = { width -> width / 24 },
+                                    animationSpec = tween(180)
+                                )
+                            }
                         ) {
                             composable(AppDestination.Login.route) {
                                 val loginViewModel: LoginViewModel = hiltViewModel()
