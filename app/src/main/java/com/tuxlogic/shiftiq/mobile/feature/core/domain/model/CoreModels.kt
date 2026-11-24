@@ -21,6 +21,23 @@ data class Branch(
     val phone: String
 )
 
+data class BranchCatalogItem(
+    val branchId: String,
+    val workshopId: String,
+    val workshopBrandName: String,
+    val workshopBusinessName: String,
+    val branchCode: String,
+    val branchName: String,
+    val address: String,
+    val phone: String
+) {
+    val displayName: String
+        get() = listOf(workshopBrandName, branchName)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+            .ifBlank { workshopBusinessName.ifBlank { branchCode } }
+}
+
 data class WorkshopSpecialty(
     val id: String,
     val workshopId: String,

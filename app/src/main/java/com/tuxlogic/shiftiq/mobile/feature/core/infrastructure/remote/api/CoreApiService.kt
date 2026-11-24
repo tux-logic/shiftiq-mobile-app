@@ -1,6 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.api
 
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.AssignBranchSubscriptionRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchCatalogResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchSubscriptionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.CreateBranchRequestDto
@@ -102,6 +103,9 @@ interface CoreApiService {
     suspend fun getBranches(
         @Query("workshopId") workshopId: String
     ): Response<List<BranchResourceDto>>
+
+    @GET("api/v1/branches/catalog")
+    suspend fun getBranchCatalog(): Response<List<BranchCatalogResourceDto>>
 
     @GET("api/v1/branches/{branchId}")
     suspend fun getBranchById(

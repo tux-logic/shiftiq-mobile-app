@@ -120,7 +120,7 @@ private fun LiveTelemetrySyncBadge(
         )
         Spacer(modifier = Modifier.width(spacing.extraSmall))
         Text(
-            text = if (isSynchronized) "Sincronizado" else "Demo IoT",
+            text = if (isSynchronized) "Synchronized" else "No OBD data",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = indicatorColor

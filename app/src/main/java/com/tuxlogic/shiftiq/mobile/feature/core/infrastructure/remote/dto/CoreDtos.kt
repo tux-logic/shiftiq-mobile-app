@@ -114,6 +114,25 @@ data class BranchResourceDto(
     val phone: String
 )
 
+data class BranchCatalogResourceDto(
+    @SerializedName("branchId")
+    val branchId: String,
+    @SerializedName("workshopId")
+    val workshopId: String,
+    @SerializedName("workshopBrandName")
+    val workshopBrandName: String? = null,
+    @SerializedName("workshopBusinessName")
+    val workshopBusinessName: String? = null,
+    @SerializedName("branchCode")
+    val branchCode: String? = null,
+    @SerializedName("branchName")
+    val branchName: String? = null,
+    @SerializedName("address")
+    val address: String? = null,
+    @SerializedName("phone")
+    val phone: String? = null
+)
+
 data class CreateBranchRequestDto(
     @SerializedName("workshopId")
     val workshopId: String,

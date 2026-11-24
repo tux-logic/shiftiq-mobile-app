@@ -2,12 +2,8 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuxlogic.shiftiq.mobile.core.database.dao.TelemetryDao
-import com.tuxlogic.shiftiq.mobile.core.database.entity.TelemetrySnapshotEntity
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.DemoVehicleIoTProfiles
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetDriverDashboardUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,28 +14,27 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.random.Random
 
 @HiltViewModel
 class DriverHomeViewModel @Inject constructor(
-    private val getDriverDashboardUseCase: GetDriverDashboardUseCase,
-    private val telemetryDao: TelemetryDao
+    private val getDriverDashboardUseCase: GetDriverDashboardUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DriverHomeUiState(isLoading = true))
     val uiState: StateFlow<DriverHomeUiState> = _uiState.asStateFlow()
 
-    private var telemetrySimulationJob: Job? = null
+    private var refreshJob: Job? = null
 
     init {
         loadDashboardData()
+        startPeriodicRefresh()
     }
 
-    fun loadDashboardData() {
+    fun loadDashboardData(selectedVehicleId: String? = _uiState.value.selectedVehicle?.id) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val data = getDriverDashboardUseCase()
+                val data = getDriverDashboardUseCase(selectedVehicleId)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -55,76 +50,44 @@ class DriverHomeViewModel @Inject constructor(
                         isObdConnected = data.isObdConnected
                     )
                 }
-                startLiveTelemetrySimulation()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "No fue posible cargar datos del vehículo"
+                        errorMessage = e.message ?: "Unable to load vehicle dashboard data"
                     )
                 }
-                startLiveTelemetrySimulation()
             }
         }
     }
 
-    private fun startLiveTelemetrySimulation() {
-        telemetrySimulationJob?.cancel()
-        telemetrySimulationJob = viewModelScope.launch {
+    private fun startPeriodicRefresh() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(2000)
-                val currentState = _uiState.value
-                val vehicle = currentState.selectedVehicle ?: continue
-                val profileTelemetry = DemoVehicleIoTProfiles
-                    .forVehicle(vehicle, currentState.availableVehicles)
-                    ?.telemetry
-                    ?: continue
-                val updatedTelemetry = profileTelemetry.copy(
-                    rpm = (profileTelemetry.rpm + Random.nextInt(-18, 19)).coerceAtLeast(500),
-                    temperatureCelsius = (profileTelemetry.temperatureCelsius + Random.nextInt(-1, 2))
-                        .coerceIn(70, 120),
-                    batteryVoltage = (profileTelemetry.batteryVoltage + Random.nextInt(-1, 2) * 0.1)
-                        .coerceIn(11.5, 14.8)
-                )
-
-                _uiState.update { state ->
-                    if (state.selectedVehicle?.id == vehicle.id) {
-                        state.copy(liveTelemetry = updatedTelemetry)
-                    } else state
-                }
-
-                try {
-                    telemetryDao.insertTelemetry(
-                        TelemetrySnapshotEntity(
-                            vehicleId = vehicle.id,
-                            rpm = updatedTelemetry.rpm,
-                            temperatureCelsius = updatedTelemetry.temperatureCelsius,
-                            speedKmh = updatedTelemetry.speedKmh,
-                            odometerKm = updatedTelemetry.odometerKm,
-                            fuelLevelPercent = updatedTelemetry.fuelPercent,
-                            batteryVoltage = updatedTelemetry.batteryVoltage
+                delay(15_000)
+                val selectedId = _uiState.value.selectedVehicle?.id
+                runCatching {
+                    val data = getDriverDashboardUseCase(selectedId)
+                    _uiState.update {
+                        it.copy(
+                            selectedVehicle = data.selectedVehicle,
+                            availableVehicles = data.availableVehicles,
+                            vehicleHealth = data.vehicleHealth,
+                            liveTelemetry = data.liveTelemetry,
+                            activeService = data.activeService,
+                            activeDtcAlert = data.activeDtcAlert,
+                            isObdConnected = data.isObdConnected
                         )
-                    )
-                } catch (_: Exception) {
-                    // Demo telemetry is best effort and must not block the dashboard.
+                    }
                 }
             }
         }
     }
 
     fun onSelectVehicle(vehicle: B2CVehicleItem) {
-        val currentState = _uiState.value
-        val profile = DemoVehicleIoTProfiles.forVehicle(vehicle, currentState.availableVehicles)
-        _uiState.update {
-            it.copy(
-                selectedVehicle = vehicle,
-                isVehicleSelectorOpen = false,
-                liveTelemetry = profile?.telemetry ?: DriverLiveTelemetry(isSynchronized = false),
-                vehicleHealth = profile?.health ?: it.vehicleHealth,
-                activeDtcAlert = profile?.alert,
-                isObdConnected = false
-            )
-        }
+        _uiState.update { it.copy(isVehicleSelectorOpen = false, selectedVehicle = vehicle) }
+        loadDashboardData(vehicle.id)
     }
 
     fun toggleVehicleSelector() {
@@ -132,38 +95,36 @@ class DriverHomeViewModel @Inject constructor(
     }
 
     fun onStartFullScan() {
-        val initialState = _uiState.value
-        if (initialState.isScanning) return
-        val selectedVehicle = initialState.selectedVehicle ?: return
-        val profile = DemoVehicleIoTProfiles.forVehicle(selectedVehicle, initialState.availableVehicles)
-            ?: return
+        val selectedVehicle = _uiState.value.selectedVehicle ?: return
+        if (_uiState.value.isScanning) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isScanning = true, scanProgressMessage = "Iniciando escaneo IoT de demostración...") }
-            delay(1200)
-            _uiState.update { it.copy(scanProgressMessage = "Simulando telemetría para el vehículo seleccionado...") }
-            delay(1500)
-            _uiState.update { it.copy(scanProgressMessage = "Generando alertas DTC de demostración...") }
-            delay(1500)
             _uiState.update {
-                if (it.selectedVehicle?.id != selectedVehicle.id) {
-                    it.copy(isScanning = false, scanProgressMessage = null)
-                } else {
-                    it.copy(
-                        isScanning = false,
-                        scanProgressMessage = null,
-                        liveTelemetry = profile.telemetry,
-                        vehicleHealth = profile.health,
-                        activeDtcAlert = profile.alert,
-                        isObdConnected = false
-                    )
-                }
+                it.copy(isScanning = true, scanProgressMessage = "Refreshing OBD-II telemetry from the server...")
+            }
+            delay(400)
+            val data = getDriverDashboardUseCase(selectedVehicle.id)
+            _uiState.update {
+                it.copy(
+                    isScanning = false,
+                    scanProgressMessage = null,
+                    selectedVehicle = data.selectedVehicle,
+                    availableVehicles = data.availableVehicles,
+                    vehicleHealth = data.vehicleHealth,
+                    liveTelemetry = data.liveTelemetry,
+                    activeService = data.activeService,
+                    activeDtcAlert = data.activeDtcAlert,
+                    isObdConnected = data.isObdConnected,
+                    errorMessage = if (!data.isObdConnected) {
+                        "No telemetry snapshots were found for this vehicle yet."
+                    } else null
+                )
             }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        telemetrySimulationJob?.cancel()
+        refreshJob?.cancel()
     }
 }

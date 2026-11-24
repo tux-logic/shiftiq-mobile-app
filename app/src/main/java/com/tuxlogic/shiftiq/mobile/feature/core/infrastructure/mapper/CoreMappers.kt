@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchCatalogResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchSubscriptionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.CustomerResourceDto
@@ -14,6 +15,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.Unifie
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.WorkshopResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.WorkshopSpecialtyResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchCatalogItem
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchSubscription
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.DocumentProfileLookup
@@ -60,6 +62,17 @@ fun BranchResourceDto.toDomain(): Branch = Branch(
     name = name,
     address = address,
     phone = phone
+)
+
+fun BranchCatalogResourceDto.toDomain(): BranchCatalogItem = BranchCatalogItem(
+    branchId = branchId,
+    workshopId = workshopId,
+    workshopBrandName = workshopBrandName.orEmpty(),
+    workshopBusinessName = workshopBusinessName.orEmpty(),
+    branchCode = branchCode.orEmpty(),
+    branchName = branchName.orEmpty(),
+    address = address.orEmpty(),
+    phone = phone.orEmpty()
 )
 
 fun BranchSubscriptionResourceDto.toDomain(): BranchSubscription = BranchSubscription(
