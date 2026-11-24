@@ -60,8 +60,13 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.lockOutline
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.mailOutline
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBackgroundLight
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQOnErrorContainer
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
@@ -72,10 +77,11 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 
-private val LoginBackground = Color(0xFFF8F9FF)
-private val ShiftIQNavy = Color(0xFF203B82)
+private val LoginBackground = ShiftIQBackgroundLight
+private val LoginHeroStart = Navy900
+private val LoginHeroEnd = ShiftIQPrimary
 private val LoginFieldBackground = Color.White
-private val LoginFieldBorder = Color(0xFF203B82).copy(alpha = 0.38f)
+private val LoginFieldBorder = ShiftIQPrimary.copy(alpha = 0.38f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,7 +105,7 @@ fun LoginScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color.White,
+        containerColor = LoginBackground,
         contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         Column(
@@ -115,7 +121,11 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(196.dp)
                     .clip(RoundedCornerShape(bottomStart = 42.dp, bottomEnd = 42.dp))
-                    .background(ShiftIQNavy),
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(LoginHeroStart, LoginHeroEnd)
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -128,7 +138,7 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = "SI",
-                            color = ShiftIQNavy,
+                            color = ShiftIQPrimary,
                             fontSize = 25.sp,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = (-1).sp
@@ -201,7 +211,7 @@ fun LoginScreen(
                     focusedContainerColor = LoginFieldBackground,
                     unfocusedContainerColor = LoginFieldBackground,
                     errorContainerColor = LoginFieldBackground,
-                    focusedBorderColor = ShiftIQNavy,
+                    focusedBorderColor = ShiftIQPrimary,
                     unfocusedBorderColor = LoginFieldBorder,
                     errorBorderColor = SeverityCrimson
                 ),
@@ -269,7 +279,7 @@ fun LoginScreen(
                     focusedContainerColor = LoginFieldBackground,
                     unfocusedContainerColor = LoginFieldBackground,
                     errorContainerColor = LoginFieldBackground,
-                    focusedBorderColor = ShiftIQNavy,
+                    focusedBorderColor = ShiftIQPrimary,
                     unfocusedBorderColor = LoginFieldBorder,
                     errorBorderColor = SeverityCrimson
                 ),
@@ -325,7 +335,7 @@ fun LoginScreen(
                 }
                 Text(
                     text = "¿Olvidaste tu contraseña?",
-                    color = ShiftIQNavy,
+                    color = ShiftIQPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.End,
@@ -339,13 +349,13 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFFFEEEE))
-                        .border(1.dp, Color(0xFFF4CACA), RoundedCornerShape(10.dp))
+                        .background(ShiftIQErrorContainer)
+                        .border(1.dp, SeverityCrimson.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
                         .padding(horizontal = 12.dp, vertical = 9.dp)
                 ) {
                     Text(
                         text = uiState.errorMessage,
-                        color = Color(0xFFB42318),
+                        color = ShiftIQOnErrorContainer,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -358,7 +368,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(ShiftIQNavy)
+                    .background(ShiftIQPrimary)
                     .scaleOnPress(onClick = onLoginClick),
                 contentAlignment = Alignment.Center
             ) {
@@ -428,7 +438,7 @@ fun LoginScreen(
                 Text("¿No tienes una cuenta? ", color = Slate600, fontSize = 12.sp)
                 Text(
                     text = "Regístrate",
-                    color = ShiftIQNavy,
+                    color = ShiftIQPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable(onClick = onNavigateToRegister)

@@ -59,6 +59,7 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQEmptyState
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
@@ -404,33 +405,19 @@ private fun EmptyAppointmentsView(
     isUpcoming: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
     Box(
-        modifier = modifier.fillMaxSize().padding(spacing.large),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.small)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = Slate500,
-                modifier = Modifier.size(spacing.gaugeSmall)
-            )
-            Text(
-                text = if (isUpcoming) "No tienes citas activas próximas" else "No hay historial de citas anteriores",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Slate700
-            )
-            Text(
-                text = "Reserva una bahía técnica en cualquier taller certificado ShiftIQ desde el buscador.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Slate500
-            )
-        }
+        ShiftIQEmptyState(
+            title = if (isUpcoming) {
+                "No tienes citas activas próximas"
+            } else {
+                "No hay historial de citas anteriores"
+            },
+            message = "Reserva una bahía técnica en cualquier taller certificado ShiftIQ desde el buscador.",
+            icon = Icons.Default.CalendarMonth
+        )
     }
 }
 

@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
@@ -169,71 +170,28 @@ private fun DriverHomeTopBar(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ObdStatusChip(isConnected = isObdConnected)
-
-        Text(
-            text = "Home Dashboard",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-
-        IconButton(
-            onClick = onOpenDrawer,
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.20f))
-        ) {
-            Text(
-                text = avatarInitial,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+    ShiftIQPageHeader(
+        title = "Home Dashboard",
+        subtitle = if (isObdConnected) "OBD-II conectado" else "OBD-II desconectado",
+        badgeLabel = if (isObdConnected) "EN LINEA" else "OFFLINE",
+        modifier = modifier,
+        actions = {
+            IconButton(
+                onClick = onOpenDrawer,
+                modifier = Modifier
+                    .size(spacing.badgeHeight + spacing.smallMedium)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.20f))
+            ) {
+                Text(
+                    text = avatarInitial,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun ObdStatusChip(
-    isConnected: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(spacing.radiusFull))
-            .background(Navy900)
-            .padding(horizontal = spacing.smallMedium, vertical = spacing.compact),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(spacing.indicatorHeight)
-                .clip(CircleShape)
-                .background(if (isConnected) ShiftIQSuccess else MaterialTheme.colorScheme.error)
-        )
-        Spacer(modifier = Modifier.width(spacing.compact))
-        Text(
-            text = if (isConnected) "OBD2 CONECTADO" else "OBD2 DESCONECTADO",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
+    )
 }
 
 @Composable

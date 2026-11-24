@@ -400,6 +400,7 @@ fun MainB2CScreen(
             }
             else -> {
                 Scaffold(
+                    containerColor = MaterialTheme.colorScheme.background,
                     bottomBar = {
                         ShiftIQBottomNavBar(
                             selectedTab = selectedTab,

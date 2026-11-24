@@ -2,7 +2,9 @@ package com.tuxlogic.shiftiq.mobile.core.designsystem.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -11,6 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+
+/** Shape scale aligned with Flutter (buttons 8, cards 12). */
+private val ShiftIQShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp)
+)
 
 /**
  * Color schemes mirrored from Flutter `MaterialTheme.lightScheme()` / `darkScheme()`.
@@ -103,6 +115,7 @@ fun ShiftIQTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = ShiftIQTypography,
+            shapes = ShiftIQShapes,
             content = content
         )
     }
