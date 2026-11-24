@@ -161,14 +161,13 @@ class RegisterViewModel @Inject constructor(
 
     fun onScanBleDevices() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isScanningBle = true) }
-            delay(1200)
             _uiState.update {
                 it.copy(
                     isScanningBle = false,
-                    selectedDongleId = "OBD2-BT-9821",
-                    dongleSignal = "Excelente (-42 dBm)",
-                    dongleBattery = 98
+                    selectedDongleId = "",
+                    dongleSignal = "",
+                    dongleBattery = 0,
+                    errorMessage = "Bluetooth OBD scanning is not available in this build. You can finish registration without a dongle and link a device later from a workshop."
                 )
             }
         }

@@ -117,6 +117,27 @@ class DiagnosticViewModel @Inject constructor(
                     description = alert.description.ifBlank { "Diagnostic trouble code reported by the vehicle." }
                 )
             }
+            val inspectedEcus = if (alerts.isEmpty()) {
+                listOf(
+                    EcuInspectionItem(
+                        ecuId = "ECU",
+                        moduleName = "Powertrain",
+                        hasDtc = false,
+                        dtcCode = null,
+                        statusText = if (telemetry != null) "No active DTC codes" else "No OBD data"
+                    )
+                )
+            } else {
+                alerts.mapIndexed { index, alert ->
+                    EcuInspectionItem(
+                        ecuId = "DTC #${index + 1}",
+                        moduleName = alert.description.ifBlank { "Reported module" },
+                        hasDtc = true,
+                        dtcCode = alert.dtcCode,
+                        statusText = "Active DTC ${alert.dtcCode}"
+                    )
+                }
+            }
 
             _uiState.update {
                 it.copy(
@@ -136,6 +157,7 @@ class DiagnosticViewModel @Inject constructor(
                     } ?: DriverLiveTelemetry(isSynchronized = false),
                     engineLoadPercent = 0,
                     activeDtcAlert = activeAlert,
+                    inspectedEcus = inspectedEcus,
                     dtcResolvedMessage = if (telemetry == null && alerts.isEmpty()) {
                         "No telemetry or DTC data is available for this vehicle yet."
                     } else null

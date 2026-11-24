@@ -2,8 +2,11 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuxlogic.shiftiq.mobile.core.database.dao.TelemetryDao
+import com.tuxlogic.shiftiq.mobile.core.database.entity.TelemetrySnapshotEntity
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetDriverDashboardUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -17,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DriverHomeViewModel @Inject constructor(
-    private val getDriverDashboardUseCase: GetDriverDashboardUseCase
+    private val getDriverDashboardUseCase: GetDriverDashboardUseCase,
+    private val telemetryDao: TelemetryDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DriverHomeUiState(isLoading = true))
@@ -35,6 +39,7 @@ class DriverHomeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val data = getDriverDashboardUseCase(selectedVehicleId)
+                cacheTelemetry(data.selectedVehicle?.id, data.liveTelemetry)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -69,6 +74,7 @@ class DriverHomeViewModel @Inject constructor(
                 val selectedId = _uiState.value.selectedVehicle?.id
                 runCatching {
                     val data = getDriverDashboardUseCase(selectedId)
+                    cacheTelemetry(data.selectedVehicle?.id, data.liveTelemetry)
                     _uiState.update {
                         it.copy(
                             selectedVehicle = data.selectedVehicle,
@@ -120,6 +126,23 @@ class DriverHomeViewModel @Inject constructor(
                     } else null
                 )
             }
+        }
+    }
+
+    private suspend fun cacheTelemetry(vehicleId: String?, telemetry: DriverLiveTelemetry) {
+        if (vehicleId.isNullOrBlank() || !telemetry.isSynchronized) return
+        runCatching {
+            telemetryDao.insertTelemetry(
+                TelemetrySnapshotEntity(
+                    vehicleId = vehicleId,
+                    rpm = telemetry.rpm,
+                    temperatureCelsius = telemetry.temperatureCelsius,
+                    speedKmh = telemetry.speedKmh,
+                    odometerKm = telemetry.odometerKm,
+                    fuelLevelPercent = telemetry.fuelPercent,
+                    batteryVoltage = telemetry.batteryVoltage
+                )
+            )
         }
     }
 

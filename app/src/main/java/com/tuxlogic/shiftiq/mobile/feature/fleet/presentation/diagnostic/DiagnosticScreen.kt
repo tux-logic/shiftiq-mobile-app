@@ -61,14 +61,6 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.HealthRingCanvas
 
-data class EcuInspectionItem(
-    val ecuId: String,
-    val moduleName: String,
-    val hasDtc: Boolean,
-    val dtcCode: String? = null,
-    val statusText: String
-)
-
 @Composable
 fun DiagnosticsRoute(
     onNavigateToWorkshops: () -> Unit,
@@ -87,8 +79,8 @@ fun DiagnosticsRoute(
             val telemetry = uiState.telemetry
             val reportLines = listOf(
                 "Fecha: ${java.time.LocalDateTime.now()}",
-                "Origen: datos de demostración IoT; no son una lectura real de un dongle OBD-II.",
-                "Estado OBD-II: ${if (uiState.isObdConnected) "Conectado en la demostración" else "Sin conexión"}",
+                "Origen: telemetría OBD-II sincronizada desde el backend ShiftIQ.",
+                "Estado OBD-II: ${if (uiState.isObdConnected) "Conectado" else "Sin datos recientes"}",
                 "RPM: ${telemetry.rpm}",
                 "Temperatura del motor: ${telemetry.temperatureCelsius} °C",
                 "Voltaje de batería: ${telemetry.batteryVoltage} V",
@@ -151,15 +143,18 @@ fun DiagnosticsScreen(
     onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val sampleEcus = listOf(
-        EcuInspectionItem("ECU #7E0", "Motor / Inyección", true, "P0135", "Alerta DTC Activa"),
-        EcuInspectionItem("ECU #7E1", "Transmisión Automática", false, null, "Sin Códigos de Falla"),
-        EcuInspectionItem("ECU #7E2", "Módulo Frenos ABS / ESP", false, null, "Sin Códigos de Falla"),
-        EcuInspectionItem("ECU #7E3", "Sistema de Airbags / SRS", false, null, "Sin Códigos de Falla")
-    )
-
     val spacing = MaterialTheme.spacing
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val ecuCountLabel = if (uiState.inspectedEcus.isEmpty()) {
+        "0 ECUS"
+    } else {
+        "${uiState.inspectedEcus.count { it.hasDtc }} / ${uiState.inspectedEcus.size} ECUS"
+    }
+    val progressPercent = when {
+        uiState.isScanning -> (uiState.scanProgress * 100).toInt().coerceIn(0, 100)
+        uiState.isObdConnected -> 100
+        else -> 0
+    }
 
     Column(
         modifier = modifier
@@ -176,11 +171,11 @@ fun DiagnosticsScreen(
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             ProtocolBusHeaderCard()
-            CircularProgressSection(progressPercent = 68, ecuCount = "05 / 08 ECUS")
+            CircularProgressSection(progressPercent = progressPercent, ecuCount = ecuCountLabel)
             ModuleInterrogationStatusPill()
             CanBusTrafficMonitor()
             InspectedEcusSection(
-                ecus = sampleEcus,
+                ecus = uiState.inspectedEcus,
                 onDtcClick = { code -> onNavigateToDtcDetail(code) }
             )
             DiagnosticsActionButtons(

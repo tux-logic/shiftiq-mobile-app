@@ -37,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +45,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -60,10 +63,17 @@ data class BufferedFrameItem(
 @Composable
 fun OfflineTelemetryRoute(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: OfflineTelemetryViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     OfflineTelemetryScreen(
         onNavigateBack = onNavigateBack,
+        frames = uiState.frames,
+        frameCount = uiState.frameCount,
+        memoryKb = uiState.memoryKb,
+        message = uiState.message,
+        onSync = viewModel::loadBufferedFrames,
         modifier = modifier
     )
 }
@@ -71,15 +81,13 @@ fun OfflineTelemetryRoute(
 @Composable
 fun OfflineTelemetryScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    frames: List<BufferedFrameItem> = emptyList(),
+    frameCount: Int = 0,
+    memoryKb: Double = 0.0,
+    message: String? = null,
+    onSync: () -> Unit = {}
 ) {
-    val sampleFrames = listOf(
-        BufferedFrameItem("PID \$010C", "Régimen del Motor", "848 RPM", "Hace 12s"),
-        BufferedFrameItem("PID \$0105", "Temperatura Refrigerante", "89 °C", "Hace 14s"),
-        BufferedFrameItem("PID \$010D", "Velocidad del Vehículo", "0 km/h", "Hace 16s"),
-        BufferedFrameItem("PID \$012F", "Nivel de Combustible", "68.4 %", "Hace 18s")
-    )
-
     val spacing = MaterialTheme.spacing
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
@@ -102,9 +110,16 @@ fun OfflineTelemetryScreen(
         ) {
             OfflineWarningBanner()
             LocalBufferDiagramCard()
-            QueueStatsCard(frameCount = 124, memoryKb = 18.4)
-            BufferedFramesSection(frames = sampleFrames)
-            SyncActionButton(onSync = {})
+            QueueStatsCard(frameCount = frameCount, memoryKb = memoryKb)
+            if (!message.isNullOrBlank()) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            BufferedFramesSection(frames = frames)
+            SyncActionButton(onSync = onSync)
             Spacer(modifier = Modifier.height(spacing.medium))
         }
     }

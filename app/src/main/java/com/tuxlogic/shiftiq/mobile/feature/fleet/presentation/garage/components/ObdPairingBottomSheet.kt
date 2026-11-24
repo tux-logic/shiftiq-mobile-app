@@ -66,26 +66,13 @@ fun ObdPairingBottomSheet(
     onDismissRequest: () -> Unit,
     onDeviceConnected: (DiscoveredObdDevice) -> Unit,
     modifier: Modifier = Modifier,
+    devices: List<DiscoveredObdDevice> = emptyList(),
+    emptyMessage: String = "Bluetooth scanning is not available yet. OBD-II devices must be linked by workshop staff through the IoT API.",
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
-    val sampleDevices = listOf(
-        DiscoveredObdDevice(
-            id = "obd-1",
-            name = "OBD2-BT-9821",
-            macAddress = "00:1D:A5:68:98:21",
-            signalStrength = "Excelente (-52 dBm)",
-            isRecommended = true
-        ),
-        DiscoveredObdDevice(
-            id = "obd-2",
-            name = "OBDII-Generic-ELM327",
-            macAddress = "11:22:33:44:55:66",
-            signalStrength = "Media (-74 dBm)",
-            isRecommended = false
-        )
-    )
-
-    var selectedDeviceId by rememberSaveable { mutableStateOf(sampleDevices.first().id) }
+    var selectedDeviceId by rememberSaveable(devices) {
+        mutableStateOf(devices.firstOrNull()?.id.orEmpty())
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -94,11 +81,12 @@ fun ObdPairingBottomSheet(
         modifier = modifier
     ) {
         ObdPairingContent(
-            devices = sampleDevices,
+            devices = devices,
             selectedDeviceId = selectedDeviceId,
+            emptyMessage = emptyMessage,
             onSelectDevice = { selectedDeviceId = it },
             onConnect = {
-                val selected = sampleDevices.firstOrNull { it.id == selectedDeviceId }
+                val selected = devices.firstOrNull { it.id == selectedDeviceId }
                 if (selected != null) onDeviceConnected(selected)
             },
             onRescan = {}
@@ -113,7 +101,8 @@ private fun ObdPairingContent(
     onSelectDevice: (String) -> Unit,
     onConnect: () -> Unit,
     onRescan: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    emptyMessage: String = "No OBD-II devices are available."
 ) {
     val spacing = MaterialTheme.spacing
     Column(
@@ -126,15 +115,28 @@ private fun ObdPairingContent(
         Spacer(modifier = Modifier.height(spacing.smallMedium))
         ObdProtocolTag()
         Spacer(modifier = Modifier.height(spacing.medium))
-        ObdDevicesList(
-            devices = devices,
-            selectedDeviceId = selectedDeviceId,
-            onSelectDevice = onSelectDevice
-        )
+        if (devices.isEmpty()) {
+            Text(
+                text = emptyMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            ObdDevicesList(
+                devices = devices,
+                selectedDeviceId = selectedDeviceId,
+                onSelectDevice = onSelectDevice
+            )
+        }
         Spacer(modifier = Modifier.height(spacing.medium))
         ObdSafetyNotice()
         Spacer(modifier = Modifier.height(spacing.medium))
-        ObdActionButtons(onConnect = onConnect, onRescan = onRescan)
+        ObdActionButtons(
+            onConnect = onConnect,
+            onRescan = onRescan,
+            connectEnabled = devices.any { it.id == selectedDeviceId }
+        )
         Spacer(modifier = Modifier.height(spacing.large))
     }
 }
@@ -323,7 +325,8 @@ private fun ObdSafetyNotice(modifier: Modifier = Modifier) {
 private fun ObdActionButtons(
     onConnect: () -> Unit,
     onRescan: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    connectEnabled: Boolean = true
 ) {
     val spacing = MaterialTheme.spacing
     Column(
@@ -332,6 +335,7 @@ private fun ObdActionButtons(
     ) {
         Button(
             onClick = onConnect,
+            enabled = connectEnabled,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),

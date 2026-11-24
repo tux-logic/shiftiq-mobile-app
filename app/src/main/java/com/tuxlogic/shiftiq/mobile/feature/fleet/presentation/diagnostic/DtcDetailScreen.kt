@@ -58,7 +58,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 
-private data class DtcDemoDetails(
+private data class DtcReferenceDetails(
     val title: String,
     val severity: String,
     val suggestedReviewKm: Int,
@@ -71,66 +71,70 @@ private data class DtcDemoDetails(
     val recommendation: String
 )
 
-private fun demoDetailsForDtc(code: String): DtcDemoDetails = when (code.uppercase()) {
-    "P0135" -> DtcDemoDetails(
-        title = "Circuito calefactor del sensor de oxígeno",
-        severity = "Media · preventiva",
+/**
+ * Static SAE-style reference text for known DTC codes.
+ * The code itself comes from live telemetry navigation; this block only explains the code.
+ */
+private fun referenceDetailsForDtc(code: String): DtcReferenceDetails = when (code.uppercase()) {
+    "P0135" -> DtcReferenceDetails(
+        title = "O2 sensor heater circuit (Bank 1 Sensor 1)",
+        severity = "Medium",
         suggestedReviewKm = 500,
-        plainLanguage = "La simulación representa una falla del circuito que precalienta el sensor de oxígeno. No es una lectura real del vehículo.",
-        consumptionImpact = "Puede aumentar en frío",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Sin riesgo simulado inmediato",
-        location = "Escape, Banco 1 · Sensor 1",
-        part = "Sensor de oxígeno / circuito calefactor",
-        recommendation = "Verificar el sensor y su circuito con un escáner OBD-II real."
+        plainLanguage = "The oxygen sensor heater circuit may not be warming the sensor as expected.",
+        consumptionImpact = "May increase during cold starts",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Usually no immediate driving risk",
+        location = "Exhaust · Bank 1 · Sensor 1",
+        part = "Oxygen sensor / heater circuit",
+        recommendation = "Have a workshop verify the sensor and wiring with a live OBD-II scan."
     )
-    "P0420" -> DtcDemoDetails(
-        title = "Eficiencia del catalizador baja",
-        severity = "Media · revisar",
+    "P0420" -> DtcReferenceDetails(
+        title = "Catalyst system efficiency below threshold",
+        severity = "Medium",
         suggestedReviewKm = 250,
-        plainLanguage = "La simulación indica que el catalizador trabaja por debajo del umbral esperado. El código es ficticio y no confirma una falla.",
-        consumptionImpact = "Emisiones elevadas simuladas",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Revisión recomendada",
-        location = "Sistema de escape · catalizador",
-        part = "Catalizador y sensores de oxígeno",
-        recommendation = "Comprobar sensores y escape antes de reemplazar piezas."
+        plainLanguage = "The catalytic converter may be operating below the expected efficiency threshold.",
+        consumptionImpact = "Emissions may rise",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Workshop inspection recommended",
+        location = "Exhaust · catalytic converter",
+        part = "Catalyst and oxygen sensors",
+        recommendation = "Confirm sensors and exhaust health before replacing parts."
     )
-    "P0301" -> DtcDemoDetails(
-        title = "Falla de combustión en cilindro 1",
-        severity = "Alta · atención pronta",
+    "P0301" -> DtcReferenceDetails(
+        title = "Cylinder 1 misfire detected",
+        severity = "High",
         suggestedReviewKm = 100,
-        plainLanguage = "La simulación detectó una combustión irregular en el cilindro 1. Es un dato ficticio para probar las alertas.",
-        consumptionImpact = "Consumo irregular simulado",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Evita exigir el motor",
-        location = "Motor · cilindro 1",
-        part = "Bujía, bobina e inyector del cilindro 1",
-        recommendation = "Solicitar una inspección técnica; no sustituir piezas solo por esta demo."
+        plainLanguage = "Cylinder 1 reported irregular combustion.",
+        consumptionImpact = "Uneven fuel use possible",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Avoid heavy acceleration until inspected",
+        location = "Engine · cylinder 1",
+        part = "Spark plug, coil, or injector for cylinder 1",
+        recommendation = "Request a technical inspection promptly."
     )
-    "P0171" -> DtcDemoDetails(
-        title = "Mezcla de combustible demasiado pobre",
-        severity = "Media · revisar",
+    "P0171" -> DtcReferenceDetails(
+        title = "System too lean (Bank 1)",
+        severity = "Medium",
         suggestedReviewKm = 300,
-        plainLanguage = "La simulación representa una mezcla con más aire del esperado. No es una lectura real del motor.",
-        consumptionImpact = "Rendimiento irregular simulado",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Revisión preventiva",
-        location = "Admisión · Banco 1",
-        part = "Admisión de aire y sensores de mezcla",
-        recommendation = "Revisar admisión y sensores con equipo de diagnóstico."
+        plainLanguage = "The air-fuel mixture on bank 1 may contain more air than expected.",
+        consumptionImpact = "Performance can feel irregular",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Preventive inspection recommended",
+        location = "Intake · Bank 1",
+        part = "Air intake and mixture sensors",
+        recommendation = "Inspect intake leaks and mixture sensors."
     )
-    else -> DtcDemoDetails(
-        title = "Código de diagnóstico $code",
-        severity = "Demo · validar",
+    else -> DtcReferenceDetails(
+        title = "Diagnostic trouble code $code",
+        severity = "Review",
         suggestedReviewKm = 500,
-        plainLanguage = "Este código se muestra como ejemplo IoT. Confírmalo con una lectura OBD-II real antes de tomar decisiones.",
-        consumptionImpact = "No disponible en demo",
-        checkEngineImpact = "Código de ejemplo",
-        safetyImpact = "No evaluado",
-        location = "No disponible para este código",
-        part = "No se asigna una pieza automáticamente",
-        recommendation = "Confirmar la definición del código con un escáner OBD-II real."
+        plainLanguage = "This code was reported by vehicle telemetry. Use the workshop scan for a definitive interpretation.",
+        consumptionImpact = "Not assessed from this code alone",
+        checkEngineImpact = "Depends on the vehicle ECU",
+        safetyImpact = "Not assessed from this code alone",
+        location = "Not available for this code",
+        part = "Not assigned automatically",
+        recommendation = "Confirm the definition with workshop diagnostic equipment."
     )
 }
 
@@ -142,17 +146,17 @@ fun DtcDetailRoute(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val details = demoDetailsForDtc(dtcCode)
+    val details = referenceDetailsForDtc(dtcCode)
     val reportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { destination ->
         if (destination != null) {
             val reportLines = listOf(
                 "Fecha: ${java.time.LocalDateTime.now()}",
-                "Origen: datos IoT ficticios de demostración; no son una lectura real del vehículo.",
+                "Origen: telemetría OBD-II del vehículo reportada por ShiftIQ.",
                 "Código DTC: $dtcCode",
                 "Descripción: ${details.title}",
-                "Severidad de demostración: ${details.severity}.",
+                "Severidad de referencia: ${details.severity}.",
                 "Ventana sugerida de revisión: próximos ${details.suggestedReviewKm} km.",
                 "Interpretación: ${details.plainLanguage}",
                 "Recomendación: ${details.recommendation}"
@@ -186,7 +190,7 @@ fun DtcDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val details = demoDetailsForDtc(dtcCode)
+    val details = referenceDetailsForDtc(dtcCode)
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
@@ -277,7 +281,7 @@ private fun DtcDetailTopBar(
 @Composable
 private fun DtcAlertOverviewCard(
     dtcCode: String,
-    details: DtcDemoDetails,
+    details: DtcReferenceDetails,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -332,7 +336,7 @@ private fun DtcAlertOverviewCard(
             }
             Spacer(modifier = Modifier.height(spacing.smallMedium))
             Text(
-                text = "Lectura ficticia · revisar en ${details.suggestedReviewKm} km",
+                text = "Referencia · revisar en ${details.suggestedReviewKm} km",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = ShiftIQWarning
@@ -360,7 +364,7 @@ private fun DtcUrgencyPill(severity: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlainLanguageTranslationCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun PlainLanguageTranslationCard(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -390,7 +394,7 @@ private fun PlainLanguageTranslationCard(details: DtcDemoDetails, modifier: Modi
 }
 
 @Composable
-private fun DrivingImpactSection(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun DrivingImpactSection(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -469,7 +473,7 @@ private fun ImpactCard(
 }
 
 @Composable
-private fun TechnicalSpecCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun TechnicalSpecCard(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
