@@ -35,9 +35,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavActiveBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavActivePill
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavInactiveSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 
@@ -126,7 +123,11 @@ private fun ShiftIQBottomNavItem(
             text = item.title,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) NavActiveBlue else NavInactiveSlate
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
         )
     }
 }
@@ -139,8 +140,17 @@ private fun ShiftIQNavPill(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val pillBg = if (isSelected) NavActivePill.copy(alpha = 0.7f) else Color.Transparent
-    val iconTint = if (isSelected) NavActiveBlue else NavInactiveSlate
+    // Flutter: indicatorColor = primaryContainer.withAlpha(80)
+    val pillBg = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 80f / 255f)
+    } else {
+        Color.Transparent
+    }
+    val iconTint = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     Box(
         modifier = modifier
