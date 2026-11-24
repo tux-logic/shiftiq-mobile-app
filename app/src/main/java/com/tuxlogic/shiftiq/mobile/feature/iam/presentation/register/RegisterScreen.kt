@@ -79,8 +79,14 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.smartphone
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.syncIcon
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavActivePill
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQAccentSkyBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQError
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -92,6 +98,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate800
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.WalBufferAmber
 
 @Composable
 fun RegisterScreen(
@@ -189,7 +196,7 @@ fun RegisterContent(
                 title = {
                     Text(
                         text = topBarTitle,
-                        color = Color(0xFF203B82),
+                        color = ShiftIQPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -199,7 +206,7 @@ fun RegisterContent(
                         Icon(
                             imageVector = arrowBack,
                             contentDescription = "Atrás",
-                            tint = Color(0xFF203B82),
+                            tint = ShiftIQPrimary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -313,7 +320,7 @@ private fun WizardStepper(currentStep: Int) {
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFE4E8F1))
+        border = BorderStroke(1.dp, Slate200)
     ) {
         Row(
             modifier = Modifier
@@ -324,13 +331,13 @@ private fun WizardStepper(currentStep: Int) {
             StepItem(1, "Propietario", currentStep >= 1, currentStep == 1)
             HorizontalDivider(
                 modifier = Modifier.weight(1f).padding(horizontal = 7.dp),
-                color = if (currentStep > 1) Color(0xFF203B82) else Slate200,
+                color = if (currentStep > 1) ShiftIQPrimary else Slate200,
                 thickness = 2.dp
             )
             StepItem(2, "Vehículo", currentStep >= 2, currentStep == 2)
             HorizontalDivider(
                 modifier = Modifier.weight(1f).padding(horizontal = 7.dp),
-                color = if (currentStep > 2) Color(0xFF203B82) else Slate200,
+                color = if (currentStep > 2) ShiftIQPrimary else Slate200,
                 thickness = 2.dp
             )
             StepItem(3, "Confirmar", currentStep >= 3, currentStep == 3)
@@ -350,10 +357,10 @@ private fun StepItem(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(if (isActive) Color(0xFF203B82) else Color.White)
+                .background(if (isActive) ShiftIQPrimary else Color.White)
                 .border(
                     width = if (isCurrent) 2.dp else 1.dp,
-                    color = if (isActive) Color(0xFF203B82) else Slate400,
+                    color = if (isActive) ShiftIQPrimary else Slate400,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -368,7 +375,7 @@ private fun StepItem(
         Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = title,
-            color = if (isCurrent) Color(0xFF203B82) else Slate500,
+            color = if (isCurrent) ShiftIQPrimary else Slate500,
             fontSize = 10.sp,
             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1
@@ -396,7 +403,7 @@ private fun Step1OwnerContent(
     onNavigateToLogin: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.width(4.dp).height(20.dp).background(Color(0xFF203B82), RoundedCornerShape(2.dp)))
+        Box(modifier = Modifier.width(4.dp).height(20.dp).background(ShiftIQPrimary, RoundedCornerShape(2.dp)))
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "Paso 1: Datos del Propietario",
@@ -435,8 +442,8 @@ private fun Step1OwnerContent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
             errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
@@ -479,8 +486,8 @@ private fun Step1OwnerContent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
             errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
@@ -529,8 +536,8 @@ private fun Step1OwnerContent(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+                focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
                 errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
             )
         )
@@ -565,8 +572,8 @@ private fun Step1OwnerContent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
             errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
@@ -612,8 +619,8 @@ private fun Step1OwnerContent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
             errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
@@ -658,8 +665,8 @@ private fun Step1OwnerContent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
             errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
         )
     )
@@ -679,7 +686,7 @@ private fun Step1OwnerContent(
             checked = state.notificationsAccepted,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = Color(0xFF203B82),
+                checkedColor = ShiftIQPrimary,
                 uncheckedColor = Slate400,
                 checkmarkColor = Color.White
             )
@@ -705,7 +712,7 @@ private fun Step1OwnerContent(
             checked = state.termsAccepted,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = Color(0xFF203B82),
+                checkedColor = ShiftIQPrimary,
                 uncheckedColor = Slate400,
                 checkmarkColor = Color.White
             )
@@ -724,14 +731,14 @@ private fun Step1OwnerContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-            border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+            colors = CardDefaults.cardColors(containerColor = ShiftIQPrimary.copy(alpha = 0.08f)),
+            border = BorderStroke(1.dp, ShiftIQAccentSkyBlue.copy(alpha = 0.55f))
         ) {
             Row(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = errorOutline, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(16.dp))
+                Icon(imageVector = errorOutline, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (!state.termsAccepted && !state.notificationsAccepted) {
@@ -741,7 +748,7 @@ private fun Step1OwnerContent(
                     } else {
                         "Debes aceptar las Notificaciones de telemetría para continuar."
                     },
-                    color = Color(0xFF203B82),
+                    color = ShiftIQPrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -754,8 +761,8 @@ private fun Step1OwnerContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-            border = BorderStroke(1.dp, Color(0xFFFECACA))
+            colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
+            border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.35f))
         ) {
             Row(
                 modifier = Modifier.padding(10.dp),
@@ -763,7 +770,7 @@ private fun Step1OwnerContent(
             ) {
                 Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
+                Text(text = state.errorMessage, color = ShiftIQError, fontSize = 12.sp)
             }
         }
     }
@@ -855,7 +862,7 @@ private fun Step2VehicleContent(
             Icon(imageVector = photoCamera, contentDescription = null, tint = Slate400, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.height(6.dp))
             Text(text = "Subir fotografía frontal o lateral (Opcional)", color = Slate600, fontSize = 12.sp)
-            Text(text = "[ Explorar archivo ]", color = Color(0xFF203B82), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(text = "[ Explorar archivo ]", color = ShiftIQPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 
@@ -873,8 +880,8 @@ private fun Step2VehicleContent(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
+                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
                 )
             )
         }
@@ -889,8 +896,8 @@ private fun Step2VehicleContent(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
+                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
                 )
             )
         }
@@ -911,8 +918,8 @@ private fun Step2VehicleContent(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
+                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
                 )
             )
         }
@@ -928,8 +935,8 @@ private fun Step2VehicleContent(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
+                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
                 )
             )
         }
@@ -956,8 +963,8 @@ private fun Step2VehicleContent(
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
+            focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
         )
     )
     Spacer(modifier = Modifier.height(4.dp))
@@ -975,10 +982,10 @@ private fun Step2VehicleContent(
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFEFF6FF)),
+                    modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(ShiftIQPrimary.copy(alpha = 0.08f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = bluetooth, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(18.dp))
+                    Icon(imageVector = bluetooth, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(18.dp))
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
@@ -1001,7 +1008,7 @@ private fun Step2VehicleContent(
             ) {
                 if (state.isScanningBle) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFF203B82), strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ShiftIQPrimary, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "Buscando señal BLE...", color = Slate700, fontSize = 12.sp)
                     }
@@ -1020,8 +1027,8 @@ private fun Step2VehicleContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF0FDF4))
-                    .border(BorderStroke(1.dp, Color(0xFFBBF7D0)), RoundedCornerShape(10.dp))
+                    .background(ShiftIQSuccess.copy(alpha = 0.10f))
+                    .border(BorderStroke(1.dp, ShiftIQSuccess.copy(alpha = 0.35f)), RoundedCornerShape(10.dp))
                     .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1032,7 +1039,7 @@ private fun Step2VehicleContent(
                     Text(text = "Señal ${state.dongleSignal}", color = Slate500, fontSize = 11.sp)
                 }
                 Box(
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFDCFCE7)).padding(horizontal = 8.dp, vertical = 2.dp)
+                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(ShiftIQSuccess.copy(alpha = 0.22f)).padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(text = "${state.dongleBattery}%", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
@@ -1085,13 +1092,13 @@ private fun Step3ConfirmContent(
 ) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xFF203B82)),
+            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(ShiftIQPrimary),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = checkCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(36.dp))
         }
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "(( • ))", color = Color(0xFF203B82), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        Text(text = "(( • ))", color = ShiftIQPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = "¡Vehículo y Telemetría Listos!", color = Slate900, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(6.dp))
@@ -1103,8 +1110,8 @@ private fun Step3ConfirmContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFEFF6FF))
-                .border(BorderStroke(1.dp, Color(0xFFDBEAFE)), RoundedCornerShape(10.dp))
+                .background(ShiftIQPrimary.copy(alpha = 0.08f))
+                .border(BorderStroke(1.dp, NavActivePill), RoundedCornerShape(10.dp))
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -1128,7 +1135,7 @@ private fun Step3ConfirmContent(
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = "RESUMEN DE REGISTRO", color = Slate700, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                    Text(text = "#REG-2024-DRV", color = Color(0xFF203B82), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    Text(text = "#REG-2024-DRV", color = ShiftIQPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1137,7 +1144,7 @@ private fun Step3ConfirmContent(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = directionsCar, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(24.dp))
+                    Icon(imageVector = directionsCar, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = "${state.brand} ${state.model} ${state.year}", color = Slate900, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
@@ -1161,7 +1168,7 @@ private fun Step3ConfirmContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
+                .background(ShiftIQPrimary)
                 .scaleOnPress(onClick = onSubmit),
             contentAlignment = Alignment.Center
         ) {
@@ -1224,8 +1231,8 @@ private fun StepErrorContent(
             modifier = Modifier
                 .size(74.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFFFEF2F2))
-                .border(BorderStroke(1.5.dp, Color(0xFFFCA5A5)), RoundedCornerShape(22.dp)),
+                .background(ShiftIQErrorContainer)
+                .border(BorderStroke(1.5.dp, SeverityCrimson.copy(alpha = 0.45f)), RoundedCornerShape(22.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(40.dp))
@@ -1274,7 +1281,7 @@ private fun StepErrorContent(
                 .fillMaxWidth()
                 .height(50.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
+                .background(ShiftIQPrimary)
                 .scaleOnPress(onClick = onCorrectData),
             contentAlignment = Alignment.Center
         ) {
@@ -1309,7 +1316,7 @@ private fun StepSuccessContent(
             modifier = Modifier
                 .size(76.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFF22C55E)),
+                .background(ShiftIQSuccess),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = checkCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
@@ -1343,7 +1350,7 @@ private fun StepSuccessContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
+                .background(ShiftIQPrimary)
                 .scaleOnPress(onClick = onGoToDashboard),
             contentAlignment = Alignment.Center
         ) {
@@ -1377,13 +1384,13 @@ private fun StepOtpContent(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFEFF6FF)),
+                .background(ShiftIQPrimary.copy(alpha = 0.08f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Security,
                 contentDescription = null,
-                tint = Color(0xFF203B82),
+                tint = ShiftIQPrimary,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -1425,7 +1432,7 @@ private fun StepOtpContent(
             Icon(
                 imageVector = Icons.Filled.AccessTime,
                 contentDescription = null,
-                tint = if (state.timeLeft > 0) Slate500 else Color(0xFFD97706),
+                tint = if (state.timeLeft > 0) Slate500 else WalBufferAmber,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -1451,13 +1458,13 @@ private fun StepOtpContent(
                     Icon(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = null,
-                        tint = Color(0xFF203B82),
+                        tint = ShiftIQPrimary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = "Reenviar código",
-                        color = Color(0xFF203B82),
+                        color = ShiftIQPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1470,8 +1477,8 @@ private fun StepOtpContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                border = BorderStroke(1.dp, Color(0xFFFECACA))
+                colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
+                border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.35f))
             ) {
                 Row(
                     modifier = Modifier.padding(10.dp),
@@ -1479,7 +1486,7 @@ private fun StepOtpContent(
                 ) {
                     Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
+                    Text(text = state.errorMessage, color = ShiftIQError, fontSize = 12.sp)
                 }
             }
         }
@@ -1565,7 +1572,7 @@ private fun OtpBoxesView(
                             .background(Color.White)
                             .border(
                                 width = if (isFocused) 2.dp else 1.dp,
-                                color = if (isFocused) Color(0xFF203B82) else if (char.isNotEmpty()) Slate400 else Slate200,
+                                color = if (isFocused) ShiftIQPrimary else if (char.isNotEmpty()) Slate400 else Slate200,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center

@@ -53,6 +53,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.widget.Toast
 import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
@@ -193,45 +194,12 @@ private fun DiagnosticsTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Row(
+    ShiftIQPageHeader(
+        title = "Diagnóstico OBD-II",
+        subtitle = "Escaneo y lectura en tiempo real",
+        badgeLabel = "EN VIVO",
         modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                text = "Diagnóstico OBD-II",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Escaneo y lectura en tiempo real",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.7f)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(Color.White.copy(alpha = 0.15f))
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = "EN VIVO",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            )
-        }
-    }
+    )
 }
 
 @Composable

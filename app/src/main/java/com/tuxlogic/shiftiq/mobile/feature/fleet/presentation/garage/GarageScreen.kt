@@ -66,6 +66,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
@@ -204,38 +205,27 @@ private fun GarageTopBar(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Mi Garaje - Historial",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        IconButton(
-            onClick = onNavigateToProfile,
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f))
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Mi Perfil",
-                tint = Color.White,
-                modifier = Modifier.size(spacing.iconLarge)
-            )
+    ShiftIQPageHeader(
+        title = "Mi Garaje",
+        subtitle = "Historial y flota personal",
+        modifier = modifier,
+        actions = {
+            IconButton(
+                onClick = onNavigateToProfile,
+                modifier = Modifier
+                    .size(spacing.badgeHeight + spacing.smallMedium)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.15f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Mi Perfil",
+                    tint = Color.White,
+                    modifier = Modifier.size(spacing.iconLarge)
+                )
+            }
         }
-    }
+    )
 }
 
 @Composable

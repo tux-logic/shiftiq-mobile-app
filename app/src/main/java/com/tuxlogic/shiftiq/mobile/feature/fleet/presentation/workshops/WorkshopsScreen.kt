@@ -62,6 +62,7 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
@@ -172,50 +173,12 @@ private fun WorkshopsTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.medium),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(spacing.radiusFull))
-                    .background(ObdTeal.copy(alpha = 0.2f))
-                    .padding(horizontal = spacing.small, vertical = spacing.micro)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(spacing.indicatorHeight)
-                            .clip(CircleShape)
-                            .background(ObdTeal)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                    Text(
-                        text = "OBD2 CONECTADO",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = ObdTeal
-                    )
-                }
-            }
-
-            Text(
-                text = "Talleres Afiliados",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
+    ShiftIQPageHeader(
+        title = "Talleres Afiliados",
+        subtitle = "Red certificada ShiftIQ",
+        badgeLabel = "OBD2 CONECTADO",
+        modifier = modifier,
+        actions = {
             IconButton(onClick = onNavigateToMyAppointments) {
                 Icon(
                     imageVector = Icons.Default.EventNote,
@@ -224,7 +187,7 @@ private fun WorkshopsTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 @Composable

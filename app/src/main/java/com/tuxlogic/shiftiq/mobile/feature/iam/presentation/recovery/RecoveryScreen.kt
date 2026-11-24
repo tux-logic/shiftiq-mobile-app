@@ -75,6 +75,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQAccentSkyBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
@@ -85,6 +90,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate800
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.WalBufferAmber
 
 @Composable
 fun RecoveryScreen(
@@ -192,8 +198,8 @@ fun RecoveryContent(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                        border = BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
+                        border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.45f))
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -373,7 +379,7 @@ private fun StepEmailContent(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFEFF6FF)),
+                .background(ShiftIQPrimary.copy(alpha = 0.08f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -491,7 +497,7 @@ private fun StepEmailContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isEmailValid && !isLoading) PrimaryBlue else Color(0xFF93C5FD))
+                .background(if (isEmailValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
                 .scaleOnPress(
                     onClick = {
                         if (isEmailValid && !isLoading) onRequestCode()
@@ -546,13 +552,13 @@ private fun StepOtpContent(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFFEF3C7)),
+                .background(ShiftIQWarning.copy(alpha = 0.25f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Security,
                 contentDescription = null,
-                tint = Color(0xFFD97706),
+                tint = WalBufferAmber,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -596,7 +602,7 @@ private fun StepOtpContent(
             Icon(
                 imageVector = Icons.Filled.AccessTime,
                 contentDescription = null,
-                tint = if (timeLeft > 0) Slate500 else Color(0xFFD97706),
+                tint = if (timeLeft > 0) Slate500 else WalBufferAmber,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -643,7 +649,7 @@ private fun StepOtpContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isOtpValid && !isLoading) PrimaryBlue else Color(0xFF93C5FD))
+                .background(if (isOtpValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
                 .scaleOnPress(
                     onClick = {
                         if (isOtpValid && !isLoading) onVerify()
@@ -751,7 +757,7 @@ private fun StepNewPasswordContent(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFECFDF5)),
+                .background(ShiftIQSuccess.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -920,7 +926,7 @@ private fun StepNewPasswordContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isFormValid && !isLoading) PrimaryBlue else Color(0xFF93C5FD))
+                .background(if (isFormValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
                 .scaleOnPress(
                     onClick = {
                         if (isFormValid && !isLoading) onResetPassword()
@@ -1002,7 +1008,7 @@ private fun StepSuccessContent(
             modifier = Modifier
                 .size(76.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFF22C55E)),
+                .background(ShiftIQSuccess),
             contentAlignment = Alignment.Center
         ) {
             Icon(
