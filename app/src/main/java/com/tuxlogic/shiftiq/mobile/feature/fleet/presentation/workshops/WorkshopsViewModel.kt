@@ -56,7 +56,9 @@ class WorkshopsViewModel @Inject constructor(
                         address = item.address,
                         phone = item.phone,
                         district = item.address.substringAfterLast(",").trim().ifBlank { item.address },
-                        isCertifiedShiftIQ = true
+                        isCertifiedShiftIQ = true,
+                        latitude = item.latitude,
+                        longitude = item.longitude
                     )
                 }
                 is AppResult.Failure -> {

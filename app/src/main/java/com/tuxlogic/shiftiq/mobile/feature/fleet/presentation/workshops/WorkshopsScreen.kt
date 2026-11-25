@@ -280,7 +280,9 @@ private fun VectorGpsMapCard(
 ) {
     val spacing = MaterialTheme.spacing
     val focused = workshops.firstOrNull()
-    val pins = remember(workshops) { workshopMapPins(workshops.map { it.id }) }
+    val pins = remember(workshops) {
+        workshopMapPins(workshops.map { it.id to (it.latitude to it.longitude) })
+    }
     var mapController by remember { mutableStateOf<MapLibreMapController?>(null) }
 
     Card(

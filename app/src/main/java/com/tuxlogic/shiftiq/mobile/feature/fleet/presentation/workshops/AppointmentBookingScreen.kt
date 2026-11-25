@@ -333,9 +333,10 @@ private fun VehicleRegistrationCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = Slate100),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -394,14 +395,15 @@ private fun DaySelectorSection(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onSelectDay(index) },
-                    shape = RoundedCornerShape(spacing.radiusMedium),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.surface
+                        containerColor = if (isSelected) PrimaryBlue else Color.White
                     ),
                     border = BorderStroke(
                         spacing.strokeThin,
-                        if (isSelected) PrimaryBlue else Slate200
-                    )
+                        if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -447,14 +449,15 @@ private fun BaySelectorSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onSelectBay(bay.id) },
-                shape = RoundedCornerShape(spacing.radiusMedium),
+                shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) PrimaryBlue.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+                    containerColor = if (isSelected) PrimaryBlue.copy(alpha = 0.08f) else Color.White
                 ),
                 border = BorderStroke(
                     spacing.strokeThin,
-                    if (isSelected) PrimaryBlue else Slate200
-                )
+                    if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -552,14 +555,15 @@ private fun BaySlotCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(spacing.radiusMedium),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) PrimaryBlue else Color.White
         ),
         border = BorderStroke(
             spacing.strokeThin,
-            if (isSelected) PrimaryBlue else Slate200
-        )
+            if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -639,8 +643,9 @@ private fun ConfirmBookingButton(
         modifier = modifier
             .fillMaxWidth()
             .height(spacing.buttonHeight),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
     ) {
         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
         Spacer(modifier = Modifier.width(spacing.small))
@@ -700,7 +705,7 @@ private fun BookingConfirmationModal(
                 onClick = onConfirm,
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(spacing.iconMedium))
@@ -712,12 +717,12 @@ private fun BookingConfirmationModal(
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Modificar", color = Slate700)
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -775,7 +780,7 @@ private fun BookingSuccessModal(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(spacing.radiusMedium))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(Navy900)
                         .padding(spacing.smallMedium),
                     contentAlignment = Alignment.Center
@@ -799,7 +804,7 @@ private fun BookingSuccessModal(
                 onClick = onViewMyAppointments,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Ver en Mis Citas", fontWeight = FontWeight.Bold)
             }
@@ -808,12 +813,12 @@ private fun BookingSuccessModal(
             OutlinedButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Aceptar y Salir", color = Slate700)
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -878,12 +883,12 @@ private fun TurnConflictErrorDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Elegir Horario")
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -915,9 +920,10 @@ private fun BranchUnavailableDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelectBranch(branch) },
-                        shape = RoundedCornerShape(spacing.radiusSmall),
-                        colors = CardDefaults.cardColors(containerColor = Slate100),
-                        border = BorderStroke(spacing.strokeThin, Slate200)
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(spacing.small)) {
                             Text(text = branch.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Slate900)
@@ -928,11 +934,15 @@ private fun BranchUnavailableDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss, shape = RoundedCornerShape(spacing.radiusMedium)) {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                shape = RoundedCornerShape(14.dp)
+            ) {
                 Text("Cerrar")
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 

@@ -1,8 +1,5 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.recovery
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,49 +9,30 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,11 +50,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthErrorBanner
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthLabeledField
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthPrimaryButton
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthScaffold
-import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
+import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.lockOutline
+import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.mailOutline
+import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
+import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQAccentSkyBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
@@ -119,7 +101,6 @@ fun RecoveryScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecoveryContent(
     state: RecoveryUiState,
@@ -174,41 +155,8 @@ fun RecoveryContent(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Banner dinámico de error si existe
-            AnimatedVisibility(
-                visible = state.errorMessage != null,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                state.errorMessage?.let { msg ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
-                        border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.45f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.ErrorOutline,
-                                contentDescription = null,
-                                tint = SeverityCrimson,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = msg,
-                                color = SeverityCrimson,
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
-                }
+            if (state.errorMessage != null) {
+                AuthErrorBanner(message = state.errorMessage)
             }
 
             // Contenido por paso
@@ -400,118 +348,47 @@ private fun StepEmailContent(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Correo Electrónico",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Slate700
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+        val showFormatError = email.isNotBlank() && !isEmailValid
+        val isFieldInError = emailError != null || showFormatError
+        val fieldErrorMessage = emailError ?: if (showFormatError) "Formato de correo inválido" else null
 
-            val showFormatError = email.isNotBlank() && !isEmailValid
-            val isFieldInError = emailError != null || showFormatError
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = onEmailChanged,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(
-                    color = Slate900,
-                    fontSize = 15.sp
-                ),
-                placeholder = {
-                    Text(text = "ejemplo@shiftiq.com", color = Slate400, fontSize = 15.sp)
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Email,
-                        contentDescription = null,
-                        tint = if (isFieldInError) SeverityCrimson else if (isEmailValid) PrimaryBlue else Slate400,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                trailingIcon = {
-                    if (email.isNotBlank()) {
-                        IconButton(onClick = onClearEmail) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Limpiar",
-                                tint = Slate400,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+        AuthLabeledField(
+            label = "Correo electrónico",
+            value = email,
+            onValueChange = onEmailChanged,
+            hint = "ejemplo@shiftiq.com",
+            leadingIcon = mailOutline,
+            isError = isFieldInError,
+            errorMessage = fieldErrorMessage,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { if (!isLoading && isEmailValid) onRequestCode() }
+            ),
+            trailingIcon = {
+                if (email.isNotBlank()) {
+                    IconButton(onClick = onClearEmail) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Clear email",
+                            tint = Slate400,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
-                },
-                isError = isFieldInError,
-                supportingText = {
-                    if (emailError != null) {
-                        Text(text = emailError, color = SeverityCrimson, fontSize = 12.sp)
-                    } else if (showFormatError) {
-                        Text(text = "Formato de correo inválido", color = SeverityCrimson, fontSize = 12.sp)
-                    } else if (isEmailValid) {
-                        Text(text = "✓ Correo con formato válido", color = TelematicsGreen, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { if (!isLoading && isEmailValid) onRequestCode() }
-                ),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900,
-                    unfocusedTextColor = Slate900,
-                    errorTextColor = Slate900,
-                    cursorColor = PrimaryBlue,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    errorContainerColor = Color.White,
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Slate200,
-                    errorBorderColor = SeverityCrimson
-                )
-            )
-        }
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (isEmailValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
-                .scaleOnPress(
-                    onClick = {
-                        if (isEmailValid && !isLoading) onRequestCode()
-                    }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Enviar Código de Seguridad",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
+        AuthPrimaryButton(
+            label = "Enviar código de seguridad",
+            isLoading = isLoading,
+            enabled = isEmailValid,
+            onClick = onRequestCode
+        )
     }
 }
 
@@ -631,39 +508,12 @@ private fun StepOtpContent(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (isOtpValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
-                .scaleOnPress(
-                    onClick = {
-                        if (isOtpValid && !isLoading) onVerify()
-                    }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Verificar Código",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
+        AuthPrimaryButton(
+            label = "Verificar código",
+            isLoading = isLoading,
+            enabled = isOtpValid,
+            onClick = onVerify
+        )
     }
 }
 
@@ -778,107 +628,65 @@ private fun StepNewPasswordContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Campo 1: Nueva Contraseña
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Nueva Contraseña", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Slate700)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
-                value = newPassword,
-                onValueChange = onNewPasswordChanged,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 15.sp),
-                placeholder = { Text("Mínimo 8 caracteres", color = Slate400, fontSize = 15.sp) },
-                leadingIcon = {
+        AuthLabeledField(
+            label = "Nueva contraseña",
+            value = newPassword,
+            onValueChange = onNewPasswordChanged,
+            hint = "Mínimo 8 caracteres",
+            leadingIcon = lockOutline,
+            isError = newPasswordError != null,
+            errorMessage = newPasswordError,
+            visualTransformation = if (isNewPasswordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
+            trailingIcon = {
+                IconButton(onClick = onToggleNewPasswordVisibility) {
                     Icon(
-                        imageVector = Icons.Filled.Lock,
-                        contentDescription = null,
-                        tint = if (newPasswordError != null) SeverityCrimson else Slate400,
+                        imageVector = if (isNewPasswordVisible) visibilityOff else visibility,
+                        contentDescription = if (isNewPasswordVisible) "Hide password" else "Show password",
+                        tint = Slate500,
                         modifier = Modifier.size(20.dp)
                     )
-                },
-                trailingIcon = {
-                    IconButton(onClick = onToggleNewPasswordVisibility) {
-                        Icon(
-                            imageVector = if (isNewPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (isNewPasswordVisible) "Ocultar" else "Mostrar",
-                            tint = Slate500,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                visualTransformation = if (isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                isError = newPasswordError != null,
-                supportingText = {
-                    newPasswordError?.let { Text(text = it, color = SeverityCrimson, fontSize = 12.sp) }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900,
-                    unfocusedTextColor = Slate900,
-                    errorTextColor = Slate900,
-                    cursorColor = PrimaryBlue,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Slate200,
-                    errorBorderColor = SeverityCrimson
-                )
-            )
-        }
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Campo 2: Confirmar Contraseña
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Confirmar Nueva Contraseña", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Slate700)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = onConfirmPasswordChanged,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 15.sp),
-                placeholder = { Text("Repite tu nueva contraseña", color = Slate400, fontSize = 15.sp) },
-                leadingIcon = {
+        AuthLabeledField(
+            label = "Confirmar nueva contraseña",
+            value = confirmPassword,
+            onValueChange = onConfirmPasswordChanged,
+            hint = "Repite tu nueva contraseña",
+            leadingIcon = lockOutline,
+            isError = confirmPasswordError != null,
+            errorMessage = confirmPasswordError,
+            visualTransformation = if (isConfirmPasswordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            trailingIcon = {
+                IconButton(onClick = onToggleConfirmPasswordVisibility) {
                     Icon(
-                        imageVector = Icons.Filled.Lock,
-                        contentDescription = null,
-                        tint = if (confirmPasswordError != null) SeverityCrimson else Slate400,
+                        imageVector = if (isConfirmPasswordVisible) visibilityOff else visibility,
+                        contentDescription = if (isConfirmPasswordVisible) "Hide password" else "Show password",
+                        tint = Slate500,
                         modifier = Modifier.size(20.dp)
                     )
-                },
-                trailingIcon = {
-                    IconButton(onClick = onToggleConfirmPasswordVisibility) {
-                        Icon(
-                            imageVector = if (isConfirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (isConfirmPasswordVisible) "Ocultar" else "Mostrar",
-                            tint = Slate500,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                visualTransformation = if (isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                isError = confirmPasswordError != null,
-                supportingText = {
-                    confirmPasswordError?.let { Text(text = it, color = SeverityCrimson, fontSize = 12.sp) }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900,
-                    unfocusedTextColor = Slate900,
-                    errorTextColor = Slate900,
-                    cursorColor = PrimaryBlue,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Slate200,
-                    errorBorderColor = SeverityCrimson
-                )
-            )
-        }
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -908,39 +716,12 @@ private fun StepNewPasswordContent(
 
         val isFormValid = isPasswordLengthValid && hasUppercase && hasSpecialOrNumber && doPasswordsMatch
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (isFormValid && !isLoading) PrimaryBlue else ShiftIQAccentSkyBlue.copy(alpha = 0.65f))
-                .scaleOnPress(
-                    onClick = {
-                        if (isFormValid && !isLoading) onResetPassword()
-                    }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Actualizar Contraseña",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
+        AuthPrimaryButton(
+            label = "Actualizar contraseña",
+            isLoading = isLoading,
+            enabled = isFormValid,
+            onClick = onResetPassword
+        )
     }
 }
 
@@ -1029,30 +810,10 @@ private fun StepSuccessContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(PrimaryBlue)
-                .scaleOnPress(onClick = onNavigateToLogin),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Iniciar Sesión",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
+        AuthPrimaryButton(
+            label = "Iniciar sesión",
+            isLoading = false,
+            onClick = onNavigateToLogin
+        )
     }
 }

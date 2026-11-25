@@ -111,7 +111,11 @@ data class BranchResourceDto(
     @SerializedName("address")
     val address: String,
     @SerializedName("phone")
-    val phone: String
+    val phone: String,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null
 )
 
 data class BranchCatalogResourceDto(
@@ -130,7 +134,11 @@ data class BranchCatalogResourceDto(
     @SerializedName("address")
     val address: String? = null,
     @SerializedName("phone")
-    val phone: String? = null
+    val phone: String? = null,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null
 )
 
 data class CreateBranchRequestDto(

@@ -222,10 +222,12 @@ class MapLibreMapController {
 }
 
 /**
- * Deterministic Lima-area coordinates when the backend does not yet expose lat/lng.
- * Mirrors Flutter placeholder pin spread around the default OpenFreeMap center.
+ * Prefer backend lat/lng when present; otherwise spread deterministic Lima-area
+ * offsets (same OpenFreeMap default center as Flutter [MinimalistMapConfig]).
  */
-fun workshopMapPins(workshopIds: List<String>): List<ShiftIQMapPin> {
+fun workshopMapPins(
+    workshops: List<Pair<String, Pair<Double?, Double?>>>
+): List<ShiftIQMapPin> {
     val offsets = listOf(
         0.000 to 0.000,
         0.012 to -0.018,
@@ -237,12 +239,17 @@ fun workshopMapPins(workshopIds: List<String>): List<ShiftIQMapPin> {
         0.014 to -0.008
     )
     val center = MapLibreMapController.DEFAULT_CENTER
-    return workshopIds.mapIndexed { index, id ->
-        val offset = offsets[index % offsets.size]
-        ShiftIQMapPin(
-            id = id,
-            latitude = center.latitude + offset.first,
-            longitude = center.longitude + offset.second
-        )
+    return workshops.mapIndexed { index, (id, coords) ->
+        val (lat, lng) = coords
+        if (lat != null && lng != null) {
+            ShiftIQMapPin(id = id, latitude = lat, longitude = lng)
+        } else {
+            val offset = offsets[index % offsets.size]
+            ShiftIQMapPin(
+                id = id,
+                latitude = center.latitude + offset.first,
+                longitude = center.longitude + offset.second
+            )
+        }
     }
 }

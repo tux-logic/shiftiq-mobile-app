@@ -18,7 +18,9 @@ data class Branch(
     val code: String,
     val name: String,
     val address: String,
-    val phone: String
+    val phone: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 data class BranchCatalogItem(
@@ -29,7 +31,9 @@ data class BranchCatalogItem(
     val branchCode: String,
     val branchName: String,
     val address: String,
-    val phone: String
+    val phone: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 ) {
     val displayName: String
         get() = listOf(workshopBrandName, branchName)

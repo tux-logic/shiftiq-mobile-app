@@ -81,5 +81,7 @@ data class WorkshopItem(
     val estimatedCostMinPen: Double = 0.0,
     val estimatedCostMaxPen: Double = 0.0,
     val nextAvailableSlot: String = "",
-    val linkedIssue: String? = null
+    val linkedIssue: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

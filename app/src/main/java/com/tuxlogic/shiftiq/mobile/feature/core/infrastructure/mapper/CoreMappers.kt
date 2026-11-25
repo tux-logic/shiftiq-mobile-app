@@ -61,7 +61,9 @@ fun BranchResourceDto.toDomain(): Branch = Branch(
     code = code,
     name = name,
     address = address,
-    phone = phone
+    phone = phone,
+    latitude = latitude,
+    longitude = longitude
 )
 
 fun BranchCatalogResourceDto.toDomain(): BranchCatalogItem = BranchCatalogItem(
@@ -72,7 +74,9 @@ fun BranchCatalogResourceDto.toDomain(): BranchCatalogItem = BranchCatalogItem(
     branchCode = branchCode.orEmpty(),
     branchName = branchName.orEmpty(),
     address = address.orEmpty(),
-    phone = phone.orEmpty()
+    phone = phone.orEmpty(),
+    latitude = latitude,
+    longitude = longitude
 )
 
 fun BranchSubscriptionResourceDto.toDomain(): BranchSubscription = BranchSubscription(
