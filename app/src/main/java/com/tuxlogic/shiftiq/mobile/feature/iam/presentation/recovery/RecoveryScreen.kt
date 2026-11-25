@@ -72,6 +72,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthScaffold
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
@@ -143,44 +144,31 @@ fun RecoveryContent(
         RecoveryStep.SUCCESS -> "Listo"
     }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = topBarTitle,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar",
-                            tint = Slate800
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Slate50
-                )
+    val subtitle = when (state.step) {
+        RecoveryStep.EMAIL -> "Te enviaremos un código de verificación a tu correo"
+        RecoveryStep.OTP -> "Ingresa el código de 6 dígitos que enviamos"
+        RecoveryStep.NEW_PASSWORD -> "Define una contraseña segura para tu cuenta"
+        RecoveryStep.SUCCESS -> "Tu contraseña fue actualizada correctamente"
+    }
+
+    AuthScaffold(
+        title = topBarTitle,
+        subtitle = subtitle,
+        showBackButton = true,
+        showLogo = false,
+        onBack = onBack,
+        footer = {
+            Text(
+                text = "Volver al inicio de sesión",
+                color = PrimaryBlue,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable(onClick = onNavigateToLogin)
             )
-        },
-        containerColor = Slate50
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .navigationBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Stepper visual de progreso
+        }
+    ) {
             if (state.step != RecoveryStep.SUCCESS) {
                 RecoveryStepIndicator(currentStep = state.step)
                 Spacer(modifier = Modifier.height(24.dp))
@@ -276,7 +264,6 @@ fun RecoveryContent(
                     )
                 }
             }
-        }
     }
 }
 
