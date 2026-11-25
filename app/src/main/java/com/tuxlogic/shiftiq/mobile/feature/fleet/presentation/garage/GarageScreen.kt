@@ -445,7 +445,7 @@ private fun VehicleCardTopRow(
                     .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
             ) {
                 Text(
-                    text = "Ppal",
+                    text = "Principal",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = Slate500
