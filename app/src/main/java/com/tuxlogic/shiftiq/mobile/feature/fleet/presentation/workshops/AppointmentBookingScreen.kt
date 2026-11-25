@@ -177,11 +177,13 @@ fun AppointmentBookingScreen(
                     selectedIndex = uiState.selectedDayIndex,
                     onSelectDay = onSelectDay
                 )
-                BaySelectorSection(
-                    bays = uiState.availableBays,
-                    selectedBayId = uiState.selectedBayId,
-                    onSelectBay = onSelectBay
-                )
+                if (uiState.availableBays.isNotEmpty()) {
+                    BaySelectorSection(
+                        bays = uiState.availableBays,
+                        selectedBayId = uiState.selectedBayId,
+                        onSelectBay = onSelectBay
+                    )
+                }
                 BaySlotGridSection(
                     slots = uiState.availableSlots,
                     selectedIndex = uiState.selectedSlotIndex,
@@ -673,9 +675,16 @@ private fun BookingConfirmationModal(
             ) {
                 ConfirmationDetailRow(label = "TALLER TÉCNICO", value = uiState.workshopName)
                 ConfirmationDetailRow(label = "FECHA Y TURNO", value = "$selectedDay • $selectedSlot")
-                ConfirmationDetailRow(label = "BAHÍA ASIGNADA", value = selectedBay?.name ?: "Bahía 2")
-                ConfirmationDetailRow(label = "VEHÍCULO", value = uiState.selectedVehicle?.let { "${it.brand} ${it.model} • ${it.plateNumber}" } ?: "ABC-123")
-                ConfirmationDetailRow(label = "PRESUPUESTO ESTIMADO", value = uiState.estimatedPricePen)
+                selectedBay?.name?.takeIf { it.isNotBlank() }?.let { bayName ->
+                    ConfirmationDetailRow(label = "BAHÍA ASIGNADA", value = bayName)
+                }
+                ConfirmationDetailRow(
+                    label = "VEHÍCULO",
+                    value = uiState.selectedVehicle?.let { "${it.brand} ${it.model} • ${it.plateNumber}" }.orEmpty()
+                )
+                if (uiState.estimatedPricePen.isNotBlank()) {
+                    ConfirmationDetailRow(label = "PRESUPUESTO ESTIMADO", value = uiState.estimatedPricePen)
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -786,8 +795,12 @@ private fun BookingSuccessModal(
 
                 ConfirmationDetailRow(label = "Taller", value = voucher.workshopName)
                 ConfirmationDetailRow(label = "Fecha y Turno", value = "${voucher.scheduledDate} • ${voucher.scheduledTime}")
-                ConfirmationDetailRow(label = "Bahía", value = voucher.bayName)
-                ConfirmationDetailRow(label = "Estimado a Pagar", value = "${voucher.estimatedPen} (Pago presencial)")
+                if (voucher.bayName.isNotBlank()) {
+                    ConfirmationDetailRow(label = "Bahía", value = voucher.bayName)
+                }
+                if (voucher.estimatedPen.isNotBlank()) {
+                    ConfirmationDetailRow(label = "Estimado a Pagar", value = "${voucher.estimatedPen} (Pago presencial)")
+                }
             }
         },
         confirmButton = {

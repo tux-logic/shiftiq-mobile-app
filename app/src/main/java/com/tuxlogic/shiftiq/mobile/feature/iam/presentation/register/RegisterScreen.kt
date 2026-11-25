@@ -1,5 +1,9 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -98,6 +103,27 @@ fun RegisterScreen(
     onRegistrationSuccess: () -> Unit = onBackToLogin
 ) {
     val state by viewModel.uiState.collectAsState()
+    val blePermissions = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+        }
+    }
+    val blePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) {
+            viewModel.onScanBleDevices()
+        }
+    }
 
     RegisterContent(
         state = state,
@@ -126,7 +152,7 @@ fun RegisterScreen(
         onYearChange = viewModel::onYearChange,
         onPlateNumberChange = viewModel::onPlateNumberChange,
         onVinChange = viewModel::onVinChange,
-        onScanBleDevices = viewModel::onScanBleDevices,
+        onScanBleDevices = { blePermissionLauncher.launch(blePermissions) },
         onSelectDongle = viewModel::onSelectDongle,
         // Step OTP
         onOtpCodeChanged = viewModel::onOtpCodeChanged,
@@ -906,28 +932,38 @@ private fun Step2VehicleContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(ShiftIQSuccess.copy(alpha = 0.10f))
-                    .border(BorderStroke(1.dp, ShiftIQSuccess.copy(alpha = 0.35f)), RoundedCornerShape(10.dp))
-                    .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = state.selectedDongleId, color = Slate900, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                    Text(text = "Señal ${state.dongleSignal}", color = Slate500, fontSize = 11.sp)
-                }
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(ShiftIQSuccess.copy(alpha = 0.22f)).padding(horizontal = 8.dp, vertical = 2.dp)
+            if (state.hasPairedDongle) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(ShiftIQSuccess.copy(alpha = 0.10f))
+                        .border(BorderStroke(1.dp, ShiftIQSuccess.copy(alpha = 0.35f)), RoundedCornerShape(10.dp))
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "${state.dongleBattery}%", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = state.selectedDongleId, color = Slate900, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                        Text(text = "Señal ${state.dongleSignal}", color = Slate500, fontSize = 11.sp)
+                    }
+                    if (state.dongleBattery > 0) {
+                        Box(
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(ShiftIQSuccess.copy(alpha = 0.22f)).padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(text = "Listo", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
+            } else {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Opcional: puedes continuar sin dongle y vincularlo después desde el garaje.",
+                    color = Slate500,
+                    fontSize = 11.sp
+                )
             }
         }
     }

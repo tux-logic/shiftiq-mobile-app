@@ -9,6 +9,9 @@ import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchCatalogUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.CreateAppointmentUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetAppointmentsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.vehicles.GetCustomerVehiclesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +35,7 @@ class AppointmentBookingViewModel @Inject constructor(
     private val getBranchCatalog: GetBranchCatalogUseCase,
     private val getCustomerByUserId: GetCustomerByUserIdUseCase,
     private val getCustomerVehicles: GetCustomerVehiclesUseCase,
+    private val getAppointments: GetAppointmentsUseCase,
     private val createAppointment: CreateAppointmentUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -67,30 +71,41 @@ class AppointmentBookingViewModel @Inject constructor(
                 }
 
             val userId = sessionDataStore.userId.firstOrNull()?.value?.toString()
-            val vehicle = if (userId != null) {
-                val customer = (getCustomerByUserId(userId) as? AppResult.Success)?.data
-                val vehicles = customer?.let {
-                    (getCustomerVehicles(CustomerId(it.id)) as? AppResult.Success)?.data.orEmpty()
-                }.orEmpty()
-                vehicles.firstOrNull()?.let {
+            val customer = userId?.let { (getCustomerByUserId(it) as? AppResult.Success)?.data }
+            val vehicle = customer?.let {
+                val vehicles = (getCustomerVehicles(CustomerId(it.id)) as? AppResult.Success)?.data.orEmpty()
+                vehicles.firstOrNull()?.let { vehicle ->
                     B2CVehicleItem(
-                        id = it.id.toString(),
-                        brand = it.brand,
-                        model = it.model,
-                        year = it.year,
-                        plateNumber = it.plateNumber.value,
-                        vin = it.vin.value,
-                        photoUrl = it.photoUrl,
+                        id = vehicle.id.toString(),
+                        brand = vehicle.brand,
+                        model = vehicle.model,
+                        year = vehicle.year,
+                        plateNumber = vehicle.plateNumber.value,
+                        vin = vehicle.vin.value,
+                        photoUrl = vehicle.photoUrl,
                         isMonitored = false,
                         batteryVoltage = null,
                         isPrimary = true
                     )
                 }
-            } else null
+            }
+
+            val branchId = catalogItem?.branchId ?: workshopId
+            val pendingAppointments = customer?.let {
+                (getAppointments(customerId = UUID.fromString(it.id)) as? AppResult.Success)?.data
+                    ?.filter { appointment ->
+                        appointment.status == AppointmentStatus.PENDING &&
+                            appointment.branchId.toString() == branchId
+                    }
+                    .orEmpty()
+            }.orEmpty()
+
+            val slotsForToday = filterOpenSlots(LocalDate.now(), pendingAppointments)
+            val slotsForTomorrow = filterOpenSlots(LocalDate.now().plusDays(1), pendingAppointments)
 
             _uiState.update {
                 it.copy(
-                    workshopId = catalogItem?.branchId ?: workshopId,
+                    workshopId = branchId,
                     workshopName = catalogItem?.displayName.orEmpty().ifBlank { "Workshop" },
                     workshopAddress = catalogItem?.address.orEmpty(),
                     workshopDistrict = catalogItem?.address
@@ -98,14 +113,73 @@ class AppointmentBookingViewModel @Inject constructor(
                         ?.trim()
                         .orEmpty(),
                     selectedVehicle = vehicle,
-                    alternativeBranches = alternatives
+                    alternativeBranches = alternatives,
+                    availableDays = listOf("Hoy", "Mañana"),
+                    availableSlots = slotsForToday.ifEmpty { slotsForTomorrow },
+                    selectedDayIndex = if (slotsForToday.isNotEmpty()) 0 else 1,
+                    selectedSlotIndex = 0,
+                    // Backend appointments API does not assign physical bays.
+                    availableBays = emptyList(),
+                    selectedBayId = "",
+                    estimatedPricePen = ""
                 )
             }
         }
     }
 
     fun onSelectDay(index: Int) {
-        _uiState.update { it.copy(selectedDayIndex = index) }
+        viewModelScope.launch {
+            val booking = _uiState.value
+            val customerId = sessionDataStore.userId.firstOrNull()?.value?.toString()
+                ?.let { (getCustomerByUserId(it) as? AppResult.Success)?.data?.id }
+            val pending = customerId?.let {
+                (getAppointments(customerId = UUID.fromString(it)) as? AppResult.Success)?.data
+                    ?.filter { appointment ->
+                        appointment.status == AppointmentStatus.PENDING &&
+                            appointment.branchId.toString() == booking.workshopId
+                    }
+                    .orEmpty()
+            }.orEmpty()
+            val day = if (index == 0) LocalDate.now() else LocalDate.now().plusDays(1)
+            val slots = filterOpenSlots(day, pending)
+            _uiState.update {
+                it.copy(
+                    selectedDayIndex = index,
+                    availableSlots = slots,
+                    selectedSlotIndex = 0
+                )
+            }
+        }
+    }
+
+    private fun filterOpenSlots(
+        day: LocalDate,
+        pendingAppointments: List<Appointment>
+    ): List<String> {
+        val booked = pendingAppointments.mapNotNull { appointment ->
+            runCatching {
+                LocalDateTime.parse(appointment.scheduledStart, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            }.getOrNull()
+        }.filter { it.toLocalDate() == day }.map { it.toLocalTime() }.toSet()
+
+        val now = LocalDateTime.now()
+        return DEFAULT_SLOTS.mapNotNull { time ->
+            val slotDateTime = LocalDateTime.of(day, time)
+            if (slotDateTime.isBefore(now)) return@mapNotNull null
+            if (booked.contains(time)) return@mapNotNull null
+            time.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US))
+        }
+    }
+
+    companion object {
+        private val DEFAULT_SLOTS = listOf(
+            LocalTime.of(8, 30),
+            LocalTime.of(10, 0),
+            LocalTime.of(11, 30),
+            LocalTime.of(14, 0),
+            LocalTime.of(15, 30),
+            LocalTime.of(17, 0)
+        )
     }
 
     fun onSelectBay(bayId: String) {

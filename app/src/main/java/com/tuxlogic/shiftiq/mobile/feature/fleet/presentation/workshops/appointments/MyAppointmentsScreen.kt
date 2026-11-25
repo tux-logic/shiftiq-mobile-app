@@ -296,8 +296,10 @@ private fun AppointmentItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AppointmentBayBadge(bayNumber = appointment.bayNumber)
-                Spacer(modifier = Modifier.width(8.dp))
+                if (appointment.bayNumber.isNotBlank()) {
+                    AppointmentBayBadge(bayNumber = appointment.bayNumber)
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Icon(
                     imageVector = Icons.Default.Schedule,
                     contentDescription = null,

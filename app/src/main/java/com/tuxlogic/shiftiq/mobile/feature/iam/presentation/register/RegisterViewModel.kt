@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuxlogic.shiftiq.mobile.core.common.ble.ObdBluetoothScanner
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateCustomerProfileUseCase
@@ -18,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +32,8 @@ class RegisterViewModel @Inject constructor(
     private val registerVehicleUseCase: RegisterVehicleUseCase,
     private val lookupIdentityDocumentUseCase: LookupIdentityDocumentUseCase,
     private val sendOtpUseCase: SendOtpUseCase,
-    private val verifyOtpUseCase: VerifyOtpUseCase
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val obdBluetoothScanner: ObdBluetoothScanner
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -38,6 +41,7 @@ class RegisterViewModel @Inject constructor(
 
     private var timerJob: Job? = null
     private var dniLookupJob: Job? = null
+    private var bleScanJob: Job? = null
 
     // Modificadores de Datos del Propietario (Paso 1)
     fun onFullNameChange(value: String) {
@@ -160,21 +164,98 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onScanBleDevices() {
-        viewModelScope.launch {
+        bleScanJob?.cancel()
+        bleScanJob = viewModelScope.launch {
+            if (!obdBluetoothScanner.hasBluetoothHardware()) {
+                _uiState.update {
+                    it.copy(
+                        isScanningBle = false,
+                        errorMessage = "This device does not support Bluetooth. You can finish registration and link an OBD-II dongle later."
+                    )
+                }
+                return@launch
+            }
+            if (!obdBluetoothScanner.isBluetoothEnabled()) {
+                _uiState.update {
+                    it.copy(
+                        isScanningBle = false,
+                        errorMessage = "Turn on Bluetooth to scan for OBD-II adapters."
+                    )
+                }
+                return@launch
+            }
+            val missing = obdBluetoothScanner.missingPermissions()
+            if (missing.isNotEmpty()) {
+                _uiState.update {
+                    it.copy(
+                        isScanningBle = false,
+                        errorMessage = "Grant Bluetooth permissions, then tap scan again."
+                    )
+                }
+                return@launch
+            }
+
+            _uiState.update {
+                it.copy(
+                    isScanningBle = true,
+                    discoveredDongles = emptyList(),
+                    errorMessage = null
+                )
+            }
+
+            var lastDevices = emptyList<RegisterBleDongle>()
+            obdBluetoothScanner.scan()
+                .catch { error ->
+                    _uiState.update {
+                        it.copy(
+                            isScanningBle = false,
+                            errorMessage = error.message
+                                ?: "Bluetooth scan failed. You can continue without a dongle."
+                        )
+                    }
+                }
+                .collect { scanned ->
+                    lastDevices = scanned.map { device ->
+                        RegisterBleDongle(
+                            id = device.id,
+                            name = device.name,
+                            signal = device.signalLabel,
+                            isRecommended = device.isRecommended
+                        )
+                    }
+                    val preferred = lastDevices.firstOrNull { it.isRecommended } ?: lastDevices.firstOrNull()
+                    _uiState.update { state ->
+                        state.copy(
+                            discoveredDongles = lastDevices,
+                            selectedDongleId = preferred?.name ?: state.selectedDongleId,
+                            dongleSignal = preferred?.signal.orEmpty(),
+                            dongleBattery = if (preferred != null) 100 else 0
+                        )
+                    }
+                }
+
             _uiState.update {
                 it.copy(
                     isScanningBle = false,
-                    selectedDongleId = "",
-                    dongleSignal = "",
-                    dongleBattery = 0,
-                    errorMessage = "Bluetooth OBD scanning is not available in this build. You can finish registration without a dongle and link a device later from a workshop."
+                    errorMessage = if (lastDevices.isEmpty()) {
+                        "No OBD-II adapters found nearby. You can finish registration and pair later from Garage."
+                    } else {
+                        null
+                    }
                 )
             }
         }
     }
 
     fun onSelectDongle(dongleId: String) {
-        _uiState.update { it.copy(selectedDongleId = dongleId) }
+        val selected = _uiState.value.discoveredDongles.firstOrNull { it.id == dongleId || it.name == dongleId }
+        _uiState.update {
+            it.copy(
+                selectedDongleId = selected?.name ?: dongleId,
+                dongleSignal = selected?.signal.orEmpty(),
+                dongleBattery = if (selected != null) 100 else 0
+            )
+        }
     }
 
     // Modificadores de OTP (Paso de Verificación)
