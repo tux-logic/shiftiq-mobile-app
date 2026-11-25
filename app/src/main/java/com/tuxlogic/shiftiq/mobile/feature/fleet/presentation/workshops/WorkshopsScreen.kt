@@ -531,11 +531,17 @@ private fun WorkshopCardItem(
             if (!workshop.linkedIssue.isNullOrBlank()) {
                 DtcAlignmentBanner(issue = workshop.linkedIssue)
             }
-            WorkshopCardPricingRow(
-                minPen = workshop.estimatedCostMinPen,
-                maxPen = workshop.estimatedCostMaxPen,
-                slot = workshop.nextAvailableSlot
-            )
+            if (
+                workshop.estimatedCostMinPen > 0.0 ||
+                workshop.estimatedCostMaxPen > 0.0 ||
+                workshop.nextAvailableSlot.isNotBlank()
+            ) {
+                WorkshopCardPricingRow(
+                    minPen = workshop.estimatedCostMinPen,
+                    maxPen = workshop.estimatedCostMaxPen,
+                    slot = workshop.nextAvailableSlot
+                )
+            }
             WorkshopCardActions(
                 onBook = onBook,
                 onViewProfile = onViewProfile
@@ -581,32 +587,53 @@ private fun WorkshopCardHeader(
                     fontWeight = FontWeight.Bold,
                     color = Slate900
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (workshop.rating > 0.0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "★ ${workshop.rating}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ShiftIQWarning
+                        )
+                        Spacer(modifier = Modifier.width(spacing.extraSmall))
+                        Text(
+                            text = if (workshop.reviewCount > 0) {
+                                "(${workshop.reviewCount} reseñas) • ${workshop.district}"
+                            } else {
+                                workshop.district
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Slate500
+                        )
+                    }
+                } else if (workshop.district.isNotBlank()) {
                     Text(
-                        text = "★ ${workshop.rating}",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = ShiftIQWarning
-                    )
-                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                    Text(
-                        text = "(${workshop.reviewCount} reseñas) • ${workshop.district}",
+                        text = workshop.district,
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate500
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = Slate500,
-                        modifier = Modifier.size(spacing.iconSmall)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
+                if (workshop.distanceKm > 0.0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(spacing.iconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(spacing.micro))
+                        Text(
+                            text = "A ${workshop.distanceKm} km de tu ubicación",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Slate500
+                        )
+                    }
+                } else if (workshop.address.isNotBlank()) {
                     Text(
-                        text = "A ${workshop.distanceKm} km de tu ubicación",
+                        text = workshop.address,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Slate500
+                        color = Slate500,
+                        maxLines = 2
                     )
                 }
             }
@@ -709,12 +736,6 @@ private fun DtcAlignmentBanner(
                 )
             }
         }
-        Text(
-            text = "S/ 140 - S/ 180 ESTIMADO",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryBlue
-        )
     }
 }
 
@@ -731,13 +752,24 @@ private fun WorkshopCardPricingRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = Slate500)
-            Text(text = "S/ ${minPen.toInt()} - S/ ${maxPen.toInt()} PEN", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Slate900)
+        if (minPen > 0.0 || maxPen > 0.0) {
+            Column {
+                Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = Slate500)
+                Text(
+                    text = "S/ ${minPen.toInt()} - S/ ${maxPen.toInt()} PEN",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate900
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(text = "Próximo Turno Libre", style = MaterialTheme.typography.labelSmall, color = Slate500)
-            Text(text = slot, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+        if (slot.isNotBlank()) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = "Próximo Turno Libre", style = MaterialTheme.typography.labelSmall, color = Slate500)
+                Text(text = slot, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+            }
         }
     }
 }

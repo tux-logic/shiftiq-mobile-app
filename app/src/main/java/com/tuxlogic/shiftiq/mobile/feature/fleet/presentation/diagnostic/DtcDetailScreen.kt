@@ -34,11 +34,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +52,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
@@ -58,6 +62,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
+import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcAlert
 
 private data class DtcReferenceDetails(
     val title: String,
@@ -144,10 +149,13 @@ fun DtcDetailRoute(
     dtcCode: String,
     onNavigateBack: () -> Unit,
     onNavigateToWorkshops: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: DtcDetailViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val details = referenceDetailsForDtc(dtcCode)
+    val resolvedCode = uiState.dtcCode.ifBlank { dtcCode }
+    val details = mergeLiveDtcDetails(resolvedCode, uiState.alert)
     val reportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { destination ->
@@ -155,14 +163,15 @@ fun DtcDetailRoute(
             val reportLines = listOf(
                 "Fecha: ${java.time.LocalDateTime.now()}",
                 "Origen: telemetría OBD-II del vehículo reportada por ShiftIQ.",
-                "Código DTC: $dtcCode",
+                "Código DTC: $resolvedCode",
                 "Descripción: ${details.title}",
-                "Severidad de referencia: ${details.severity}.",
+                "Severidad: ${details.severity}.",
                 "Ventana sugerida de revisión: próximos ${details.suggestedReviewKm} km.",
                 "Interpretación: ${details.plainLanguage}",
-                "Recomendación: ${details.recommendation}"
-            )
-            PdfDocumentExporter.write(context, destination, "Informe DTC $dtcCode", reportLines)
+                "Recomendación: ${details.recommendation}",
+                uiState.alert?.createdAt?.let { "Detectado: $it" }.orEmpty()
+            ).filter { it.isNotBlank() }
+            PdfDocumentExporter.write(context, destination, "Informe DTC $resolvedCode", reportLines)
                 .onSuccess {
                     Toast.makeText(context, "Informe PDF guardado", Toast.LENGTH_LONG).show()
                 }
@@ -172,27 +181,38 @@ fun DtcDetailRoute(
         }
     }
     DtcDetailScreen(
-        dtcCode = dtcCode,
+        uiState = uiState,
+        details = details,
         onNavigateBack = onNavigateBack,
         onNavigateToWorkshops = onNavigateToWorkshops,
         onDownloadReport = {
-            reportLauncher.launch("ShiftIQ_DTC_${dtcCode}_${System.currentTimeMillis()}.pdf")
+            reportLauncher.launch("ShiftIQ_DTC_${resolvedCode}_${System.currentTimeMillis()}.pdf")
         },
         modifier = modifier
     )
 }
 
+private fun mergeLiveDtcDetails(code: String, alert: DtcAlert?): DtcReferenceDetails {
+    val reference = referenceDetailsForDtc(code)
+    if (alert == null) return reference
+    return reference.copy(
+        title = alert.description.ifBlank { reference.title },
+        severity = alert.severity.toDisplayLabel(),
+        plainLanguage = alert.description.ifBlank { reference.plainLanguage }
+    )
+}
+
 @Composable
-fun DtcDetailScreen(
-    dtcCode: String,
+private fun DtcDetailScreen(
+    uiState: DtcDetailUiState,
+    details: DtcReferenceDetails,
     onNavigateBack: () -> Unit,
     onNavigateToWorkshops: () -> Unit,
     onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val details = referenceDetailsForDtc(dtcCode)
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val dtcCode = uiState.dtcCode
 
     Column(
         modifier = modifier
@@ -202,25 +222,46 @@ fun DtcDetailScreen(
         DtcDetailTopBar(
             dtcCode = dtcCode,
             onNavigateBack = onNavigateBack,
-            statusBarPadding = statusBarPadding
+            statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
-        ) {
-            DtcAlertOverviewCard(dtcCode = dtcCode, details = details)
-            PlainLanguageTranslationCard(details = details)
-            DrivingImpactSection(details = details)
-            TechnicalSpecCard(details = details)
-            EstimateTwinCards()
-            DtcActionButtons(
-                onFindWorkshop = onNavigateToWorkshops,
-                onDownloadReport = onDownloadReport
-            )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryBlue)
+                }
+            }
+            else -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            ) {
+                uiState.errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                DtcAlertOverviewCard(
+                    dtcCode = dtcCode,
+                    details = details,
+                    sourceLabel = if (uiState.alert != null) "Alerta OBD-II en vivo" else "Referencia SAE"
+                )
+                PlainLanguageTranslationCard(details = details)
+                DrivingImpactSection(details = details)
+                TechnicalSpecCard(details = details)
+                EstimateTwinCards()
+                DtcActionButtons(
+                    onFindWorkshop = onNavigateToWorkshops,
+                    onDownloadReport = onDownloadReport
+                )
+            }
         }
     }
 }
@@ -246,6 +287,7 @@ private fun DtcDetailTopBar(
 private fun DtcAlertOverviewCard(
     dtcCode: String,
     details: DtcReferenceDetails,
+    sourceLabel: String,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
@@ -300,7 +342,7 @@ private fun DtcAlertOverviewCard(
             }
             Spacer(modifier = Modifier.height(spacing.smallMedium))
             Text(
-                text = "Referencia · revisar en ${details.suggestedReviewKm} km",
+                text = "$sourceLabel · revisar en ${details.suggestedReviewKm} km",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = ShiftIQWarning
@@ -587,7 +629,8 @@ private fun DtcActionButtons(
 private fun DtcDetailScreenPreview() {
     ShiftIQTheme {
         DtcDetailScreen(
-            dtcCode = "P0135",
+            uiState = DtcDetailUiState(dtcCode = "P0135", isLoading = false),
+            details = referenceDetailsForDtc("P0135"),
             onNavigateBack = {},
             onNavigateToWorkshops = {}
         )

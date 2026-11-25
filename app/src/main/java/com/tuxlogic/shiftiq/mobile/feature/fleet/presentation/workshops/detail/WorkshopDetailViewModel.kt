@@ -3,6 +3,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuxlogic.shiftiq.mobile.core.common.geo.AddressGeocoder
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchCatalogUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetSpecialtiesUseCase
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class WorkshopDetailViewModel @Inject constructor(
     private val getBranchCatalog: GetBranchCatalogUseCase,
     private val getSpecialties: GetSpecialtiesUseCase,
+    private val addressGeocoder: AddressGeocoder,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -64,6 +66,14 @@ class WorkshopDetailViewModel @Inject constructor(
                 is AppResult.Failure -> emptyList()
             }
 
+            val latitude = catalogItem.latitude
+            val longitude = catalogItem.longitude
+            val geocoded = if (latitude == null || longitude == null) {
+                addressGeocoder.geocode(catalogItem.address)
+            } else {
+                null
+            }
+
             _uiState.value = WorkshopDetailUiState.Success(
                 WorkshopDetailData(
                     id = catalogItem.branchId,
@@ -74,12 +84,14 @@ class WorkshopDetailViewModel @Inject constructor(
                     district = catalogItem.address.substringAfterLast(",").trim().ifBlank { catalogItem.address },
                     phone = catalogItem.phone,
                     openingHours = "",
-                    isOpenNow = true,
+                    isOpenNow = false,
                     compatibilityNotice = "Branch available for booking in ShiftIQ.",
                     activeBaysCount = 0,
                     certifiedTechniciansCount = 0,
                     isFavorite = false,
-                    specialties = specialties
+                    specialties = specialties,
+                    latitude = latitude ?: geocoded?.latitude,
+                    longitude = longitude ?: geocoded?.longitude
                 )
             )
         }

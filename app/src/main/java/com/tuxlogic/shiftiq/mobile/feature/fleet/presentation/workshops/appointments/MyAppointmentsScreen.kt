@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.common.geo.openWorkshopDirections
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQEmptyState
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
@@ -276,6 +278,7 @@ private fun AppointmentItemCard(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
+    val context = LocalContext.current
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -420,7 +423,13 @@ private fun AppointmentItemCard(
                     horizontalArrangement = Arrangement.spacedBy(spacing.small)
                 ) {
                     Button(
-                        onClick = { /* Navigation intent */ },
+                        onClick = {
+                            openWorkshopDirections(
+                                context = context,
+                                address = appointment.address,
+                                label = appointment.workshopName
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(spacing.buttonHeight),

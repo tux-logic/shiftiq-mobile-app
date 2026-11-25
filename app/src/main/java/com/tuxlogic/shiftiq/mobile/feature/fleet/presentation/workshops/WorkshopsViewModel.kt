@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuxlogic.shiftiq.mobile.core.common.geo.AddressGeocoder
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
@@ -32,7 +33,8 @@ class WorkshopsViewModel @Inject constructor(
     private val sessionDataStore: SessionDataStore,
     private val getCustomerByUserId: GetCustomerByUserIdUseCase,
     private val getCustomerVehicles: GetCustomerVehiclesUseCase,
-    private val createAppointment: CreateAppointmentUseCase
+    private val createAppointment: CreateAppointmentUseCase,
+    private val addressGeocoder: AddressGeocoder
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WorkshopsUiState())
@@ -82,6 +84,30 @@ class WorkshopsViewModel @Inject constructor(
                     } else null
                 )
             }
+
+            enrichWorkshopCoordinates(workshops)
+        }
+    }
+
+    private suspend fun enrichWorkshopCoordinates(workshops: List<WorkshopItem>) {
+        if (workshops.isEmpty()) return
+        val enriched = workshops.map { workshop ->
+            if (workshop.latitude != null && workshop.longitude != null) {
+                workshop
+            } else {
+                val coords = addressGeocoder.geocode(workshop.address)
+                if (coords != null) {
+                    workshop.copy(latitude = coords.latitude, longitude = coords.longitude)
+                } else {
+                    workshop
+                }
+            }
+        }
+        _uiState.update { current ->
+            current.copy(
+                allWorkshops = enriched,
+                filteredWorkshops = applyFilters(enriched, current.searchQuery, current.selectedFilter)
+            )
         }
     }
 

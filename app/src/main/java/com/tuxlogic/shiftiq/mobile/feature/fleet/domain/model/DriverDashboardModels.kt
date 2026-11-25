@@ -77,7 +77,8 @@ data class WorkshopItem(
     val district: String = "",
     val distanceKm: Double = 0.0,
     val isCertifiedShiftIQ: Boolean = true,
-    val hasFreeBaysToday: Boolean = true,
+    /** Unknown until the catalog exposes live bay occupancy. */
+    val hasFreeBaysToday: Boolean = false,
     val estimatedCostMinPen: Double = 0.0,
     val estimatedCostMaxPen: Double = 0.0,
     val nextAvailableSlot: String = "",

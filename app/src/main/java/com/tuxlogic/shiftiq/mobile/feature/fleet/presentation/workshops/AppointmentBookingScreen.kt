@@ -283,21 +283,12 @@ private fun WorkshopBookingSummaryCard(
                     fontWeight = FontWeight.Bold,
                     color = Slate900
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = ShiftIQWarning,
-                        modifier = Modifier.size(spacing.iconMedium)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(
-                        text = "4.8",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                }
+                Text(
+                    text = "Red certificada",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
+                )
             }
 
             Text(
