@@ -66,6 +66,15 @@ class GarageViewModel @Inject constructor(
 
                         is AppResult.Success -> {
                             val vehicles = vehiclesResult.data
+                            val savedPrimaryId = sessionDataStore.getPrimaryVehicleId(userId)?.toString()
+                            val primaryId = savedPrimaryId?.takeIf { id ->
+                                vehicles.any { vehicle -> vehicle.id.toString() == id }
+                            } ?: vehicles.firstOrNull()?.id?.toString()
+                            if (primaryId != null && primaryId != savedPrimaryId) {
+                                runCatching {
+                                    sessionDataStore.setPrimaryVehicleId(userId, VehicleId(primaryId))
+                                }
+                            }
                             val telemetryByVehicle = vehicles.associate { vehicle ->
                                 val telemetry = getVehicleTelemetryHistory(vehicle.id, page = 0, size = 1)
                                 vehicle.id.toString() to (telemetry as? AppResult.Success)?.data?.firstOrNull()
@@ -96,7 +105,6 @@ class GarageViewModel @Inject constructor(
                                 }
                             }
 
-                            val primaryId = vehicles.firstOrNull()?.id?.toString()
                             primaryVehicleId = primaryId
                             val latestTelemetry = primaryId?.let { telemetryByVehicle[it] }
                             _uiState.update {
