@@ -57,6 +57,8 @@ import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -207,9 +209,10 @@ private fun ProtocolBusHeaderCard(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -253,9 +256,10 @@ private fun CircularProgressSection(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -312,9 +316,10 @@ private fun CanBusTrafficMonitor(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Navy900),
-        border = BorderStroke(spacing.strokeThin, CanBusCyan.copy(alpha = 0.3f))
+        border = BorderStroke(spacing.strokeThin, CanBusCyan.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -384,12 +389,13 @@ private fun EcuInspectionCard(
             .clickable(enabled = ecu.hasDtc && ecu.dtcCode != null) {
                 ecu.dtcCode?.let { onDtcClick(it) }
             },
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(
             spacing.strokeThin,
-            if (ecu.hasDtc) ShiftIQWarning else MaterialTheme.colorScheme.outlineVariant
-        )
+            if (ecu.hasDtc) ShiftIQWarning else ShiftIQBorderSlate
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -456,8 +462,8 @@ private fun DiagnosticsActionButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),
-            shape = RoundedCornerShape(spacing.radiusMedium),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
             Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
             Spacer(modifier = Modifier.width(spacing.small))
