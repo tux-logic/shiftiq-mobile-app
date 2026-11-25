@@ -10,8 +10,10 @@ import com.tuxlogic.shiftiq.mobile.core.common.event.DomainEventBus
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
+import com.tuxlogic.shiftiq.mobile.core.model.VehicleId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
@@ -30,6 +32,7 @@ class SessionDataStoreImpl @Inject constructor(
         val USER_EMAIL = stringPreferencesKey("session_user_email")
         val USER_ROLE = stringPreferencesKey("session_user_role")
         val ACTIVE_BRANCH_ID = stringPreferencesKey("session_active_branch_id")
+        fun primaryVehicleId(userId: UserId) = stringPreferencesKey("primary_vehicle_${userId}")
     }
 
     private val safePreferences: Flow<Preferences> = dataStore.data
@@ -118,6 +121,19 @@ class SessionDataStoreImpl @Inject constructor(
             )
         }
     }
+
+    override suspend fun setPrimaryVehicleId(userId: UserId, vehicleId: VehicleId) {
+        dataStore.edit { prefs ->
+            prefs[Keys.primaryVehicleId(userId)] = vehicleId.toString()
+        }
+    }
+
+    override suspend fun getPrimaryVehicleId(userId: UserId): VehicleId? =
+        safePreferences.map { prefs ->
+            prefs[Keys.primaryVehicleId(userId)]?.let { value ->
+                runCatching { VehicleId(value) }.getOrNull()
+            }
+        }.first()
 
     override suspend fun clearSession() {
         dataStore.edit { prefs ->
