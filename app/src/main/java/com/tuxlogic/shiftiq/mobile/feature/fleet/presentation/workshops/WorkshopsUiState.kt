@@ -11,15 +11,16 @@ enum class WorkshopFilter(val label: String) {
 }
 
 data class WorkshopsUiState(
+    val isLoading: Boolean = false,
     val searchQuery: String = "",
     val selectedFilter: WorkshopFilter = WorkshopFilter.ALL,
     val allWorkshops: List<WorkshopItem> = emptyList(),
     val filteredWorkshops: List<WorkshopItem> = emptyList(),
     val selectedVehicle: B2CVehicleItem? = null,
     val selectedWorkshopForBooking: WorkshopItem? = null,
-    val selectedDate: String = "Hoy, 12 Nov",
+    val selectedDate: String = "Hoy",
     val selectedTimeSlot: String = "3:30 PM",
-    val bookingReason: String = "Diagnóstico preventivo DTC P0135 (Sensor O2)",
+    val bookingReason: String = "",
     val isBookingLoading: Boolean = false,
     val bookingSuccessVoucher: BookingVoucher? = null,
     val errorMessage: String? = null

@@ -4,6 +4,8 @@ import com.tuxlogic.shiftiq.mobile.core.common.result.AppError
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchBay
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchCatalogItem
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchSubscription
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
 import javax.inject.Inject
@@ -16,6 +18,25 @@ class GetBranchesUseCase @Inject constructor(
             return AppResult.Failure(AppError.Validation(details = "workshopId", message = "Workshop ID is required"))
         }
         return coreRepository.getBranches(workshopId)
+    }
+}
+
+class GetBranchCatalogUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(): AppResult<List<BranchCatalogItem>> {
+        return coreRepository.getBranchCatalog()
+    }
+}
+
+class GetBranchBaysUseCase @Inject constructor(
+    private val coreRepository: CoreRepository
+) {
+    suspend operator fun invoke(branchId: String, activeOnly: Boolean = true): AppResult<List<BranchBay>> {
+        if (branchId.isBlank()) {
+            return AppResult.Failure(AppError.Validation(details = "branchId", message = "Branch ID is required"))
+        }
+        return coreRepository.getBranchBays(branchId, activeOnly)
     }
 }
 

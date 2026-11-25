@@ -18,7 +18,41 @@ data class Branch(
     val code: String,
     val name: String,
     val address: String,
-    val phone: String
+    val phone: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+)
+
+data class BranchCatalogItem(
+    val branchId: String,
+    val workshopId: String,
+    val workshopBrandName: String,
+    val workshopBusinessName: String,
+    val branchCode: String,
+    val branchName: String,
+    val address: String,
+    val phone: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val averageRating: Double = 0.0,
+    val reviewCount: Int = 0,
+    val activeBaysCount: Int = 0,
+    val freeBaysToday: Int = 0
+) {
+    val displayName: String
+        get() = listOf(workshopBrandName, branchName)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+            .ifBlank { workshopBusinessName.ifBlank { branchCode } }
+}
+
+data class BranchBay(
+    val id: String,
+    val branchId: String,
+    val code: String,
+    val name: String,
+    val type: String,
+    val active: Boolean = true
 )
 
 data class WorkshopSpecialty(

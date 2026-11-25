@@ -1,5 +1,6 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,21 +30,16 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -54,12 +50,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentListScreen(
     uiState: AppointmentListUiState,
@@ -85,60 +83,43 @@ fun AppointmentListScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Agenda de Citas",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Todas las sedes",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Regresar")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Recargar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreate,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Agendar Cita")
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Filtros por estado
+            ShiftIQPageHeader(
+                title = "Agenda de Citas",
+                subtitle = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Agenda de citas B2B",
+                showBackButton = true,
+                onBackPressed = onNavigateBack,
+                actions = {
+                    IconButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Recargar",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = onNavigateToCreate) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Agendar Cita",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp)
+            ) {
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
@@ -228,7 +209,7 @@ fun AppointmentListScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.filteredAppointments, key = { it.id }) { appointment ->
@@ -241,7 +222,12 @@ fun AppointmentListScreen(
                     }
                 }
             }
+            }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -255,10 +241,10 @@ fun AppointmentCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-        )
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier

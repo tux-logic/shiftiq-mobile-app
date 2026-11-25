@@ -2,7 +2,9 @@ package com.tuxlogic.shiftiq.mobile.core.designsystem.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -11,33 +13,52 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
+/** Shape scale aligned with Flutter (buttons 8, cards 12). */
+private val ShiftIQShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp)
+)
+
+/**
+ * Color schemes mirrored from Flutter `MaterialTheme.lightScheme()` / `darkScheme()`.
+ */
 private val DarkColorScheme = darkColorScheme(
-    primary = ShiftIQPrimary,
-    onPrimary = ShiftIQOnPrimary,
-    primaryContainer = ShiftIQPrimaryContainer,
-    onPrimaryContainer = ShiftIQOnPrimaryContainer,
+    primary = ShiftIQAccentSkyBlue,
+    onPrimary = ShiftIQPrimary,
+    primaryContainer = ShiftIQPrimary,
+    onPrimaryContainer = ShiftIQOnPrimary,
     secondary = ShiftIQSecondary,
-    onSecondary = ShiftIQOnSecondary,
-    secondaryContainer = Color(0xFF1E3A8A),
-    onSecondaryContainer = Color(0xFFBFDBFE),
+    onSecondary = Color(0xFF003735),
+    secondaryContainer = Color(0xFF004F4C),
+    onSecondaryContainer = Color(0xFFBCECE7),
     tertiary = ShiftIQTertiary,
-    onTertiary = ShiftIQOnTertiary,
+    onTertiary = Color(0xFF0D3E1E),
+    tertiaryContainer = Color(0xFF1E5B33),
+    onTertiaryContainer = Color(0xFFC7F5D7),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = ShiftIQError,
+    onErrorContainer = ShiftIQErrorContainer,
     background = ShiftIQBackgroundDark,
-    surface = Navy900,
+    surface = ShiftIQSurfaceDark,
     surfaceContainerLow = Color(0xFF141E33),
     surfaceContainer = Slate800,
     surfaceContainerHigh = Color(0xFF243248),
     surfaceContainerHighest = Slate700,
     onBackground = ShiftIQOnSurfaceDark,
-    onSurface = Slate50,
-    onSurfaceVariant = Slate400,
+    onSurface = ShiftIQOnSurfaceDark,
+    onSurfaceVariant = ShiftIQOnSurfaceVariantDark,
     outline = Slate600,
-    outlineVariant = Color(0xFF1E3A8A),
-    inverseSurface = Color(0xFFFFFFFF),
-    inverseOnSurface = Color(0xFF1E3A8A),
-    error = ShiftIQError,
-    onError = ShiftIQOnError
+    outlineVariant = Slate700,
+    inverseSurface = ShiftIQSurfaceLight,
+    inverseOnSurface = ShiftIQOnSurfaceLight,
+    inversePrimary = ShiftIQPrimary,
+    scrim = Color.Black
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -51,6 +72,12 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = ShiftIQOnSecondaryContainer,
     tertiary = ShiftIQTertiary,
     onTertiary = ShiftIQOnTertiary,
+    tertiaryContainer = ShiftIQTertiaryContainer,
+    onTertiaryContainer = ShiftIQOnTertiaryContainer,
+    error = ShiftIQError,
+    onError = ShiftIQOnError,
+    errorContainer = ShiftIQErrorContainer,
+    onErrorContainer = ShiftIQOnErrorContainer,
     background = ShiftIQBackgroundLight,
     surface = ShiftIQSurfaceLight,
     surfaceContainerLow = Slate50,
@@ -59,19 +86,20 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerHighest = Slate300,
     onBackground = ShiftIQOnSurfaceLight,
     onSurface = ShiftIQOnSurfaceLight,
-    onSurfaceVariant = Slate500,
-    outline = Slate400,
-    outlineVariant = Slate200,
+    onSurfaceVariant = ShiftIQOnSurfaceVariantLight,
+    outline = ShiftIQBorderSlate,
+    outlineVariant = ShiftIQOutlineVariant,
     inverseSurface = Navy900,
     inverseOnSurface = Color(0xFFFFFFFF),
-    error = ShiftIQError,
-    onError = ShiftIQOnError
+    inversePrimary = ShiftIQAccentSkyBlue,
+    scrim = Color.Black
 )
 
 @Composable
 fun ShiftIQTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Desactivado por defecto para preservar identidad de marca
+    // Disabled by default so brand colors stay consistent with Flutter
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -87,6 +115,7 @@ fun ShiftIQTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = ShiftIQTypography,
+            shapes = ShiftIQShapes,
             content = content
         )
     }

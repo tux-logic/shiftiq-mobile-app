@@ -2,25 +2,24 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops.appoint
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -34,13 +33,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -54,18 +53,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.common.geo.openWorkshopDirections
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQEmptyState
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSeverityOrange
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate500
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
@@ -106,7 +112,6 @@ fun MyAppointmentsScreen(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.userMessage) {
@@ -124,8 +129,7 @@ fun MyAppointmentsScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             MyAppointmentsTopBar(
                 onNavigateBack = onNavigateBack,
-                onRefresh = onRefresh,
-                statusBarPadding = statusBarPadding
+                onRefresh = onRefresh
             )
 
             AppointmentTabsHeader(
@@ -143,16 +147,15 @@ fun MyAppointmentsScreen(
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(color = PrimaryBlue)
                 }
             } else if (currentList.isEmpty()) {
                 EmptyAppointmentsView(isUpcoming = uiState.selectedTab == AppointmentTabFilter.UPCOMING)
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
-                    verticalArrangement = Arrangement.spacedBy(spacing.medium)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(items = currentList, key = { it.id.toString() }) { appointment ->
                         AppointmentItemCard(
@@ -185,37 +188,15 @@ fun MyAppointmentsScreen(
 private fun MyAppointmentsTopBar(
     onNavigateBack: () -> Unit,
     onRefresh: () -> Unit,
-    statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = statusBarPadding)
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.small),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Text(
-                text = "Mis Citas de Taller",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+    ShiftIQPageHeader(
+        title = "Mis Citas",
+        subtitle = "Agenda y seguimiento de atención en sede",
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
+        modifier = modifier,
+        actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
@@ -224,7 +205,7 @@ private fun MyAppointmentsTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -235,41 +216,57 @@ private fun AppointmentTabsHeader(
     onTabSelected: (AppointmentTabFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    TabRow(
-        selectedTabIndex = selectedTab.ordinal,
-        modifier = modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surface,
-        indicator = { tabPositions ->
-            TabRowDefaults.SecondaryIndicator(
-                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
-                height = spacing.indicatorHeight,
-                color = PrimaryBlue
+    Column(modifier = modifier.fillMaxWidth().background(Color.White)) {
+        TabRow(
+            selectedTabIndex = selectedTab.ordinal,
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.White,
+            contentColor = PrimaryBlue,
+            divider = {},
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                    height = 2.5.dp,
+                    color = PrimaryBlue
+                )
+            }
+        ) {
+            Tab(
+                selected = selectedTab == AppointmentTabFilter.UPCOMING,
+                onClick = { onTabSelected(AppointmentTabFilter.UPCOMING) },
+                selectedContentColor = PrimaryBlue,
+                unselectedContentColor = Slate500,
+                text = {
+                    Text(
+                        text = "Próximas  $upcomingCount",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selectedTab == AppointmentTabFilter.UPCOMING) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.SemiBold
+                        }
+                    )
+                }
+            )
+            Tab(
+                selected = selectedTab == AppointmentTabFilter.HISTORY,
+                onClick = { onTabSelected(AppointmentTabFilter.HISTORY) },
+                selectedContentColor = PrimaryBlue,
+                unselectedContentColor = Slate500,
+                text = {
+                    Text(
+                        text = "Historial  $historyCount",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selectedTab == AppointmentTabFilter.HISTORY) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.SemiBold
+                        }
+                    )
+                }
             )
         }
-    ) {
-        Tab(
-            selected = selectedTab == AppointmentTabFilter.UPCOMING,
-            onClick = { onTabSelected(AppointmentTabFilter.UPCOMING) },
-            text = {
-                Text(
-                    text = "Próximas ($upcomingCount)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (selectedTab == AppointmentTabFilter.UPCOMING) FontWeight.Bold else FontWeight.Medium
-                )
-            }
-        )
-        Tab(
-            selected = selectedTab == AppointmentTabFilter.HISTORY,
-            onClick = { onTabSelected(AppointmentTabFilter.HISTORY) },
-            text = {
-                Text(
-                    text = "Historial ($historyCount)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (selectedTab == AppointmentTabFilter.HISTORY) FontWeight.Bold else FontWeight.Medium
-                )
-            }
-        )
+        HorizontalDivider(thickness = 1.dp, color = ShiftIQBorderSlate.copy(alpha = 0.6f))
     }
 }
 
@@ -281,95 +278,200 @@ private fun AppointmentItemCard(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
+    val context = LocalContext.current
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AppointmentStatusBadge(status = appointment.status)
-                Text(
-                    text = appointment.appointmentCode,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Slate500
+                if (appointment.bayNumber.isNotBlank()) {
+                    AppointmentBayBadge(bayNumber = appointment.bayNumber)
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = Slate500,
+                    modifier = Modifier.size(14.dp)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = appointment.scheduledTime,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Slate900
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                AppointmentStatusBadge(status = appointment.status)
             }
 
-            Text(
-                text = appointment.workshopName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Slate900
-            )
+            HorizontalDivider(thickness = 1.dp, color = ShiftIQBorderSlate)
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = appointment.address, style = MaterialTheme.typography.bodySmall, color = Slate700)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = appointment.workshopName,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Slate900
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = appointment.address,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Slate500
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Navy900)
+                        .padding(horizontal = 9.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = appointment.vehiclePlate,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = "${appointment.scheduledDate} • ${appointment.scheduledTime}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = Slate900)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Slate100)
+                    .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate.copy(alpha = 0.55f)), RoundedCornerShape(14.dp))
+                    .padding(12.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = appointment.vehicleDescription,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Slate900
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Build,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = appointment.reasonOrService,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryBlue
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${appointment.scheduledDate} · ${appointment.appointmentCode}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Slate500
+                        )
+                    }
+                }
             }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.DirectionsCar, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = "${appointment.vehicleDescription} • Placa ${appointment.vehiclePlate}", style = MaterialTheme.typography.bodySmall, color = Slate700)
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = ShiftIQWarning, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = appointment.bayNumber, style = MaterialTheme.typography.bodySmall, color = Slate700)
-            }
-
-            Text(
-                text = "Motivo: ${appointment.reasonOrService}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Slate500
-            )
 
             if (isUpcoming && appointment.status == "PENDING") {
-                Spacer(modifier = Modifier.height(spacing.extraSmall))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing.small)
                 ) {
                     Button(
-                        onClick = { /* Navigation intent */ },
-                        modifier = Modifier.weight(1f).height(spacing.buttonHeight),
+                        onClick = {
+                            openWorkshopDirections(
+                                context = context,
+                                address = appointment.address,
+                                label = appointment.workshopName
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(spacing.buttonHeight),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(spacing.radiusMedium)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
+                        Icon(
+                            imageVector = Icons.Default.Navigation,
+                            contentDescription = null,
+                            modifier = Modifier.size(spacing.iconMedium)
+                        )
                         Spacer(modifier = Modifier.width(spacing.extraSmall))
-                        Text(text = "Cómo llegar", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Cómo llegar",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     OutlinedButton(
                         onClick = onRequestCancel,
-                        modifier = Modifier.weight(1f).height(spacing.buttonHeight),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(spacing.buttonHeight),
                         border = BorderStroke(spacing.strokeThin, SeverityCrimson),
-                        shape = RoundedCornerShape(spacing.radiusMedium)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Cancel, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(spacing.iconMedium))
+                        Icon(
+                            imageVector = Icons.Default.Cancel,
+                            contentDescription = null,
+                            tint = SeverityCrimson,
+                            modifier = Modifier.size(spacing.iconMedium)
+                        )
                         Spacer(modifier = Modifier.width(spacing.extraSmall))
-                        Text(text = "Cancelar", color = SeverityCrimson, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Cancelar",
+                            color = SeverityCrimson,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -378,24 +480,58 @@ private fun AppointmentItemCard(
 }
 
 @Composable
+private fun AppointmentBayBadge(
+    bayNumber: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(PrimaryBlue.copy(alpha = 0.07f))
+            .border(BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.22f)), RoundedCornerShape(10.dp))
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Build,
+            contentDescription = null,
+            tint = PrimaryBlue,
+            modifier = Modifier.size(13.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = bayNumber,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryBlue
+        )
+    }
+}
+
+@Composable
 private fun AppointmentStatusBadge(
     status: String,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
     val (label, bg, fg) = when (status) {
-        "COMPLETED" -> Triple("Atendida con Éxito", ShiftIQSuccess.copy(alpha = 0.15f), ShiftIQSuccess)
-        "CANCELED" -> Triple("Cancelada", SeverityCrimson.copy(alpha = 0.15f), SeverityCrimson)
-        else -> Triple("Cita Confirmada", PrimaryBlue.copy(alpha = 0.15f), PrimaryBlue)
+        "COMPLETED" -> Triple("Atendida", ShiftIQSuccess.copy(alpha = 0.10f), ShiftIQSuccess)
+        "CANCELED" -> Triple("Cancelada", SeverityCrimson.copy(alpha = 0.10f), SeverityCrimson)
+        "CONFIRMED" -> Triple("Confirmada", ShiftIQSuccess.copy(alpha = 0.10f), ShiftIQSuccess)
+        else -> Triple("Pendiente", ShiftIQSeverityOrange.copy(alpha = 0.10f), ShiftIQSeverityOrange)
     }
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(spacing.radiusSmall))
+            .clip(RoundedCornerShape(20.dp))
             .background(bg)
-            .padding(horizontal = spacing.small, vertical = spacing.micro)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = fg)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = fg
+        )
     }
 }
 
@@ -404,33 +540,19 @@ private fun EmptyAppointmentsView(
     isUpcoming: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
     Box(
-        modifier = modifier.fillMaxSize().padding(spacing.large),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.small)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = Slate500,
-                modifier = Modifier.size(spacing.gaugeSmall)
-            )
-            Text(
-                text = if (isUpcoming) "No tienes citas activas próximas" else "No hay historial de citas anteriores",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Slate700
-            )
-            Text(
-                text = "Reserva una bahía técnica en cualquier taller certificado ShiftIQ desde el buscador.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Slate500
-            )
-        }
+        ShiftIQEmptyState(
+            title = if (isUpcoming) {
+                "No tienes citas activas próximas"
+            } else {
+                "No hay historial de citas anteriores"
+            },
+            message = "Reserva una bahía técnica en cualquier taller certificado ShiftIQ desde el buscador.",
+            icon = Icons.Default.CalendarMonth
+        )
     }
 }
 
@@ -488,7 +610,8 @@ private fun CancelAppointmentDialog(
                 Text(text = "Mantener Cita", color = Slate700, style = MaterialTheme.typography.bodyMedium)
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp),
+        containerColor = Color.White
     )
 }
 

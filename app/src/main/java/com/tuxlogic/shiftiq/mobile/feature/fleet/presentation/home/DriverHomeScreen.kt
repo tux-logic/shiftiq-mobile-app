@@ -48,9 +48,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
@@ -58,6 +61,7 @@ import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverLiveTelemetry
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.DriverVehicleHealth
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.ActiveServiceCard
+import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.CustomerWelcomeHero
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.DtcAlertBanner
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.HealthRingCanvas
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.LiveTelemetryGrid
@@ -116,14 +120,18 @@ fun DriverHomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 110.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.smallMedium)
         ) {
-            DriverGreetingCard(
+            val healthPercent = uiState.vehicleHealth.score.coerceIn(0, 100)
+            val dtcCount = if (uiState.activeDtcAlert != null) 1 else 0
+            CustomerWelcomeHero(
                 driverName = uiState.driverName,
-                driverRole = uiState.driverRole,
-                avatarInitial = uiState.avatarInitial,
-                isObdConnected = uiState.isObdConnected
+                driverEmail = uiState.driverEmail,
+                driverRole = uiState.driverRole.ifBlank { "Cliente" },
+                healthPercent = healthPercent,
+                healthRatio = healthPercent / 100f,
+                dtcCount = dtcCount
             )
 
             ActiveServiceCard(
@@ -151,8 +159,6 @@ fun DriverHomeScreen(
             )
 
             FullScanButton(onClick = onStartFullScan)
-
-            Spacer(modifier = Modifier.height(spacing.medium))
         }
     }
 
@@ -169,184 +175,28 @@ private fun DriverHomeTopBar(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ObdStatusChip(isConnected = isObdConnected)
-
-        Text(
-            text = "Home Dashboard",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-
-        IconButton(
-            onClick = onOpenDrawer,
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.20f))
-        ) {
-            Text(
-                text = avatarInitial,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
-
-@Composable
-private fun ObdStatusChip(
-    isConnected: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(spacing.radiusFull))
-            .background(Navy900)
-            .padding(horizontal = spacing.smallMedium, vertical = spacing.compact),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(spacing.indicatorHeight)
-                .clip(CircleShape)
-                .background(if (isConnected) ShiftIQSuccess else MaterialTheme.colorScheme.error)
-        )
-        Spacer(modifier = Modifier.width(spacing.compact))
-        Text(
-            text = if (isConnected) "OBD2 CONECTADO" else "OBD2 DESCONECTADO",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-private fun DriverGreetingCard(
-    driverName: String,
-    driverRole: String,
-    avatarInitial: String,
-    isObdConnected: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.medium),
-            verticalArrangement = Arrangement.spacedBy(spacing.small)
-        ) {
-            DriverGreetingInfo(
-                driverName = driverName,
-                driverRole = driverRole,
-                avatarInitial = avatarInitial,
-                modifier = Modifier.fillMaxWidth()
-            )
-            DriverObdBadge(
-                isConnected = isObdConnected,
-                modifier = Modifier.align(Alignment.End)
-            )
-        }
-    }
-}
-
-@Composable
-private fun DriverGreetingInfo(
-    driverName: String,
-    driverRole: String,
-    avatarInitial: String,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
+    ShiftIQPageHeader(
+        title = "Portal Cliente",
+        subtitle = if (isObdConnected) "OBD-II conectado" else "OBD-II desconectado",
+        badgeLabel = if (isObdConnected) "EN LINEA" else "OFFLINE",
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(spacing.avatarMedium)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = avatarInitial,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
+        actions = {
+            IconButton(
+                onClick = onOpenDrawer,
+                modifier = Modifier
+                    .size(spacing.badgeHeight + spacing.smallMedium)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.20f))
+            ) {
+                Text(
+                    text = avatarInitial,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(spacing.smallMedium))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "¡Hola, $driverName!",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(spacing.micro))
-            Text(
-                text = driverRole,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun DriverObdBadge(
-    isConnected: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(spacing.radiusMedium))
-            .background(ShiftIQSuccess.copy(alpha = 0.12f))
-            .padding(horizontal = spacing.smallMedium, vertical = spacing.extraSmall),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(spacing.indicatorHeight)
-                .clip(CircleShape)
-                .background(if (isConnected) ShiftIQSuccess else MaterialTheme.colorScheme.error)
-        )
-        Spacer(modifier = Modifier.width(spacing.compact))
-        Text(
-            text = if (isConnected) "OBD-II Conectado" else "Desconectado",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isConnected) ShiftIQSuccess else MaterialTheme.colorScheme.error
-        )
-    }
+    )
 }
 
 @Composable
@@ -362,10 +212,10 @@ private fun VehicleHealthCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -490,12 +340,12 @@ private fun FullScanButton(
         modifier = modifier
             .fillMaxWidth()
             .height(spacing.buttonHeight + spacing.small),
-        shape = RoundedCornerShape(spacing.radiusLarge),
+        shape = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Navy900,
             contentColor = Color.White
         ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = spacing.elevationSmall)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
     ) {
         Icon(
             imageVector = Icons.Default.QrCodeScanner,
@@ -520,9 +370,10 @@ private fun ScanProgressDialog(
     Dialog(onDismissRequest = {}) {
         Card(
             modifier = modifier,
-            shape = RoundedCornerShape(spacing.radiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationMedium)
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(spacing.large),

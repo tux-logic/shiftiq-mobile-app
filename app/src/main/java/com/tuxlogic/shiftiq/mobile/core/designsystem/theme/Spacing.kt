@@ -31,7 +31,7 @@ data class Spacing(
     val iconMedium: Dp = 16.dp,
     val iconLarge: Dp = 20.dp,
     val iconExtraLarge: Dp = 24.dp,
-    val buttonHeight: Dp = 44.dp,
+    val buttonHeight: Dp = 48.dp, // matches Flutter ElevatedButton min height
 
     // Corner Radii Tokens
     val radiusExtraSmall: Dp = 4.dp,

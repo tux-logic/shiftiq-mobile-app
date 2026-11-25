@@ -8,28 +8,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Shield
@@ -40,7 +34,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,8 +47,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
@@ -93,16 +89,17 @@ fun TechnicalInterventionDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        InterventionTopBar(
-            onNavigateBack = onNavigateBack,
-            statusBarPadding = statusBarPadding
+        ShiftIQPageHeader(
+            title = "Detalle de Intervención",
+            subtitle = "Historial técnico certificado",
+            showBackButton = true,
+            onBackPressed = onNavigateBack
         )
 
         when {
@@ -116,7 +113,7 @@ fun TechnicalInterventionDetailScreen(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(spacing.medium),
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.medium)
             ) {
                 MetadataSubBar(expNumber = uiState.expNumber)
@@ -136,59 +133,6 @@ fun TechnicalInterventionDetailScreen(
 
         if (!uiState.isLoading && uiState.errorMessage == null && uiState.voucherId.isNotBlank()) {
             FixedBottomActionFooter(onNavigateToVoucherPdf = onNavigateToVoucherPdf)
-        }
-    }
-}
-
-@Composable
-private fun InterventionTopBar(
-    onNavigateBack: () -> Unit,
-    statusBarPadding: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding + spacing.small,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.extraSmall))
-            Text(
-                text = "Detalle De Intervención",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(spacing.iconLarge)
-            )
         }
     }
 }
@@ -241,9 +185,10 @@ private fun InterventionSummaryCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -465,9 +410,10 @@ private fun CalibrationCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(spacing.radiusSmall),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -525,9 +471,10 @@ private fun ExecutedOperationsSection(
         )
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(spacing.radiusMedium),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(spacing.strokeThin, Slate200)
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -596,9 +543,10 @@ private fun SuppliesUsedSection(
         supplies.forEach { supply ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(spacing.radiusMedium),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(spacing.strokeThin, Slate200)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -669,9 +617,10 @@ private fun TechnicianObservationSection(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -739,8 +688,8 @@ private fun FixedBottomActionFooter(
     ) {
         Button(
             onClick = onNavigateToVoucherPdf,
-            shape = RoundedCornerShape(spacing.radiusSmall),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight)

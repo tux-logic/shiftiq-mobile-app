@@ -3,6 +3,8 @@ package com.tuxlogic.shiftiq.mobile.feature.core.domain.repository
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchBay
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchCatalogItem
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchSubscription
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.DocumentProfileLookup
@@ -53,6 +55,8 @@ interface CoreRepository {
 
     // === Branches ===
     suspend fun getBranches(workshopId: String): AppResult<List<Branch>>
+    suspend fun getBranchCatalog(): AppResult<List<BranchCatalogItem>>
+    suspend fun getBranchBays(branchId: String, activeOnly: Boolean = true): AppResult<List<BranchBay>>
     suspend fun getBranchById(branchId: String): AppResult<Branch>
     suspend fun createBranch(
         workshopId: String,

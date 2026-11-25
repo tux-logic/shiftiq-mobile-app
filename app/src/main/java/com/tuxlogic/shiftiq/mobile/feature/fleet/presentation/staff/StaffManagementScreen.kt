@@ -1,5 +1,6 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.staff
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,13 +32,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -45,8 +43,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -57,13 +53,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPrimaryButton
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQTextField
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StaffManagementScreen(
     uiState: StaffManagementUiState,
@@ -95,55 +92,39 @@ fun StaffManagementScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Equipo y Personal",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Todas las sedes",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Regresar")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Recargar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onOpenAddDialog,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Registrar Personal")
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
+            ShiftIQPageHeader(
+                title = "Equipo y Personal",
+                subtitle = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Personal del taller",
+                showBackButton = true,
+                onBackPressed = onNavigateBack,
+                actions = {
+                    IconButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Recargar",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = onOpenAddDialog) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Registrar Personal",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp)
+            ) {
             TabRow(
                 selectedTabIndex = uiState.selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface
@@ -220,7 +201,7 @@ fun StaffManagementScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(currentList, key = { it.id }) { item ->
@@ -232,7 +213,12 @@ fun StaffManagementScreen(
                     }
                 }
             }
+            }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 
     if (uiState.showAddDialog) {
@@ -309,10 +295,10 @@ fun StaffCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-        )
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier

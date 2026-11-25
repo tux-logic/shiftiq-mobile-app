@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
@@ -35,12 +34,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,15 +50,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
+import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcAlert
 
-private data class DtcDemoDetails(
+private data class DtcReferenceDetails(
     val title: String,
     val severity: String,
     val suggestedReviewKm: Int,
@@ -71,66 +77,70 @@ private data class DtcDemoDetails(
     val recommendation: String
 )
 
-private fun demoDetailsForDtc(code: String): DtcDemoDetails = when (code.uppercase()) {
-    "P0135" -> DtcDemoDetails(
-        title = "Circuito calefactor del sensor de oxígeno",
-        severity = "Media · preventiva",
+/**
+ * Static SAE-style reference text for known DTC codes.
+ * The code itself comes from live telemetry navigation; this block only explains the code.
+ */
+private fun referenceDetailsForDtc(code: String): DtcReferenceDetails = when (code.uppercase()) {
+    "P0135" -> DtcReferenceDetails(
+        title = "O2 sensor heater circuit (Bank 1 Sensor 1)",
+        severity = "Medium",
         suggestedReviewKm = 500,
-        plainLanguage = "La simulación representa una falla del circuito que precalienta el sensor de oxígeno. No es una lectura real del vehículo.",
-        consumptionImpact = "Puede aumentar en frío",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Sin riesgo simulado inmediato",
-        location = "Escape, Banco 1 · Sensor 1",
-        part = "Sensor de oxígeno / circuito calefactor",
-        recommendation = "Verificar el sensor y su circuito con un escáner OBD-II real."
+        plainLanguage = "The oxygen sensor heater circuit may not be warming the sensor as expected.",
+        consumptionImpact = "May increase during cold starts",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Usually no immediate driving risk",
+        location = "Exhaust · Bank 1 · Sensor 1",
+        part = "Oxygen sensor / heater circuit",
+        recommendation = "Have a workshop verify the sensor and wiring with a live OBD-II scan."
     )
-    "P0420" -> DtcDemoDetails(
-        title = "Eficiencia del catalizador baja",
-        severity = "Media · revisar",
+    "P0420" -> DtcReferenceDetails(
+        title = "Catalyst system efficiency below threshold",
+        severity = "Medium",
         suggestedReviewKm = 250,
-        plainLanguage = "La simulación indica que el catalizador trabaja por debajo del umbral esperado. El código es ficticio y no confirma una falla.",
-        consumptionImpact = "Emisiones elevadas simuladas",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Revisión recomendada",
-        location = "Sistema de escape · catalizador",
-        part = "Catalizador y sensores de oxígeno",
-        recommendation = "Comprobar sensores y escape antes de reemplazar piezas."
+        plainLanguage = "The catalytic converter may be operating below the expected efficiency threshold.",
+        consumptionImpact = "Emissions may rise",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Workshop inspection recommended",
+        location = "Exhaust · catalytic converter",
+        part = "Catalyst and oxygen sensors",
+        recommendation = "Confirm sensors and exhaust health before replacing parts."
     )
-    "P0301" -> DtcDemoDetails(
-        title = "Falla de combustión en cilindro 1",
-        severity = "Alta · atención pronta",
+    "P0301" -> DtcReferenceDetails(
+        title = "Cylinder 1 misfire detected",
+        severity = "High",
         suggestedReviewKm = 100,
-        plainLanguage = "La simulación detectó una combustión irregular en el cilindro 1. Es un dato ficticio para probar las alertas.",
-        consumptionImpact = "Consumo irregular simulado",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Evita exigir el motor",
-        location = "Motor · cilindro 1",
-        part = "Bujía, bobina e inyector del cilindro 1",
-        recommendation = "Solicitar una inspección técnica; no sustituir piezas solo por esta demo."
+        plainLanguage = "Cylinder 1 reported irregular combustion.",
+        consumptionImpact = "Uneven fuel use possible",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Avoid heavy acceleration until inspected",
+        location = "Engine · cylinder 1",
+        part = "Spark plug, coil, or injector for cylinder 1",
+        recommendation = "Request a technical inspection promptly."
     )
-    "P0171" -> DtcDemoDetails(
-        title = "Mezcla de combustible demasiado pobre",
-        severity = "Media · revisar",
+    "P0171" -> DtcReferenceDetails(
+        title = "System too lean (Bank 1)",
+        severity = "Medium",
         suggestedReviewKm = 300,
-        plainLanguage = "La simulación representa una mezcla con más aire del esperado. No es una lectura real del motor.",
-        consumptionImpact = "Rendimiento irregular simulado",
-        checkEngineImpact = "Luz activa simulada",
-        safetyImpact = "Revisión preventiva",
-        location = "Admisión · Banco 1",
-        part = "Admisión de aire y sensores de mezcla",
-        recommendation = "Revisar admisión y sensores con equipo de diagnóstico."
+        plainLanguage = "The air-fuel mixture on bank 1 may contain more air than expected.",
+        consumptionImpact = "Performance can feel irregular",
+        checkEngineImpact = "Check-engine light typically on",
+        safetyImpact = "Preventive inspection recommended",
+        location = "Intake · Bank 1",
+        part = "Air intake and mixture sensors",
+        recommendation = "Inspect intake leaks and mixture sensors."
     )
-    else -> DtcDemoDetails(
-        title = "Código de diagnóstico $code",
-        severity = "Demo · validar",
+    else -> DtcReferenceDetails(
+        title = "Diagnostic trouble code $code",
+        severity = "Review",
         suggestedReviewKm = 500,
-        plainLanguage = "Este código se muestra como ejemplo IoT. Confírmalo con una lectura OBD-II real antes de tomar decisiones.",
-        consumptionImpact = "No disponible en demo",
-        checkEngineImpact = "Código de ejemplo",
-        safetyImpact = "No evaluado",
-        location = "No disponible para este código",
-        part = "No se asigna una pieza automáticamente",
-        recommendation = "Confirmar la definición del código con un escáner OBD-II real."
+        plainLanguage = "This code was reported by vehicle telemetry. Use the workshop scan for a definitive interpretation.",
+        consumptionImpact = "Not assessed from this code alone",
+        checkEngineImpact = "Depends on the vehicle ECU",
+        safetyImpact = "Not assessed from this code alone",
+        location = "Not available for this code",
+        part = "Not assigned automatically",
+        recommendation = "Confirm the definition with workshop diagnostic equipment."
     )
 }
 
@@ -139,25 +149,29 @@ fun DtcDetailRoute(
     dtcCode: String,
     onNavigateBack: () -> Unit,
     onNavigateToWorkshops: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: DtcDetailViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val details = demoDetailsForDtc(dtcCode)
+    val resolvedCode = uiState.dtcCode.ifBlank { dtcCode }
+    val details = mergeLiveDtcDetails(resolvedCode, uiState.alert)
     val reportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { destination ->
         if (destination != null) {
             val reportLines = listOf(
                 "Fecha: ${java.time.LocalDateTime.now()}",
-                "Origen: datos IoT ficticios de demostración; no son una lectura real del vehículo.",
-                "Código DTC: $dtcCode",
+                "Origen: telemetría OBD-II del vehículo reportada por ShiftIQ.",
+                "Código DTC: $resolvedCode",
                 "Descripción: ${details.title}",
-                "Severidad de demostración: ${details.severity}.",
+                "Severidad: ${details.severity}.",
                 "Ventana sugerida de revisión: próximos ${details.suggestedReviewKm} km.",
                 "Interpretación: ${details.plainLanguage}",
-                "Recomendación: ${details.recommendation}"
-            )
-            PdfDocumentExporter.write(context, destination, "Informe DTC $dtcCode", reportLines)
+                "Recomendación: ${details.recommendation}",
+                uiState.alert?.createdAt?.let { "Detectado: $it" }.orEmpty()
+            ).filter { it.isNotBlank() }
+            PdfDocumentExporter.write(context, destination, "Informe DTC $resolvedCode", reportLines)
                 .onSuccess {
                     Toast.makeText(context, "Informe PDF guardado", Toast.LENGTH_LONG).show()
                 }
@@ -167,27 +181,38 @@ fun DtcDetailRoute(
         }
     }
     DtcDetailScreen(
-        dtcCode = dtcCode,
+        uiState = uiState,
+        details = details,
         onNavigateBack = onNavigateBack,
         onNavigateToWorkshops = onNavigateToWorkshops,
         onDownloadReport = {
-            reportLauncher.launch("ShiftIQ_DTC_${dtcCode}_${System.currentTimeMillis()}.pdf")
+            reportLauncher.launch("ShiftIQ_DTC_${resolvedCode}_${System.currentTimeMillis()}.pdf")
         },
         modifier = modifier
     )
 }
 
+private fun mergeLiveDtcDetails(code: String, alert: DtcAlert?): DtcReferenceDetails {
+    val reference = referenceDetailsForDtc(code)
+    if (alert == null) return reference
+    return reference.copy(
+        title = alert.description.ifBlank { reference.title },
+        severity = alert.severity.toDisplayLabel(),
+        plainLanguage = alert.description.ifBlank { reference.plainLanguage }
+    )
+}
+
 @Composable
-fun DtcDetailScreen(
-    dtcCode: String,
+private fun DtcDetailScreen(
+    uiState: DtcDetailUiState,
+    details: DtcReferenceDetails,
     onNavigateBack: () -> Unit,
     onNavigateToWorkshops: () -> Unit,
     onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val details = demoDetailsForDtc(dtcCode)
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val dtcCode = uiState.dtcCode
 
     Column(
         modifier = modifier
@@ -197,26 +222,46 @@ fun DtcDetailScreen(
         DtcDetailTopBar(
             dtcCode = dtcCode,
             onNavigateBack = onNavigateBack,
-            statusBarPadding = statusBarPadding
+            statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
-        ) {
-            DtcAlertOverviewCard(dtcCode = dtcCode, details = details)
-            PlainLanguageTranslationCard(details = details)
-            DrivingImpactSection(details = details)
-            TechnicalSpecCard(details = details)
-            EstimateTwinCards()
-            DtcActionButtons(
-                onFindWorkshop = onNavigateToWorkshops,
-                onDownloadReport = onDownloadReport
-            )
-            Spacer(modifier = Modifier.height(spacing.medium))
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryBlue)
+                }
+            }
+            else -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            ) {
+                uiState.errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                DtcAlertOverviewCard(
+                    dtcCode = dtcCode,
+                    details = details,
+                    sourceLabel = if (uiState.alert != null) "Alerta OBD-II en vivo" else "Referencia SAE"
+                )
+                PlainLanguageTranslationCard(details = details)
+                DrivingImpactSection(details = details)
+                TechnicalSpecCard(details = details)
+                EstimateTwinCards()
+                DtcActionButtons(
+                    onFindWorkshop = onNavigateToWorkshops,
+                    onDownloadReport = onDownloadReport
+                )
+            }
         }
     }
 }
@@ -228,65 +273,30 @@ private fun DtcDetailTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Row(
+    ShiftIQPageHeader(
+        title = "Diagnóstico $dtcCode",
+        subtitle = "Código DTC activo · telemetría OBD-II",
+        badgeLabel = dtcCode,
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
         modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = spacing.medium,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Atrás",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.small))
-            Text(
-                text = "Detalle de Diagnóstico",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(Color.White.copy(alpha = 0.15f))
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = dtcCode,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            )
-        }
-    }
+    )
 }
 
 @Composable
 private fun DtcAlertOverviewCard(
     dtcCode: String,
-    details: DtcDemoDetails,
+    details: DtcReferenceDetails,
+    sourceLabel: String,
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(spacing.strokeMedium, ShiftIQWarning),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -332,7 +342,7 @@ private fun DtcAlertOverviewCard(
             }
             Spacer(modifier = Modifier.height(spacing.smallMedium))
             Text(
-                text = "Lectura ficticia · revisar en ${details.suggestedReviewKm} km",
+                text = "$sourceLabel · revisar en ${details.suggestedReviewKm} km",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = ShiftIQWarning
@@ -360,13 +370,14 @@ private fun DtcUrgencyPill(severity: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlainLanguageTranslationCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun PlainLanguageTranslationCard(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -390,7 +401,7 @@ private fun PlainLanguageTranslationCard(details: DtcDemoDetails, modifier: Modi
 }
 
 @Composable
-private fun DrivingImpactSection(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun DrivingImpactSection(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -436,9 +447,10 @@ private fun ImpactCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -469,13 +481,14 @@ private fun ImpactCard(
 }
 
 @Composable
-private fun TechnicalSpecCard(details: DtcDemoDetails, modifier: Modifier = Modifier) {
+private fun TechnicalSpecCard(details: DtcReferenceDetails, modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -535,9 +548,10 @@ private fun EstimateMetricCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -588,8 +602,8 @@ private fun DtcActionButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),
-            shape = RoundedCornerShape(spacing.radiusMedium),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
             Icon(Icons.Default.Place, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
             Spacer(modifier = Modifier.width(spacing.small))
@@ -615,7 +629,8 @@ private fun DtcActionButtons(
 private fun DtcDetailScreenPreview() {
     ShiftIQTheme {
         DtcDetailScreen(
-            dtcCode = "P0135",
+            uiState = DtcDetailUiState(dtcCode = "P0135", isLoading = false),
+            details = referenceDetailsForDtc("P0135"),
             onNavigateBack = {},
             onNavigateToWorkshops = {}
         )

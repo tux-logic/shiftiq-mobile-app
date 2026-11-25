@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +17,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 
 @Composable
 fun ShiftIQTextField(
@@ -35,6 +36,7 @@ fun ShiftIQTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
+    val spacing = MaterialTheme.spacing
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -50,12 +52,16 @@ fun ShiftIQTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.radiusSmall),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900,
-            unfocusedTextColor = Slate900,
-            errorTextColor = Slate900,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            errorTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }

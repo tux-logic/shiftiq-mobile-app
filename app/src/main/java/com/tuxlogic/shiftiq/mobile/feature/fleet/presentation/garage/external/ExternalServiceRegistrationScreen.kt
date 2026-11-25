@@ -9,14 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CameraAlt
@@ -32,7 +28,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Paid
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
@@ -71,9 +66,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -135,23 +132,24 @@ fun ExternalServiceRegistrationScreen(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        ExternalServiceTopBar(
-            onNavigateBack = onNavigateBack,
-            statusBarPadding = statusBarPadding
+        ShiftIQPageHeader(
+            title = "Registrar Servicio Externo",
+            subtitle = "Registro fuera de red certificada",
+            showBackButton = true,
+            onBackPressed = onNavigateBack
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(spacing.medium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             InfoBannerSection()
@@ -219,66 +217,14 @@ fun ExternalServiceRegistrationScreen(
 }
 
 @Composable
-private fun ExternalServiceTopBar(
-    onNavigateBack: () -> Unit,
-    statusBarPadding: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding + spacing.small,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.extraSmall))
-            Text(
-                text = "Registrar Servicio Externo",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(spacing.iconLarge)
-            )
-        }
-    }
-}
-
-@Composable
 private fun InfoBannerSection(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -574,9 +520,10 @@ private fun ReceiptUploadCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = Slate100.copy(alpha = 0.5f)),
-        border = BorderStroke(spacing.strokeThin, Slate300)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -715,9 +662,10 @@ private fun TelematicsCheckboxCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) },
-        shape = RoundedCornerShape(spacing.radiusSmall),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -728,7 +676,7 @@ private fun TelematicsCheckboxCard(
             Checkbox(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                colors = CheckboxDefaults.colors(checkedColor = Navy900)
+                colors = CheckboxDefaults.colors(checkedColor = PrimaryBlue)
             )
             Spacer(modifier = Modifier.width(spacing.extraSmall))
             Column(modifier = Modifier.weight(1f)) {
@@ -763,8 +711,8 @@ private fun ActionButtonsSection(
         Button(
             onClick = onSave,
             enabled = !isLoading,
-            shape = RoundedCornerShape(spacing.radiusSmall),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight)

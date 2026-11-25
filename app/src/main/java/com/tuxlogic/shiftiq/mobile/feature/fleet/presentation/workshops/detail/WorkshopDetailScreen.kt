@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
@@ -40,6 +41,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,14 +50,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.common.geo.openWorkshopDirections
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -132,7 +139,7 @@ fun WorkshopDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = spacing.medium, vertical = spacing.smallMedium)
+                            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp)
                     )
                 }
             }
@@ -149,36 +156,13 @@ private fun WorkshopDetailTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = statusBarPadding)
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.small),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                modifier = Modifier.weight(1f).padding(horizontal = spacing.small)
-            )
+    ShiftIQPageHeader(
+        title = title,
+        subtitle = "Perfil del taller certificado",
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
+        modifier = modifier,
+        actions = {
             IconButton(onClick = onToggleFavorite) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -187,7 +171,7 @@ private fun WorkshopDetailTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -197,31 +181,65 @@ private fun WorkshopDetailContent(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
+    val context = LocalContext.current
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(spacing.medium)
     ) {
         WorkshopHeroCard(workshop = workshop)
         WorkshopCompatibilityCard(notice = workshop.compatibilityNotice)
-        WorkshopInfrastructureCard(
-            activeBays = workshop.activeBaysCount,
-            technicians = workshop.certifiedTechniciansCount
-        )
-        WorkshopSpecialtiesSection(specialties = workshop.specialties)
+        if (workshop.activeBaysCount > 0 || workshop.certifiedTechniciansCount > 0) {
+            WorkshopInfrastructureCard(
+                activeBays = workshop.activeBaysCount,
+                technicians = workshop.certifiedTechniciansCount
+            )
+        }
+        if (workshop.specialties.isNotEmpty()) {
+            WorkshopSpecialtiesSection(specialties = workshop.specialties)
+        }
         Spacer(modifier = Modifier.height(spacing.small))
+        OutlinedButton(
+            onClick = {
+                openWorkshopDirections(
+                    context = context,
+                    address = workshop.address,
+                    latitude = workshop.latitude,
+                    longitude = workshop.longitude,
+                    label = workshop.name
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(spacing.buttonHeight),
+            border = BorderStroke(spacing.strokeThin, PrimaryBlue),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Navigation,
+                contentDescription = null,
+                tint = PrimaryBlue,
+                modifier = Modifier.size(spacing.iconMedium)
+            )
+            Spacer(modifier = Modifier.width(spacing.small))
+            Text(
+                text = "Cómo llegar",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyMedium,
+                color = PrimaryBlue
+            )
+        }
         Button(
             onClick = onNavigateToBooking,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-            shape = RoundedCornerShape(spacing.radiusMedium)
+            shape = RoundedCornerShape(14.dp)
         ) {
             Icon(imageVector = Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
             Spacer(modifier = Modifier.width(spacing.small))
             Text(text = "Agendar Cita en este Taller", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
         }
-        Spacer(modifier = Modifier.height(spacing.large))
     }
 }
 
@@ -233,14 +251,15 @@ private fun WorkshopHeroCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             Row(
@@ -248,41 +267,59 @@ private fun WorkshopHeroCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = ShiftIQWarning, modifier = Modifier.size(spacing.iconMedium))
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(text = "${workshop.rating}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Slate900)
-                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                    Text(text = "(${workshop.reviewCount} reseñas)", style = MaterialTheme.typography.bodySmall, color = Slate500)
+                if (workshop.rating > 0.0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = ShiftIQWarning, modifier = Modifier.size(spacing.iconMedium))
+                        Spacer(modifier = Modifier.width(spacing.micro))
+                        Text(text = "${workshop.rating}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Slate900)
+                        if (workshop.reviewCount > 0) {
+                            Spacer(modifier = Modifier.width(spacing.extraSmall))
+                            Text(text = "(${workshop.reviewCount} reseñas)", style = MaterialTheme.typography.bodySmall, color = Slate500)
+                        }
+                    }
+                } else {
+                    Text(
+                        text = workshop.district.ifBlank { "Taller ShiftIQ" },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Slate500
+                    )
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(spacing.radiusSmall))
-                        .background(ShiftIQSuccess.copy(alpha = 0.15f))
-                        .padding(horizontal = spacing.small, vertical = spacing.micro)
-                ) {
-                    Text(text = "Abierto ahora", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ShiftIQSuccess)
+                if (workshop.isOpenNow) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(spacing.radiusSmall))
+                            .background(ShiftIQSuccess.copy(alpha = 0.15f))
+                            .padding(horizontal = spacing.small, vertical = spacing.micro)
+                    ) {
+                        Text(text = "Abierto ahora", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ShiftIQSuccess)
+                    }
                 }
             }
 
             Text(text = workshop.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Slate900)
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = workshop.address, style = MaterialTheme.typography.bodySmall, color = Slate700)
+            if (workshop.address.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text(text = workshop.address, style = MaterialTheme.typography.bodySmall, color = Slate700)
+                }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = workshop.openingHours, style = MaterialTheme.typography.bodySmall, color = Slate700)
+            if (workshop.openingHours.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text(text = workshop.openingHours, style = MaterialTheme.typography.bodySmall, color = Slate700)
+                }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
-                Spacer(modifier = Modifier.width(spacing.extraSmall))
-                Text(text = workshop.phone, style = MaterialTheme.typography.bodySmall, color = Slate700)
+            if (workshop.phone.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = Slate500, modifier = Modifier.size(spacing.iconSmall))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
+                    Text(text = workshop.phone, style = MaterialTheme.typography.bodySmall, color = Slate700)
+                }
             }
         }
     }
@@ -334,14 +371,15 @@ private fun WorkshopInfrastructureCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -372,14 +410,15 @@ private fun WorkshopSpecialtiesSection(
         specialties.forEach { item ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(spacing.radiusMedium),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(spacing.medium),
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(spacing.micro)
                 ) {
                     Row(
@@ -388,16 +427,26 @@ private fun WorkshopSpecialtiesSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = item.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.weight(1f))
-                        Text(text = "S/ ${item.estimatedPricePen.toInt()}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                        if (item.estimatedPricePen > 0.0) {
+                            Text(text = "S/ ${item.estimatedPricePen.toInt()}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                        }
                     }
-                    Text(text = item.description, style = MaterialTheme.typography.bodySmall, color = Slate500)
-                    Spacer(modifier = Modifier.height(spacing.micro))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "⏱ ~${item.estimatedDurationMinutes} min", style = MaterialTheme.typography.labelSmall, color = Slate700)
-                        Text(text = "🛡 Garantía ${item.warrantyDays} días", style = MaterialTheme.typography.labelSmall, color = ShiftIQSuccess)
+                    if (item.description.isNotBlank()) {
+                        Text(text = item.description, style = MaterialTheme.typography.bodySmall, color = Slate500)
+                    }
+                    if (item.estimatedDurationMinutes > 0 || item.warrantyDays > 0) {
+                        Spacer(modifier = Modifier.height(spacing.micro))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            if (item.estimatedDurationMinutes > 0) {
+                                Text(text = "~${item.estimatedDurationMinutes} min", style = MaterialTheme.typography.labelSmall, color = Slate700)
+                            }
+                            if (item.warrantyDays > 0) {
+                                Text(text = "Garantía ${item.warrantyDays} días", style = MaterialTheme.typography.labelSmall, color = ShiftIQSuccess)
+                            }
+                        }
                     }
                 }
             }

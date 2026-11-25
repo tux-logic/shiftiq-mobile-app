@@ -1,5 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.core.presentation.branches
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,17 +29,12 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,15 +42,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQButton
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BranchManagementScreen(
     workshopId: String,
@@ -78,7 +78,6 @@ fun BranchManagementScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BranchManagementContent(
     uiState: BranchManagementUiState,
@@ -88,53 +87,36 @@ fun BranchManagementContent(
     onNavigateToCreateBranch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Sedes del Taller",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreateBranch,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Nueva Sede"
-                )
-            }
-        },
+    Column(
         modifier = modifier
-    ) { paddingValues ->
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ShiftIQPageHeader(
+            title = "Sedes del Taller",
+            subtitle = "Sedes",
+            showBackButton = true,
+            onBackPressed = onNavigateBack,
+            actions = {
+                IconButton(onClick = onNavigateToCreateBranch) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Nueva Sede",
+                        tint = Color.White
+                    )
+                }
+            }
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp)
         ) {
             when {
                 uiState.isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
+                        color = PrimaryBlue
                     )
                 }
                 uiState.errorMessage != null -> {
@@ -206,9 +188,7 @@ fun BranchManagementContent(
                 }
                 else -> {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(uiState.branches) { branch ->
@@ -235,14 +215,10 @@ fun BranchCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isActive) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            }
-        )
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -264,14 +240,14 @@ fun BranchCard(
                     Text(
                         text = "Código: ${branch.code}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = PrimaryBlue
                     )
                 }
 
                 if (isActive) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primary
+                        color = PrimaryBlue
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

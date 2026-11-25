@@ -1,5 +1,9 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.register
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,22 +13,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Refresh
@@ -34,20 +33,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +56,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthErrorBanner
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthLabeledField
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthPrimaryButton
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthScaffold
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowBack
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowForward
@@ -79,10 +76,14 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.smartphone
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.syncIcon
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibility
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.visibilityOff
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavActivePill
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQAccentSkyBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate50
@@ -92,6 +93,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate700
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate800
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.TelematicsGreen
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.WalBufferAmber
 
 @Composable
 fun RegisterScreen(
@@ -101,6 +103,27 @@ fun RegisterScreen(
     onRegistrationSuccess: () -> Unit = onBackToLogin
 ) {
     val state by viewModel.uiState.collectAsState()
+    val blePermissions = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+        }
+    }
+    val blePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) {
+            viewModel.onScanBleDevices()
+        }
+    }
 
     RegisterContent(
         state = state,
@@ -129,7 +152,7 @@ fun RegisterScreen(
         onYearChange = viewModel::onYearChange,
         onPlateNumberChange = viewModel::onPlateNumberChange,
         onVinChange = viewModel::onVinChange,
-        onScanBleDevices = viewModel::onScanBleDevices,
+        onScanBleDevices = { blePermissionLauncher.launch(blePermissions) },
         onSelectDongle = viewModel::onSelectDongle,
         // Step OTP
         onOtpCodeChanged = viewModel::onOtpCodeChanged,
@@ -138,7 +161,6 @@ fun RegisterScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterContent(
     state: RegisterUiState,
@@ -172,56 +194,47 @@ fun RegisterContent(
     onResendOtp: () -> Unit = {}
 ) {
     val topBarTitle = when (state.step) {
-        RegisterStep.STEP_1_USER -> "Registro de Conductor"
+        RegisterStep.STEP_1_USER -> "Crear cuenta"
         RegisterStep.STEP_2_VEHICLE -> "Vehículo y Dongle"
         RegisterStep.STEP_3_CONFIRM -> "Confirmación Técnica"
         RegisterStep.OTP -> "Verificación de Correo"
         RegisterStep.SUCCESS -> "Registro Exitoso"
-        RegisterStep.ERROR -> "Registro de Conductor"
+        RegisterStep.ERROR -> "Crear cuenta"
+    }
+    val subtitle = when (state.step) {
+        RegisterStep.STEP_1_USER -> "Registra tus datos para acceder al portal cliente"
+        RegisterStep.STEP_2_VEHICLE -> "Vincula tu vehículo y el dongle OBD-II"
+        RegisterStep.STEP_3_CONFIRM -> "Revisa la información antes de continuar"
+        RegisterStep.OTP -> "Ingresa el código de 6 dígitos enviado a tu correo"
+        RegisterStep.SUCCESS -> "Tu cuenta quedó lista para iniciar sesión"
+        RegisterStep.ERROR -> "Corrige los datos o recupera el acceso existente"
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Color.White,
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            TopAppBar(
-                title = {
+    AuthScaffold(
+        title = topBarTitle,
+        subtitle = subtitle,
+        showBackButton = true,
+        showLogo = false,
+        onBack = onBack,
+        footer = {
+            if (state.step == RegisterStep.STEP_1_USER) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("¿Ya tienes cuenta? ", color = SoftSlate, fontSize = 13.sp)
                     Text(
-                        text = topBarTitle,
-                        color = Color(0xFF203B82),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "Inicia sesión",
+                        color = ShiftIQPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(onClick = onNavigateToLogin)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = arrowBack,
-                            contentDescription = "Atrás",
-                            tint = Color(0xFF203B82),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+                }
+            }
         }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .navigationBarsPadding()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                // Stepper visible en los primeros 3 pasos
+    ) {
                 if (state.step in listOf(RegisterStep.STEP_1_USER, RegisterStep.STEP_2_VEHICLE, RegisterStep.STEP_3_CONFIRM)) {
                     WizardStepper(
                         currentStep = when (state.step) {
@@ -230,7 +243,7 @@ fun RegisterContent(
                             else -> 3
                         }
                     )
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
                 when (state.step) {
@@ -299,10 +312,10 @@ fun RegisterContent(
                         )
                     }
                 }
-            }
-        }
     }
 }
+
+private val SoftSlate = Slate500
 
 // Registration progress tabs. Stages are intentionally informational; the existing
 // Back and Continue actions remain the only controls that advance the registration flow.
@@ -313,7 +326,7 @@ private fun WizardStepper(currentStep: Int) {
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFE4E8F1))
+        border = BorderStroke(1.dp, Slate200)
     ) {
         Row(
             modifier = Modifier
@@ -324,13 +337,13 @@ private fun WizardStepper(currentStep: Int) {
             StepItem(1, "Propietario", currentStep >= 1, currentStep == 1)
             HorizontalDivider(
                 modifier = Modifier.weight(1f).padding(horizontal = 7.dp),
-                color = if (currentStep > 1) Color(0xFF203B82) else Slate200,
+                color = if (currentStep > 1) ShiftIQPrimary else Slate200,
                 thickness = 2.dp
             )
             StepItem(2, "Vehículo", currentStep >= 2, currentStep == 2)
             HorizontalDivider(
                 modifier = Modifier.weight(1f).padding(horizontal = 7.dp),
-                color = if (currentStep > 2) Color(0xFF203B82) else Slate200,
+                color = if (currentStep > 2) ShiftIQPrimary else Slate200,
                 thickness = 2.dp
             )
             StepItem(3, "Confirmar", currentStep >= 3, currentStep == 3)
@@ -350,10 +363,10 @@ private fun StepItem(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(if (isActive) Color(0xFF203B82) else Color.White)
+                .background(if (isActive) ShiftIQPrimary else Color.White)
                 .border(
                     width = if (isCurrent) 2.dp else 1.dp,
-                    color = if (isActive) Color(0xFF203B82) else Slate400,
+                    color = if (isActive) ShiftIQPrimary else Slate400,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -368,7 +381,7 @@ private fun StepItem(
         Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = title,
-            color = if (isCurrent) Color(0xFF203B82) else Slate500,
+            color = if (isCurrent) ShiftIQPrimary else Slate500,
             fontSize = 10.sp,
             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1
@@ -396,7 +409,7 @@ private fun Step1OwnerContent(
     onNavigateToLogin: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.width(4.dp).height(20.dp).background(Color(0xFF203B82), RoundedCornerShape(2.dp)))
+        Box(modifier = Modifier.width(4.dp).height(20.dp).background(ShiftIQPrimary, RoundedCornerShape(2.dp)))
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "Paso 1: Datos del Propietario",
@@ -415,254 +428,200 @@ private fun Step1OwnerContent(
 
     Spacer(modifier = Modifier.height(14.dp))
 
-    Text(text = "Nombre Completo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
     val showNameError = state.fullNameError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Nombre Completo *",
         value = state.fullName,
         onValueChange = onFullNameChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Rodrigo Alarcón Flores", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = if (showNameError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
+        hint = "Rodrigo Alarcón Flores",
+        leadingIcon = person,
         isError = showNameError,
-        supportingText = {
-            state.fullNameError?.let { errorText ->
-                Text(text = errorText, color = SeverityCrimson, fontSize = 11.sp)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        errorMessage = state.fullNameError,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next)
     )
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Documento de Identidad (DNI)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Documento de Identidad (DNI) *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "8 dígitos", color = Slate500, fontSize = 11.sp)
-    }
-    Spacer(modifier = Modifier.height(4.dp))
     val showDniError = (state.documentNumber.isNotEmpty() && !state.isDniValid) || state.documentError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Documento de Identidad (DNI) *",
         value = state.documentNumber,
         onValueChange = onDocumentNumberChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("47891234", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = if (showDniError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
+        hint = "47891234",
+        leadingIcon = badgeIcon,
         isError = showDniError,
-        supportingText = {
-            if (showDniError) {
-                Text(
-                    text = state.documentError ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isLookingUpDni) {
-                Text(text = "Consultando en RENIEC...", color = Slate500, fontSize = 11.sp)
-            } else if (state.dniVerified) {
-                Text(text = "✓ DNI verificado en RENIEC", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            } else if (state.isDniValid) {
-                Text(text = "✓ DNI válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            } else {
-                Text(text = "8 dígitos numéricos", color = Slate500, fontSize = 11.sp)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        errorMessage = state.documentError
+            ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
     )
-
-    Spacer(modifier = Modifier.height(10.dp))
-
-    // Teléfono Celular WhatsApp
-    Text(text = "Teléfono Celular WhatsApp *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
-    val showPhoneError = (state.phone.isNotEmpty() && !state.isPhoneValid) || state.phoneError != null
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Box(
-            modifier = Modifier
-                .height(56.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Slate100)
-                .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(12.dp))
-                .padding(horizontal = 14.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "+51", color = Slate800, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    if (!showDniError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        val dniHelper = when {
+            state.isLookingUpDni -> "Consultando en RENIEC..."
+            state.dniVerified -> "✓ DNI verificado en RENIEC"
+            state.isDniValid -> "✓ DNI válido"
+            else -> "8 dígitos numéricos"
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        OutlinedTextField(
-            value = state.phone,
-            onValueChange = onPhoneChange,
-            modifier = Modifier.fillMaxWidth(),
-            textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-            placeholder = { Text("987654321", color = Slate400, fontSize = 14.sp) },
-            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = if (showPhoneError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-            singleLine = true,
-            isError = showPhoneError,
-            supportingText = {
-                if (showPhoneError) {
-                    Text(
-                        text = state.phoneError ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
-                        color = SeverityCrimson,
-                        fontSize = 11.sp
-                    )
-                } else if (state.isPhoneValid) {
-                    Text(text = "✓ Celular válido para alertas", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                } else {
-                    Text(text = "9 dígitos sin código de país", color = Slate500, fontSize = 11.sp)
-                }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-                errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-            )
+        val dniHelperColor = when {
+            state.dniVerified || state.isDniValid -> TelematicsGreen
+            else -> Slate500
+        }
+        Text(
+            text = dniHelper,
+            color = dniHelperColor,
+            fontSize = 11.sp,
+            fontWeight = if (state.dniVerified || state.isDniValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
         )
     }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Correo Electrónico
-    Text(text = "Correo Electrónico *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
-    val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = onEmailChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("usuario@ejemplo.com", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = if (showEmailError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
-        isError = showEmailError,
-        supportingText = {
-            if (showEmailError) {
-                Text(
-                    text = state.emailError ?: "Ingresa un correo electrónico válido",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isEmailValid) {
-                Text(text = "✓ Correo válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+    val showPhoneError = (state.phone.isNotEmpty() && !state.isPhoneValid) || state.phoneError != null
+    AuthLabeledField(
+        label = "Teléfono Celular WhatsApp *",
+        value = state.phone,
+        onValueChange = onPhoneChange,
+        hint = "987654321",
+        leadingIcon = smartphone,
+        isError = showPhoneError,
+        errorMessage = state.phoneError
+            ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
     )
+    if (!showPhoneError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        val phoneHelper = if (state.isPhoneValid) {
+            "✓ Celular válido para alertas (+51)"
+        } else {
+            "9 dígitos sin código de país (+51)"
+        }
+        Text(
+            text = phoneHelper,
+            color = if (state.isPhoneValid) TelematicsGreen else Slate500,
+            fontSize = 11.sp,
+            fontWeight = if (state.isPhoneValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Contraseña
-    Text(text = "Contraseña *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
+    val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
+    AuthLabeledField(
+        label = "Correo Electrónico *",
+        value = state.email,
+        onValueChange = onEmailChange,
+        hint = "usuario@ejemplo.com",
+        leadingIcon = mailOutline,
+        isError = showEmailError,
+        errorMessage = state.emailError ?: "Ingresa un correo electrónico válido",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+    )
+    if (!showEmailError && state.isEmailValid) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "✓ Correo válido",
+            color = TelematicsGreen,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
     val showPasswordError = (state.password.isNotEmpty() && !state.isPasswordValid) || state.passwordError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Contraseña *",
         value = state.password,
         onValueChange = onPasswordChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Mínimo 8 caracteres", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = if (showPasswordError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        trailingIcon = {
-            IconButton(onClick = onTogglePasswordVisibility) {
-                Icon(imageVector = if (state.isPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
-            }
-        },
-        singleLine = true,
-        visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        hint = "Mínimo 8 caracteres",
+        leadingIcon = lockOutline,
         isError = showPasswordError,
-        supportingText = {
-            if (showPasswordError) {
+        errorMessage = run {
+            if (state.passwordError != null) {
+                state.passwordError
+            } else if (showPasswordError) {
                 val missing = mutableListOf<String>()
                 if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
                 if (!state.hasUppercase) missing.add("1 mayúscula")
                 if (!state.hasNumber) missing.add("1 número")
-                Text(
-                    text = state.passwordError ?: "Falta: ${missing.joinToString(", ")}",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isPasswordValid) {
-                Text(text = "✓ Contraseña segura", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                "Falta: ${missing.joinToString(", ")}"
             } else {
-                Text(text = "Mínimo 8 caracteres, 1 mayúscula y 1 número", color = Slate500, fontSize = 11.sp)
+                null
             }
         },
+        visualTransformation = if (state.isPasswordVisible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        trailingIcon = {
+            IconButton(onClick = onTogglePasswordVisibility) {
+                Icon(
+                    imageVector = if (state.isPasswordVisible) visibilityOff else visibility,
+                    contentDescription = null,
+                    tint = Slate500,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     )
+    if (!showPasswordError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = if (state.isPasswordValid) {
+                "✓ Contraseña segura"
+            } else {
+                "Mínimo 8 caracteres, 1 mayúscula y 1 número"
+            },
+            color = if (state.isPasswordValid) TelematicsGreen else Slate500,
+            fontSize = 11.sp,
+            fontWeight = if (state.isPasswordValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Confirmar Contraseña
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Confirmar Contraseña *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        if (state.doPasswordsMatch) {
-            Text(text = "✓ Coincide", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-    Spacer(modifier = Modifier.height(4.dp))
     val showConfirmError = (state.confirmPassword.isNotEmpty() && !state.doPasswordsMatch) || state.confirmPasswordError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Confirmar Contraseña *",
         value = state.confirmPassword,
         onValueChange = onConfirmPasswordChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Repite tu contraseña", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = if (showConfirmError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        trailingIcon = {
-            IconButton(onClick = onToggleConfirmPasswordVisibility) {
-                Icon(imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
-            }
-        },
-        singleLine = true,
-        visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        hint = "Repite tu contraseña",
+        leadingIcon = syncIcon,
         isError = showConfirmError,
-        supportingText = {
-            if (showConfirmError) {
-                Text(
-                    text = state.confirmPasswordError ?: "Las contraseñas no coinciden",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.doPasswordsMatch) {
-                Text(text = "✓ Las contraseñas coinciden", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
+        errorMessage = state.confirmPasswordError ?: "Las contraseñas no coinciden",
+        visualTransformation = if (state.isConfirmPasswordVisible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        trailingIcon = {
+            IconButton(onClick = onToggleConfirmPasswordVisibility) {
+                Icon(
+                    imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility,
+                    contentDescription = null,
+                    tint = Slate500,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     )
+    if (!showConfirmError && state.doPasswordsMatch) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "✓ Las contraseñas coinciden",
+            color = TelematicsGreen,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(14.dp))
 
@@ -679,7 +638,7 @@ private fun Step1OwnerContent(
             checked = state.notificationsAccepted,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = Color(0xFF203B82),
+                checkedColor = ShiftIQPrimary,
                 uncheckedColor = Slate400,
                 checkmarkColor = Color.White
             )
@@ -705,7 +664,7 @@ private fun Step1OwnerContent(
             checked = state.termsAccepted,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = Color(0xFF203B82),
+                checkedColor = ShiftIQPrimary,
                 uncheckedColor = Slate400,
                 checkmarkColor = Color.White
             )
@@ -724,14 +683,14 @@ private fun Step1OwnerContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-            border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+            colors = CardDefaults.cardColors(containerColor = ShiftIQPrimary.copy(alpha = 0.08f)),
+            border = BorderStroke(1.dp, ShiftIQAccentSkyBlue.copy(alpha = 0.55f))
         ) {
             Row(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = errorOutline, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(16.dp))
+                Icon(imageVector = errorOutline, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (!state.termsAccepted && !state.notificationsAccepted) {
@@ -741,7 +700,7 @@ private fun Step1OwnerContent(
                     } else {
                         "Debes aceptar las Notificaciones de telemetría para continuar."
                     },
-                    color = Color(0xFF203B82),
+                    color = ShiftIQPrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -750,22 +709,7 @@ private fun Step1OwnerContent(
     }
 
     if (!state.errorMessage.isNullOrBlank()) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-            border = BorderStroke(1.dp, Color(0xFFFECACA))
-        ) {
-            Row(
-                modifier = Modifier.padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
-            }
-        }
+        AuthErrorBanner(message = state.errorMessage)
     }
 
     Spacer(modifier = Modifier.height(20.dp))
@@ -855,113 +799,87 @@ private fun Step2VehicleContent(
             Icon(imageVector = photoCamera, contentDescription = null, tint = Slate400, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.height(6.dp))
             Text(text = "Subir fotografía frontal o lateral (Opcional)", color = Slate600, fontSize = 12.sp)
-            Text(text = "[ Explorar archivo ]", color = Color(0xFF203B82), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(text = "[ Explorar archivo ]", color = ShiftIQPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Marca *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.brand,
-                onValueChange = onBrandChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
-                )
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Modelo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.model,
-                onValueChange = onModelChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
-                )
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        AuthLabeledField(
+            label = "Marca *",
+            value = state.brand,
+            onValueChange = onBrandChange,
+            hint = "Toyota",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
+        AuthLabeledField(
+            label = "Modelo *",
+            value = state.model,
+            onValueChange = onModelChange,
+            hint = "Corolla",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Año de Fab. *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.year,
-                onValueChange = onYearChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
-                )
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Placa Vehicular *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.plateNumber,
-                onValueChange = onPlateNumberChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                placeholder = { Text("ABC-123", color = Slate400, fontSize = 14.sp) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
-                )
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        AuthLabeledField(
+            label = "Año de Fab. *",
+            value = state.year,
+            onValueChange = onYearChange,
+            hint = "2020",
+            leadingIcon = Icons.Filled.AccessTime,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f)
+        )
+        AuthLabeledField(
+            label = "Placa Vehicular *",
+            value = state.plateNumber,
+            onValueChange = onPlateNumberChange,
+            hint = "ABC-123",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Número de Chasis (VIN) *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "17 caracteres", color = Slate500, fontSize = 11.sp)
-    }
-    Spacer(modifier = Modifier.height(4.dp))
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Número de Chasis (VIN) *",
         value = state.vin,
         onValueChange = onVinChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("3KPA24AB1KE129841", color = Slate400, fontSize = 14.sp) },
+        hint = "3KPA24AB1KE129841",
+        leadingIcon = badgeIcon,
         trailingIcon = {
             if (state.isVinValid) {
-                Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = checkCircle,
+                    contentDescription = null,
+                    tint = TelematicsGreen,
+                    modifier = Modifier.size(18.dp)
+                )
             }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = Color(0xFF203B82),
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = Color(0xFF203B82), unfocusedBorderColor = Slate200
-        )
+        }
     )
     Spacer(modifier = Modifier.height(4.dp))
-    Text(text = "Ubicado en la tarjeta de propiedad o base del parabrisas.", color = Slate500, fontSize = 11.sp)
+    Text(
+        text = "17 caracteres. Ubicado en la tarjeta de propiedad o base del parabrisas.",
+        color = Slate500,
+        fontSize = 11.sp,
+        modifier = Modifier.padding(start = 4.dp)
+    )
 
     Spacer(modifier = Modifier.height(16.dp))
 
@@ -975,10 +893,10 @@ private fun Step2VehicleContent(
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFEFF6FF)),
+                    modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(ShiftIQPrimary.copy(alpha = 0.08f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = bluetooth, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(18.dp))
+                    Icon(imageVector = bluetooth, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(18.dp))
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
@@ -1001,7 +919,7 @@ private fun Step2VehicleContent(
             ) {
                 if (state.isScanningBle) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFF203B82), strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ShiftIQPrimary, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "Buscando señal BLE...", color = Slate700, fontSize = 12.sp)
                     }
@@ -1014,28 +932,38 @@ private fun Step2VehicleContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF0FDF4))
-                    .border(BorderStroke(1.dp, Color(0xFFBBF7D0)), RoundedCornerShape(10.dp))
-                    .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = state.selectedDongleId, color = Slate900, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                    Text(text = "Señal ${state.dongleSignal}", color = Slate500, fontSize = 11.sp)
-                }
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFDCFCE7)).padding(horizontal = 8.dp, vertical = 2.dp)
+            if (state.hasPairedDongle) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(ShiftIQSuccess.copy(alpha = 0.10f))
+                        .border(BorderStroke(1.dp, ShiftIQSuccess.copy(alpha = 0.35f)), RoundedCornerShape(10.dp))
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "${state.dongleBattery}%", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = state.selectedDongleId, color = Slate900, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                        Text(text = "Señal ${state.dongleSignal}", color = Slate500, fontSize = 11.sp)
+                    }
+                    if (state.dongleBattery > 0) {
+                        Box(
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(ShiftIQSuccess.copy(alpha = 0.22f)).padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(text = "Listo", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
+            } else {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Opcional: puedes continuar sin dongle y vincularlo después desde el garaje.",
+                    color = Slate500,
+                    fontSize = 11.sp
+                )
             }
         }
     }
@@ -1085,13 +1013,13 @@ private fun Step3ConfirmContent(
 ) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xFF203B82)),
+            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(ShiftIQPrimary),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = checkCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(36.dp))
         }
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "(( • ))", color = Color(0xFF203B82), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        Text(text = "(( • ))", color = ShiftIQPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = "¡Vehículo y Telemetría Listos!", color = Slate900, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(6.dp))
@@ -1103,8 +1031,8 @@ private fun Step3ConfirmContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFEFF6FF))
-                .border(BorderStroke(1.dp, Color(0xFFDBEAFE)), RoundedCornerShape(10.dp))
+                .background(ShiftIQPrimary.copy(alpha = 0.08f))
+                .border(BorderStroke(1.dp, NavActivePill), RoundedCornerShape(10.dp))
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -1128,7 +1056,7 @@ private fun Step3ConfirmContent(
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = "RESUMEN DE REGISTRO", color = Slate700, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                    Text(text = "#REG-2024-DRV", color = Color(0xFF203B82), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    Text(text = "#REG-2024-DRV", color = ShiftIQPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1137,7 +1065,7 @@ private fun Step3ConfirmContent(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = directionsCar, contentDescription = null, tint = Color(0xFF203B82), modifier = Modifier.size(24.dp))
+                    Icon(imageVector = directionsCar, contentDescription = null, tint = ShiftIQPrimary, modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = "${state.brand} ${state.model} ${state.year}", color = Slate900, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
@@ -1156,25 +1084,11 @@ private fun Step3ConfirmContent(
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
-                .scaleOnPress(onClick = onSubmit),
-            contentAlignment = Alignment.Center
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Crear Cuenta y Finalizar", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(imageVector = arrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
+        AuthPrimaryButton(
+            label = "Crear Cuenta y Finalizar",
+            isLoading = state.isLoading,
+            onClick = onSubmit
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -1224,8 +1138,8 @@ private fun StepErrorContent(
             modifier = Modifier
                 .size(74.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFFFEF2F2))
-                .border(BorderStroke(1.5.dp, Color(0xFFFCA5A5)), RoundedCornerShape(22.dp)),
+                .background(ShiftIQErrorContainer)
+                .border(BorderStroke(1.5.dp, SeverityCrimson.copy(alpha = 0.45f)), RoundedCornerShape(22.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(40.dp))
@@ -1274,7 +1188,7 @@ private fun StepErrorContent(
                 .fillMaxWidth()
                 .height(50.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
+                .background(ShiftIQPrimary)
                 .scaleOnPress(onClick = onCorrectData),
             contentAlignment = Alignment.Center
         ) {
@@ -1309,7 +1223,7 @@ private fun StepSuccessContent(
             modifier = Modifier
                 .size(76.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFF22C55E)),
+                .background(ShiftIQSuccess),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = checkCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
@@ -1343,7 +1257,7 @@ private fun StepSuccessContent(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF203B82))
+                .background(ShiftIQPrimary)
                 .scaleOnPress(onClick = onGoToDashboard),
             contentAlignment = Alignment.Center
         ) {
@@ -1377,13 +1291,13 @@ private fun StepOtpContent(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFEFF6FF)),
+                .background(ShiftIQPrimary.copy(alpha = 0.08f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Security,
                 contentDescription = null,
-                tint = Color(0xFF203B82),
+                tint = ShiftIQPrimary,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -1425,7 +1339,7 @@ private fun StepOtpContent(
             Icon(
                 imageVector = Icons.Filled.AccessTime,
                 contentDescription = null,
-                tint = if (state.timeLeft > 0) Slate500 else Color(0xFFD97706),
+                tint = if (state.timeLeft > 0) Slate500 else WalBufferAmber,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -1451,13 +1365,13 @@ private fun StepOtpContent(
                     Icon(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = null,
-                        tint = Color(0xFF203B82),
+                        tint = ShiftIQPrimary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = "Reenviar código",
-                        color = Color(0xFF203B82),
+                        color = ShiftIQPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1467,21 +1381,7 @@ private fun StepOtpContent(
 
         if (!state.errorMessage.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(14.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                border = BorderStroke(1.dp, Color(0xFFFECACA))
-            ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = state.errorMessage, color = Color(0xFFB91C1C), fontSize = 12.sp)
-                }
-            }
+            AuthErrorBanner(message = state.errorMessage)
         }
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -1565,7 +1465,7 @@ private fun OtpBoxesView(
                             .background(Color.White)
                             .border(
                                 width = if (isFocused) 2.dp else 1.dp,
-                                color = if (isFocused) Color(0xFF203B82) else if (char.isNotEmpty()) Slate400 else Slate200,
+                                color = if (isFocused) ShiftIQPrimary else if (char.isNotEmpty()) Slate400 else Slate200,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center

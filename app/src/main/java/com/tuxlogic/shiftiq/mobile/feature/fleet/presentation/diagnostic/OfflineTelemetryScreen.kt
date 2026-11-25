@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
@@ -33,10 +32,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.WalBufferAmber
@@ -60,10 +64,17 @@ data class BufferedFrameItem(
 @Composable
 fun OfflineTelemetryRoute(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: OfflineTelemetryViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     OfflineTelemetryScreen(
         onNavigateBack = onNavigateBack,
+        frames = uiState.frames,
+        frameCount = uiState.frameCount,
+        memoryKb = uiState.memoryKb,
+        message = uiState.message,
+        onSync = viewModel::loadBufferedFrames,
         modifier = modifier
     )
 }
@@ -71,15 +82,13 @@ fun OfflineTelemetryRoute(
 @Composable
 fun OfflineTelemetryScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    frames: List<BufferedFrameItem> = emptyList(),
+    frameCount: Int = 0,
+    memoryKb: Double = 0.0,
+    message: String? = null,
+    onSync: () -> Unit = {}
 ) {
-    val sampleFrames = listOf(
-        BufferedFrameItem("PID \$010C", "Régimen del Motor", "848 RPM", "Hace 12s"),
-        BufferedFrameItem("PID \$0105", "Temperatura Refrigerante", "89 °C", "Hace 14s"),
-        BufferedFrameItem("PID \$010D", "Velocidad del Vehículo", "0 km/h", "Hace 16s"),
-        BufferedFrameItem("PID \$012F", "Nivel de Combustible", "68.4 %", "Hace 18s")
-    )
-
     val spacing = MaterialTheme.spacing
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
@@ -97,15 +106,21 @@ fun OfflineTelemetryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             OfflineWarningBanner()
             LocalBufferDiagramCard()
-            QueueStatsCard(frameCount = 124, memoryKb = 18.4)
-            BufferedFramesSection(frames = sampleFrames)
-            SyncActionButton(onSync = {})
-            Spacer(modifier = Modifier.height(spacing.medium))
+            QueueStatsCard(frameCount = frameCount, memoryKb = memoryKb)
+            if (!message.isNullOrBlank()) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            BufferedFramesSection(frames = frames)
+            SyncActionButton(onSync = onSync)
         }
     }
 }
@@ -116,50 +131,14 @@ private fun OfflineTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Row(
+    ShiftIQPageHeader(
+        title = "Modo Offline",
+        subtitle = "Buffer local de telemetría",
+        badgeLabel = "Sin Conexión",
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
         modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Atrás",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.small))
-            Text(
-                text = "Modo Offline",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(WalBufferAmber)
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = "Sin Conexión",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -167,9 +146,10 @@ private fun OfflineWarningBanner(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, ShiftIQWarning)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQWarning),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -214,9 +194,10 @@ private fun LocalBufferDiagramCard(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -293,9 +274,10 @@ private fun QueueStatsCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -360,9 +342,10 @@ private fun BufferedFrameCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -405,8 +388,8 @@ private fun SyncActionButton(
         modifier = modifier
             .fillMaxWidth()
             .height(spacing.buttonHeight),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
     ) {
         Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
         Spacer(modifier = Modifier.width(spacing.small))

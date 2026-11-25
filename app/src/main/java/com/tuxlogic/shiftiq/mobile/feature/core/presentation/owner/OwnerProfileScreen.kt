@@ -1,5 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
@@ -24,16 +25,11 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,16 +37,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQButton
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.OwnerProfile
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnerProfileScreen(
     viewModel: OwnerProfileViewModel,
@@ -71,7 +70,6 @@ fun OwnerProfileScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnerProfileContent(
     uiState: OwnerProfileUiState,
@@ -83,36 +81,18 @@ fun OwnerProfileContent(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Perfil del Propietario",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
+    Column(
         modifier = modifier
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ShiftIQPageHeader(
+            title = "Perfil del Propietario",
+            subtitle = "Perfil del dueño",
+            showBackButton = true,
+            onBackPressed = onNavigateBack
+        )
+        Box(modifier = Modifier.fillMaxSize()) {
             when {
                 uiState.isLoading && uiState.profile == null -> {
                     CircularProgressIndicator(
@@ -126,7 +106,7 @@ fun OwnerProfileContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(20.dp),
+                            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Surface(
@@ -164,10 +144,10 @@ fun OwnerProfileContent(
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            )
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, ShiftIQBorderSlate),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
                                 Text(
@@ -241,7 +221,7 @@ fun OwnerProfileContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(20.dp)
+                            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp)
                     ) {
                         Text(
                             text = "Registrar Datos del Dueño",

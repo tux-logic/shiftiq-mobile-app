@@ -9,6 +9,13 @@ enum class RegisterStep {
     ERROR
 }
 
+data class RegisterBleDongle(
+    val id: String,
+    val name: String,
+    val signal: String,
+    val isRecommended: Boolean = false
+)
+
 data class RegisterUiState(
     val step: RegisterStep = RegisterStep.STEP_1_USER,
 
@@ -42,9 +49,10 @@ data class RegisterUiState(
     val vin: String = "",
     val vinError: String? = null,
     val isScanningBle: Boolean = false,
-    val selectedDongleId: String = "OBD2-BT-9821",
-    val dongleSignal: String = "Excelente (-42 dBm)",
-    val dongleBattery: Int = 98,
+    val selectedDongleId: String = "",
+    val dongleSignal: String = "",
+    val dongleBattery: Int = 0,
+    val discoveredDongles: List<RegisterBleDongle> = emptyList(),
 
     // Paso OTP (opcional según flujo de verificación)
     val otpCode: String = "",
@@ -115,7 +123,10 @@ data class RegisterUiState(
         }
 
     val isStep2Valid: Boolean
-        get() = brand.isNotBlank() && model.isNotBlank() && isYearValid && isPlateValid && isVinValid && selectedDongleId.isNotBlank()
+        get() = brand.isNotBlank() && model.isNotBlank() && isYearValid && isPlateValid && isVinValid
+
+    val hasPairedDongle: Boolean
+        get() = selectedDongleId.isNotBlank()
 
     val formattedTimeLeft: String
         get() {

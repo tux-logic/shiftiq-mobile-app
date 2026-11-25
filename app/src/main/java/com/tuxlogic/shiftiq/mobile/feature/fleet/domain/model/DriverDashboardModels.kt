@@ -1,18 +1,18 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model
 
 data class DriverVehicleHealth(
-    val score: Int = 94,
-    val title: String = "Salud General del Vehículo",
-    val description: String = "Datos IoT de demostración",
+    val score: Int = 0,
+    val title: String = "Vehicle health",
+    val description: String = "Waiting for OBD-II telemetry",
     val hasCriticalAlerts: Boolean = false
 )
 
 data class DriverLiveTelemetry(
-    val rpm: Int = 850,
-    val temperatureCelsius: Int = 88,
-    val batteryVoltage: Double = 13.8,
-    val odometerKm: Int = 48120,
-    val fuelPercent: Double = 68.0,
+    val rpm: Int = 0,
+    val temperatureCelsius: Int = 0,
+    val batteryVoltage: Double = 0.0,
+    val odometerKm: Int = 0,
+    val fuelPercent: Double = 0.0,
     val speedKmh: Double = 0.0,
     val isSynchronized: Boolean = false
 )
@@ -30,11 +30,11 @@ data class ActiveServiceCardData(
 )
 
 data class DriverDtcAlert(
-    val code: String = "P0135",
-    val title: String = "Alerta Leve: Sensor de Oxígeno",
-    val severity: String = "Media",
-    val suggestedReviewKm: Int = 500,
-    val description: String = "Lectura IoT ficticia para demostración; no proviene de un dongle OBD-II real."
+    val code: String = "",
+    val title: String = "",
+    val severity: String = "",
+    val suggestedReviewKm: Int = 0,
+    val description: String = ""
 )
 
 data class B2CVehicleItem(
@@ -68,15 +68,21 @@ data class MaintenanceHistoryItem(
 
 data class WorkshopItem(
     val id: String,
+    val workshopId: String = "",
     val name: String,
-    val rating: Double = 4.8,
-    val reviewCount: Int = 115,
-    val district: String = "San Miguel",
-    val distanceKm: Double = 1.2,
+    val address: String = "",
+    val phone: String = "",
+    val rating: Double = 0.0,
+    val reviewCount: Int = 0,
+    val district: String = "",
+    val distanceKm: Double = 0.0,
     val isCertifiedShiftIQ: Boolean = true,
-    val hasFreeBaysToday: Boolean = true,
-    val estimatedCostMinPen: Double = 140.0,
-    val estimatedCostMaxPen: Double = 180.0,
-    val nextAvailableSlot: String = "Hoy, 3:30 PM",
-    val linkedIssue: String? = "Sensor O2 Banco 1"
+    /** Unknown until the catalog exposes live bay occupancy. */
+    val hasFreeBaysToday: Boolean = false,
+    val estimatedCostMinPen: Double = 0.0,
+    val estimatedCostMaxPen: Double = 0.0,
+    val nextAvailableSlot: String = "",
+    val linkedIssue: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

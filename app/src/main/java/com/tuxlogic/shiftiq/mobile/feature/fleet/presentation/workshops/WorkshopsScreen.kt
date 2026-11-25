@@ -1,8 +1,8 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,20 +51,28 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.MapLibreMapController
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPositronMap
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.workshopMapPins
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -140,7 +148,7 @@ fun WorkshopsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 110.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             WorkshopSearchBar(
@@ -151,17 +159,20 @@ fun WorkshopsScreen(
                 selectedFilter = uiState.selectedFilter,
                 onSelectFilter = onFilterSelected
             )
-            VectorGpsMapCard()
+            val workshops = uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops }
+            VectorGpsMapCard(
+                workshops = workshops,
+                onSelectWorkshop = onNavigateToDetail
+            )
             WorkshopsCatalogListHeader(
-                count = (uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops }).size,
+                count = workshops.size,
                 onNavigateToMyAppointments = onNavigateToMyAppointments
             )
             WorkshopsCatalogList(
-                workshops = uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops },
+                workshops = workshops,
                 onNavigateToBooking = onNavigateToBooking,
                 onNavigateToDetail = onNavigateToDetail
             )
-            Spacer(modifier = Modifier.height(spacing.medium))
         }
     }
 }
@@ -172,50 +183,12 @@ private fun WorkshopsTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.medium),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(spacing.radiusFull))
-                    .background(ObdTeal.copy(alpha = 0.2f))
-                    .padding(horizontal = spacing.small, vertical = spacing.micro)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(spacing.indicatorHeight)
-                            .clip(CircleShape)
-                            .background(ObdTeal)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                    Text(
-                        text = "OBD2 CONECTADO",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = ObdTeal
-                    )
-                }
-            }
-
-            Text(
-                text = "Talleres Afiliados",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
+    ShiftIQPageHeader(
+        title = "Talleres Afiliados",
+        subtitle = "Red certificada ShiftIQ",
+        badgeLabel = "OBD2 CONECTADO",
+        modifier = modifier,
+        actions = {
             IconButton(onClick = onNavigateToMyAppointments) {
                 Icon(
                     imageVector = Icons.Default.EventNote,
@@ -224,7 +197,7 @@ private fun WorkshopsTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -296,42 +269,47 @@ private fun WorkshopFilterChips(
     }
 }
 
+/**
+ * MapLibre OpenFreeMap Positron workshop map mirrored from Flutter [BranchMapView].
+ */
 @Composable
-private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
+private fun VectorGpsMapCard(
+    workshops: List<WorkshopItem>,
+    onSelectWorkshop: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
+    val focused = workshops.firstOrNull()
+    val pins = remember(workshops) {
+        workshopMapPins(workshops.map { it.id to (it.latitude to it.longitude) })
+    }
+    var mapController by remember { mutableStateOf<MapLibreMapController?>(null) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(spacing.mapHeight),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+            .height(220.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PositronSurface),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
-                val lineColor = Color.LightGray.copy(alpha = 0.5f)
-                drawLine(lineColor, Offset(0f, h * 0.35f), Offset(w, h * 0.35f), strokeWidth = 3f)
-                drawLine(lineColor, Offset(0f, h * 0.70f), Offset(w, h * 0.70f), strokeWidth = 3f)
-                drawLine(lineColor, Offset(w * 0.30f, 0f), Offset(w * 0.30f, h), strokeWidth = 3f)
-                drawLine(lineColor, Offset(w * 0.70f, 0f), Offset(w * 0.70f, h), strokeWidth = 3f)
-                drawCircle(PrimaryBlue, radius = 14f, center = Offset(w * 0.45f, h * 0.50f))
-                drawCircle(PrimaryBlue, radius = 28f, center = Offset(w * 0.45f, h * 0.50f), style = Stroke(width = 3f))
-                drawCircle(ObdTeal, radius = 12f, center = Offset(w * 0.25f, h * 0.30f))
-                drawCircle(ShiftIQWarning, radius = 12f, center = Offset(w * 0.75f, h * 0.65f))
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            ShiftIQPositronMap(
+                pins = pins,
+                selectedPinId = focused?.id,
+                onPinClick = onSelectWorkshop,
+                onMapReady = { mapController = it },
+                modifier = Modifier.fillMaxSize()
+            )
 
-            // GPS Pill
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(spacing.smallMedium)
                     .clip(RoundedCornerShape(spacing.radiusFull))
-                    .background(Color.White.copy(alpha = 0.95f))
+                    .background(Color.White.copy(alpha = 0.96f))
+                    .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusFull))
                     .padding(horizontal = spacing.small, vertical = spacing.micro),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -343,66 +321,110 @@ private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(spacing.extraSmall))
                 Text(
-                    text = "GPS EN VIVO",
+                    text = "MAPA · ${workshops.size} talleres",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Slate700
                 )
             }
 
-            // Map Controls Right
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(spacing.smallMedium),
                 verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
             ) {
+                MapControlButton(label = "+") { mapController?.zoomBy(1.0) }
+                MapControlButton(label = "−") { mapController?.zoomBy(-1.0) }
                 Box(
                     modifier = Modifier
                         .size(spacing.controlButtonSize)
                         .clip(RoundedCornerShape(spacing.radiusSmall))
                         .background(Color.White)
-                        .clickable {},
+                        .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
+                        .clickable { mapController?.recenter(pins) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("+", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
-                }
-                Box(
-                    modifier = Modifier
-                        .size(spacing.controlButtonSize)
-                        .clip(RoundedCornerShape(spacing.radiusSmall))
-                        .background(Color.White)
-                        .clickable {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("−", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
-                }
-                Box(
-                    modifier = Modifier
-                        .size(spacing.controlButtonSize)
-                        .clip(RoundedCornerShape(spacing.radiusSmall))
-                        .background(Color.White)
-                        .clickable {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(spacing.iconSmall))
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(spacing.iconSmall)
+                    )
                 }
             }
 
-            // Pins overlay
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = spacing.extraExtraLarge)
-                    .clip(RoundedCornerShape(spacing.radiusSmall))
-                    .background(Navy900)
-                    .padding(horizontal = spacing.small, vertical = spacing.micro)
-            ) {
-                Text(text = "Silva (1.2 km)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            if (focused != null) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(spacing.smallMedium)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(14.dp))
+                        .clickable { onSelectWorkshop(focused.id) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(PrimaryBlue.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storefront,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = focused.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = "${focused.district.ifBlank { "Cercano" }} · ${focused.distanceKm} km",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Slate500
+                        )
+                    }
+                    Text(
+                        text = "Ver",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun MapControlButton(label: String, onClick: () -> Unit) {
+    val spacing = MaterialTheme.spacing
+    Box(
+        modifier = Modifier
+            .size(spacing.controlButtonSize)
+            .clip(RoundedCornerShape(spacing.radiusSmall))
+            .background(Color.White)
+            .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+private val PositronSurface = Color(0xFFF8FAFC)
 
 @Composable
 private fun WorkshopsCatalogListHeader(
@@ -490,16 +512,18 @@ private fun WorkshopCardItem(
 ) {
     val spacing = MaterialTheme.spacing
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+        modifier = modifier
+            .fillMaxWidth()
+            .scaleOnPress(pressedScale = 0.975f, onClick = onViewProfile),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             WorkshopCardHeader(workshop = workshop)
@@ -507,11 +531,17 @@ private fun WorkshopCardItem(
             if (!workshop.linkedIssue.isNullOrBlank()) {
                 DtcAlignmentBanner(issue = workshop.linkedIssue)
             }
-            WorkshopCardPricingRow(
-                minPen = workshop.estimatedCostMinPen,
-                maxPen = workshop.estimatedCostMaxPen,
-                slot = workshop.nextAvailableSlot
-            )
+            if (
+                workshop.estimatedCostMinPen > 0.0 ||
+                workshop.estimatedCostMaxPen > 0.0 ||
+                workshop.nextAvailableSlot.isNotBlank()
+            ) {
+                WorkshopCardPricingRow(
+                    minPen = workshop.estimatedCostMinPen,
+                    maxPen = workshop.estimatedCostMaxPen,
+                    slot = workshop.nextAvailableSlot
+                )
+            }
             WorkshopCardActions(
                 onBook = onBook,
                 onViewProfile = onViewProfile
@@ -557,32 +587,53 @@ private fun WorkshopCardHeader(
                     fontWeight = FontWeight.Bold,
                     color = Slate900
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (workshop.rating > 0.0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "★ ${workshop.rating}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ShiftIQWarning
+                        )
+                        Spacer(modifier = Modifier.width(spacing.extraSmall))
+                        Text(
+                            text = if (workshop.reviewCount > 0) {
+                                "(${workshop.reviewCount} reseñas) • ${workshop.district}"
+                            } else {
+                                workshop.district
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Slate500
+                        )
+                    }
+                } else if (workshop.district.isNotBlank()) {
                     Text(
-                        text = "★ ${workshop.rating}",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = ShiftIQWarning
-                    )
-                    Spacer(modifier = Modifier.width(spacing.extraSmall))
-                    Text(
-                        text = "(${workshop.reviewCount} reseñas) • ${workshop.district}",
+                        text = workshop.district,
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate500
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = Slate500,
-                        modifier = Modifier.size(spacing.iconSmall)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
+                if (workshop.distanceKm > 0.0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(spacing.iconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(spacing.micro))
+                        Text(
+                            text = "A ${workshop.distanceKm} km de tu ubicación",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Slate500
+                        )
+                    }
+                } else if (workshop.address.isNotBlank()) {
                     Text(
-                        text = "A ${workshop.distanceKm} km de tu ubicación",
+                        text = workshop.address,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Slate500
+                        color = Slate500,
+                        maxLines = 2
                     )
                 }
             }
@@ -685,12 +736,6 @@ private fun DtcAlignmentBanner(
                 )
             }
         }
-        Text(
-            text = "S/ 140 - S/ 180 ESTIMADO",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryBlue
-        )
     }
 }
 
@@ -707,13 +752,24 @@ private fun WorkshopCardPricingRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = Slate500)
-            Text(text = "S/ ${minPen.toInt()} - S/ ${maxPen.toInt()} PEN", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Slate900)
+        if (minPen > 0.0 || maxPen > 0.0) {
+            Column {
+                Text(text = "Presupuesto Estimado", style = MaterialTheme.typography.labelSmall, color = Slate500)
+                Text(
+                    text = "S/ ${minPen.toInt()} - S/ ${maxPen.toInt()} PEN",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate900
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(text = "Próximo Turno Libre", style = MaterialTheme.typography.labelSmall, color = Slate500)
-            Text(text = slot, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+        if (slot.isNotBlank()) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = "Próximo Turno Libre", style = MaterialTheme.typography.labelSmall, color = Slate500)
+                Text(text = slot, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+            }
         }
     }
 }

@@ -1,11 +1,14 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.AppointmentDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.BranchAvailabilityDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CustomerRegistrationDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.EmployeeRegistrationDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.StaffCareerHistoryDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.BranchAvailability
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.BranchAvailabilitySlot
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.CustomerRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
@@ -16,10 +19,25 @@ fun AppointmentDto.toDomain(): Appointment = Appointment(
     branchId = UUID.fromString(branchId),
     customerId = UUID.fromString(customerId),
     vehicleId = UUID.fromString(vehicleId),
+    bayId = bayId?.let { runCatching { UUID.fromString(it) }.getOrNull() },
     scheduledStart = scheduledStart,
     scheduledEnd = scheduledEnd,
     status = AppointmentStatus.fromString(status),
     notes = notes
+)
+
+fun BranchAvailabilityDto.toDomain(): BranchAvailability = BranchAvailability(
+    branchId = branchId,
+    date = date,
+    activeBaysCount = activeBaysCount,
+    freeBaysNow = freeBaysNow,
+    slots = slots.map {
+        BranchAvailabilitySlot(
+            start = it.start,
+            end = it.end,
+            availableBayIds = it.availableBayIds
+        )
+    }
 )
 
 fun EmployeeRegistrationDto.toDomain(): EmployeeRegistration = EmployeeRegistration(

@@ -27,9 +27,18 @@ class CreateAppointmentUseCase @Inject constructor(
         customerId: UUID,
         vehicleId: UUID,
         scheduledStart: String,
-        notes: String?
+        notes: String?,
+        bayId: UUID? = null
     ): AppResult<Appointment> {
-        return repository.createAppointment(branchId, customerId, vehicleId, scheduledStart, notes)
+        return repository.createAppointment(branchId, customerId, vehicleId, scheduledStart, notes, bayId)
+    }
+}
+
+class GetBranchAvailabilityUseCase @Inject constructor(
+    private val repository: FleetRepository
+) {
+    suspend operator fun invoke(branchId: UUID, date: String): AppResult<com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.BranchAvailability> {
+        return repository.getBranchAvailability(branchId, date)
     }
 }
 

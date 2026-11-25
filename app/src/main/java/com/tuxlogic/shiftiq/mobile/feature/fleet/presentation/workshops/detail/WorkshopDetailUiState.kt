@@ -23,7 +23,9 @@ data class WorkshopDetailData(
     val activeBaysCount: Int,
     val certifiedTechniciansCount: Int,
     val isFavorite: Boolean,
-    val specialties: List<WorkshopSpecialtyItem>
+    val specialties: List<WorkshopSpecialtyItem>,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 sealed interface WorkshopDetailUiState {

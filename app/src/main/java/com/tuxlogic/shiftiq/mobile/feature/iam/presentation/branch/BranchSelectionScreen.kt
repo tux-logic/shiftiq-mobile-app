@@ -1,6 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.iam.presentation.branch
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQErrorBanner
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
+import androidx.compose.ui.graphics.Color
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPrimaryButton
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 
@@ -45,34 +48,22 @@ fun BranchSelectionScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ShiftIQPageHeader(
+            title = "Seleccionar Sucursal",
+            subtitle = "Elige la sede para esta sesión"
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(
-                    text = "Seleccionar Sucursal",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                Text(
-                    text = "Elige la sede o taller en la que operarás durante esta sesión de trabajo.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
-                )
-
                 if (uiState.errorMessage != null) {
                     ShiftIQErrorBanner(
                         message = uiState.errorMessage,
@@ -116,19 +107,13 @@ private fun BranchCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onSelect),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+            color = if (isSelected) MaterialTheme.colorScheme.primary else ShiftIQBorderSlate
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier

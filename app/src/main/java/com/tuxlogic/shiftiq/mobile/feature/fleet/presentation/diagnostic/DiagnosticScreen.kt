@@ -49,25 +49,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.widget.Toast
 import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
 import com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.home.components.HealthRingCanvas
-
-data class EcuInspectionItem(
-    val ecuId: String,
-    val moduleName: String,
-    val hasDtc: Boolean,
-    val dtcCode: String? = null,
-    val statusText: String
-)
 
 @Composable
 fun DiagnosticsRoute(
@@ -87,8 +83,8 @@ fun DiagnosticsRoute(
             val telemetry = uiState.telemetry
             val reportLines = listOf(
                 "Fecha: ${java.time.LocalDateTime.now()}",
-                "Origen: datos de demostración IoT; no son una lectura real de un dongle OBD-II.",
-                "Estado OBD-II: ${if (uiState.isObdConnected) "Conectado en la demostración" else "Sin conexión"}",
+                "Origen: telemetría OBD-II sincronizada desde el backend ShiftIQ.",
+                "Estado OBD-II: ${if (uiState.isObdConnected) "Conectado" else "Sin datos recientes"}",
                 "RPM: ${telemetry.rpm}",
                 "Temperatura del motor: ${telemetry.temperatureCelsius} °C",
                 "Voltaje de batería: ${telemetry.batteryVoltage} V",
@@ -151,15 +147,18 @@ fun DiagnosticsScreen(
     onDownloadReport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val sampleEcus = listOf(
-        EcuInspectionItem("ECU #7E0", "Motor / Inyección", true, "P0135", "Alerta DTC Activa"),
-        EcuInspectionItem("ECU #7E1", "Transmisión Automática", false, null, "Sin Códigos de Falla"),
-        EcuInspectionItem("ECU #7E2", "Módulo Frenos ABS / ESP", false, null, "Sin Códigos de Falla"),
-        EcuInspectionItem("ECU #7E3", "Sistema de Airbags / SRS", false, null, "Sin Códigos de Falla")
-    )
-
     val spacing = MaterialTheme.spacing
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val ecuCountLabel = if (uiState.inspectedEcus.isEmpty()) {
+        "0 ECUS"
+    } else {
+        "${uiState.inspectedEcus.count { it.hasDtc }} / ${uiState.inspectedEcus.size} ECUS"
+    }
+    val progressPercent = when {
+        uiState.isScanning -> (uiState.scanProgress * 100).toInt().coerceIn(0, 100)
+        uiState.isObdConnected -> 100
+        else -> 0
+    }
 
     Column(
         modifier = modifier
@@ -172,15 +171,15 @@ fun DiagnosticsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 110.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             ProtocolBusHeaderCard()
-            CircularProgressSection(progressPercent = 68, ecuCount = "05 / 08 ECUS")
+            CircularProgressSection(progressPercent = progressPercent, ecuCount = ecuCountLabel)
             ModuleInterrogationStatusPill()
             CanBusTrafficMonitor()
             InspectedEcusSection(
-                ecus = sampleEcus,
+                ecus = uiState.inspectedEcus,
                 onDtcClick = { code -> onNavigateToDtcDetail(code) }
             )
             DiagnosticsActionButtons(
@@ -188,7 +187,6 @@ fun DiagnosticsScreen(
                 onOfflineClick = onNavigateToOfflineMode,
                 onDownloadReport = onDownloadReport
             )
-            Spacer(modifier = Modifier.height(spacing.medium))
         }
     }
 }
@@ -198,45 +196,12 @@ private fun DiagnosticsTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Row(
+    ShiftIQPageHeader(
+        title = "Diagnóstico OBD-II",
+        subtitle = "Escaneo y lectura en tiempo real",
+        badgeLabel = "EN VIVO",
         modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                text = "Diagnóstico OBD-II",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Escaneo y lectura en tiempo real",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.7f)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(spacing.radiusSmall))
-                .background(Color.White.copy(alpha = 0.15f))
-                .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
-        ) {
-            Text(
-                text = "EN VIVO",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -244,9 +209,10 @@ private fun ProtocolBusHeaderCard(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -290,9 +256,10 @@ private fun CircularProgressSection(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -349,9 +316,10 @@ private fun CanBusTrafficMonitor(modifier: Modifier = Modifier) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Navy900),
-        border = BorderStroke(spacing.strokeThin, CanBusCyan.copy(alpha = 0.3f))
+        border = BorderStroke(spacing.strokeThin, CanBusCyan.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -421,12 +389,13 @@ private fun EcuInspectionCard(
             .clickable(enabled = ecu.hasDtc && ecu.dtcCode != null) {
                 ecu.dtcCode?.let { onDtcClick(it) }
             },
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(
             spacing.strokeThin,
-            if (ecu.hasDtc) ShiftIQWarning else MaterialTheme.colorScheme.outlineVariant
-        )
+            if (ecu.hasDtc) ShiftIQWarning else ShiftIQBorderSlate
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -493,8 +462,8 @@ private fun DiagnosticsActionButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),
-            shape = RoundedCornerShape(spacing.radiusMedium),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
             Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
             Spacer(modifier = Modifier.width(spacing.small))

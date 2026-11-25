@@ -2,34 +2,49 @@ package com.tuxlogic.shiftiq.mobile.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ShiftIQ Brand Colors
-val ShiftIQPrimary = Color(0xFF0F62FE)          // Electric Blue
+/**
+ * ShiftIQ brand tokens — aligned with Flutter `ShiftIQColors`
+ * (shiftiq-mobile-app-flutter/lib/core/theme.dart).
+ */
+val ShiftIQPrimary = Color(0xFF1E3A8A)          // primaryBlue
 val ShiftIQOnPrimary = Color(0xFFFFFFFF)
-val ShiftIQPrimaryContainer = Color(0xFFD0E1FD)
-val ShiftIQOnPrimaryContainer = Color(0xFF001D47)
+val ShiftIQPrimaryContainer = Color(0xFF60A5FA) // accentSkyBlue
+val ShiftIQOnPrimaryContainer = Color(0xFF1E3A8A)
 
-val ShiftIQSecondary = Color(0xFF0072C3)        // Cyan Blue
+val ShiftIQSecondary = Color(0xFF0FB5BA)        // secondaryTeal
 val ShiftIQOnSecondary = Color(0xFFFFFFFF)
-val ShiftIQSecondaryContainer = Color(0xFFD3E4FE)
-val ShiftIQOnSecondaryContainer = Color(0xFF001C38)
+val ShiftIQSecondaryContainer = Color(0xFFBCECE7)
+val ShiftIQOnSecondaryContainer = Color(0xFF003735)
 
-val ShiftIQTertiary = Color(0xFF009688)         // Emerald / Telemetry Green
+val ShiftIQTertiary = Color(0xFF3DBE6C)         // preventiveGreen
 val ShiftIQOnTertiary = Color(0xFFFFFFFF)
+val ShiftIQTertiaryContainer = Color(0xFFC7F5D7)
+val ShiftIQOnTertiaryContainer = Color(0xFF0D3E1E)
 
-val ShiftIQBackgroundLight = Color(0xFFF8F9FA)
-val ShiftIQSurfaceLight = Color(0xFFFFFFFF)
-val ShiftIQOnSurfaceLight = Color(0xFF1A1C1E)
+val ShiftIQBackgroundLight = Color(0xFFF8FAFC)  // warmNeutral
+val ShiftIQSurfaceLight = Color(0xFFF8FAFC)
+val ShiftIQOnSurfaceLight = Color(0xFF1E293B)   // graphiteText
+val ShiftIQOnSurfaceVariantLight = Color(0xFF475569)
 
-val ShiftIQBackgroundDark = Color(0xFF12161A)
-val ShiftIQSurfaceDark = Color(0xFF1E242B)
-val ShiftIQOnSurfaceDark = Color(0xFFE2E2E6)
+val ShiftIQBackgroundDark = Color(0xFF0F172A)
+val ShiftIQSurfaceDark = Color(0xFF0F172A)
+val ShiftIQOnSurfaceDark = Color(0xFFF1F5F9)
+val ShiftIQOnSurfaceVariantDark = Color(0xFF94A3B8)
 
-val ShiftIQError = Color(0xFFBA1A1A)            // Critical / DTC Alert
+val ShiftIQError = Color(0xFFDC2626)            // severityCrimson
 val ShiftIQOnError = Color(0xFFFFFFFF)
-val ShiftIQWarning = Color(0xFFF59E0B)          // Pending / Caution
-val ShiftIQSuccess = Color(0xFF10B981)          // Completed / Active
+val ShiftIQErrorContainer = Color(0xFFFFDAD6)
+val ShiftIQOnErrorContainer = Color(0xFF93000A)
+val ShiftIQWarning = Color(0xFFFBBF24)          // severityAmber
+val ShiftIQSeverityOrange = Color(0xFFF97316)
+val ShiftIQSuccess = Color(0xFF3DBE6C)          // preventiveGreen
 
-// Slate & Semantic Color Palette (for high contrast text and UI components)
+val ShiftIQAccentSkyBlue = Color(0xFF60A5FA)
+val ShiftIQBorderSlate = Color(0xFFCBD5E1)
+val ShiftIQSurfaceVariant = Color(0xFFF1F5F9)
+val ShiftIQOutlineVariant = Color(0xFFE2E8F0)
+
+// Compatibility aliases used across feature screens
 val Primary = ShiftIQPrimary
 val PrimaryBlue = ShiftIQPrimary
 val SeverityCrimson = ShiftIQError
@@ -50,11 +65,11 @@ val Slate900 = Color(0xFF0F172A)
 
 // Specialized Telemetry & Action Colors
 val CanBusCyan = Color(0xFF0284C7)
-val ObdTeal = Color(0xFF0FB5BA)
+val ObdTeal = ShiftIQSecondary
 val WhatsAppGreen = Color(0xFF25D366)
 val WalBufferAmber = Color(0xFFD97706)
 
-// Material 3 Bottom Navigation Tokens (Figma Frame 215:15142)
-val NavActiveBlue = Color(0xFF1E3A8A)
+// Bottom navigation — same primary as Flutter brand
+val NavActiveBlue = ShiftIQPrimary
 val NavActivePill = Color(0xFFDBEAFE)
-val NavInactiveSlate = Color(0xFF64748B)
+val NavInactiveSlate = Slate500

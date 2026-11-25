@@ -14,27 +14,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Verified
@@ -44,7 +38,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -62,9 +55,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tuxlogic.shiftiq.mobile.core.presentation.pdf.PdfDocumentExporter
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
@@ -182,16 +178,17 @@ fun ServiceVoucherPdfScreen(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        PdfTopBar(
-            onNavigateBack = onNavigateBack,
-            statusBarPadding = statusBarPadding
+        ShiftIQPageHeader(
+            title = "Comprobante de Servicio",
+            subtitle = "Voucher PDF",
+            showBackButton = true,
+            onBackPressed = onNavigateBack
         )
 
         when {
@@ -205,7 +202,7 @@ fun ServiceVoucherPdfScreen(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(spacing.medium),
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.medium)
             ) {
                 VoucherDetailsCard(uiState)
@@ -234,9 +231,10 @@ private fun VoucherDetailsCard(state: ServiceVoucherPdfUiState) {
     val spacing = MaterialTheme.spacing
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(spacing.medium),
@@ -273,59 +271,6 @@ private fun VoucherDetailsCard(state: ServiceVoucherPdfUiState) {
             state.balance?.let { Text("Saldo: S/ ${String.format(java.util.Locale.US, "%.2f", it)}", style = MaterialTheme.typography.bodySmall) }
             if (state.paymentInfo.isNotBlank()) Text("Pagos: ${state.paymentInfo}", style = MaterialTheme.typography.bodySmall, color = Slate500)
             if (state.pdfUrl.isNullOrBlank()) Text("No hay un PDF adjunto en el backend; puedes guardar una copia con los datos del comprobante.", style = MaterialTheme.typography.bodySmall, color = Slate500)
-        }
-    }
-}
-
-@Composable
-private fun PdfTopBar(
-    onNavigateBack: () -> Unit,
-    statusBarPadding: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding + spacing.small,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.extraSmall))
-            Text(
-                text = "Comprobante De Servicio",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(spacing.iconLarge)
-            )
         }
     }
 }
@@ -891,8 +836,8 @@ private fun PdfFixedActionFooter(
     ) {
         Button(
             onClick = onDownloadPdf,
-            shape = RoundedCornerShape(spacing.radiusSmall),
-            colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(spacing.buttonHeight)

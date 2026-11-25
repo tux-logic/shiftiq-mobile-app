@@ -111,7 +111,57 @@ data class BranchResourceDto(
     @SerializedName("address")
     val address: String,
     @SerializedName("phone")
-    val phone: String
+    val phone: String,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null
+)
+
+data class BranchCatalogResourceDto(
+    @SerializedName("branchId")
+    val branchId: String,
+    @SerializedName("workshopId")
+    val workshopId: String,
+    @SerializedName("workshopBrandName")
+    val workshopBrandName: String? = null,
+    @SerializedName("workshopBusinessName")
+    val workshopBusinessName: String? = null,
+    @SerializedName("branchCode")
+    val branchCode: String? = null,
+    @SerializedName("branchName")
+    val branchName: String? = null,
+    @SerializedName("address")
+    val address: String? = null,
+    @SerializedName("phone")
+    val phone: String? = null,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null,
+    @SerializedName("averageRating")
+    val averageRating: Double? = null,
+    @SerializedName("reviewCount")
+    val reviewCount: Int? = null,
+    @SerializedName("activeBaysCount")
+    val activeBaysCount: Int? = null,
+    @SerializedName("freeBaysToday")
+    val freeBaysToday: Int? = null
+)
+
+data class BranchBayResourceDto(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("branchId")
+    val branchId: String,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("type")
+    val type: String,
+    @SerializedName("active")
+    val active: Boolean = true
 )
 
 data class CreateBranchRequestDto(

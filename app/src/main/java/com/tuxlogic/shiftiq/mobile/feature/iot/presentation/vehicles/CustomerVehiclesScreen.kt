@@ -1,7 +1,9 @@
 package com.tuxlogic.shiftiq.mobile.feature.iot.presentation.vehicles
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
@@ -40,12 +41,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,6 +62,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcAlert
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcSeverity
@@ -78,8 +79,6 @@ private val GarageTeal = Color(0xFF0FB5BA)
 private val GarageGreen = Color(0xFF3DBE6C)
 private val GarageAmber = Color(0xFFF2A93B)
 private val GarageOrange = Color(0xFFC94A0E)
-private val GarageBackground = Color(0xFFF7F7F4)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerVehiclesScreen(
@@ -97,61 +96,59 @@ fun CustomerVehiclesScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = GarageBackground,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = when {
-                            uiState.isAddingVehicle && uiState.isEditingVehicle -> "Editar vehículo"
-                            uiState.isAddingVehicle -> "Agregar vehículo"
-                            else -> uiState.selectedVehicle?.let { "${it.brand} ${it.model}" } ?: "Mi Garaje"
-                        },
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
+    val selectedVehicle = uiState.selectedVehicle
+    val headerTitle = when {
+        uiState.isAddingVehicle && uiState.isEditingVehicle -> "Editar vehículo"
+        uiState.isAddingVehicle -> "Agregar vehículo"
+        selectedVehicle != null -> "${selectedVehicle.brand} ${selectedVehicle.model}"
+        else -> "Mis Vehículos"
+    }
+    val headerSubtitle = when {
+        uiState.isAddingVehicle -> "Registro de vehículo"
+        selectedVehicle != null -> "${selectedVehicle.brand} ${selectedVehicle.model} · ${selectedVehicle.plateNumber.value}"
+        else -> "Historial técnico y alertas de diagnóstico OBD2"
+    }
+    val contentPadding = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp)
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ShiftIQPageHeader(
+            title = headerTitle,
+            subtitle = headerSubtitle,
+            showBackButton = true,
+            onBackPressed = {
+                if (uiState.isAddingVehicle) {
+                    viewModel.cancelVehicleRegistration()
+                } else if (selectedVehicle != null) {
+                    viewModel.clearSelectedVehicle()
+                } else {
+                    onNavigateBack()
+                }
+            },
+            actions = {
+                if (!uiState.isAddingVehicle) {
                     IconButton(
                         onClick = {
-                            if (uiState.isAddingVehicle) {
-                                viewModel.cancelVehicleRegistration()
-                            } else if (uiState.selectedVehicle != null) {
-                                viewModel.clearSelectedVehicle()
+                            if (selectedVehicle != null) {
+                                viewModel.refreshSelectedVehicle()
                             } else {
-                                onNavigateBack()
+                                viewModel.loadVehicles()
                             }
                         }
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = "Actualizar",
+                            tint = Color.White
+                        )
                     }
-                },
-                actions = {
-                    if (!uiState.isAddingVehicle) {
-                        IconButton(
-                            onClick = {
-                                if (uiState.selectedVehicle != null) {
-                                    viewModel.refreshSelectedVehicle()
-                                } else {
-                                    viewModel.loadVehicles()
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Filled.Refresh, contentDescription = "Actualizar")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = GarageNavy,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
-                )
-            )
-        }
-    ) { innerPadding ->
-        val selectedVehicle = uiState.selectedVehicle
+                }
+            }
+        )
+
         if (uiState.isAddingVehicle) {
             VehicleRegistrationForm(
                 uiState = uiState,
@@ -162,7 +159,7 @@ fun CustomerVehiclesScreen(
                 onVinChanged = viewModel::onVehicleVinChanged,
                 onSubmit = viewModel::submitVehicleRegistration,
                 onCancel = viewModel::cancelVehicleRegistration,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize().then(contentPadding)
             )
         } else if (selectedVehicle == null) {
             VehicleListContent(
@@ -170,16 +167,17 @@ fun CustomerVehiclesScreen(
                 onVehicleClick = viewModel::selectVehicle,
                 onRefresh = viewModel::loadVehicles,
                 onAddVehicle = viewModel::startVehicleRegistration,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize().then(contentPadding)
             )
         } else {
             VehicleDetailContent(
                 uiState = uiState,
                 vehicle = selectedVehicle,
+                isPrimary = selectedVehicle.id == uiState.primaryVehicleId,
                 onEditVehicle = { viewModel.startVehicleEditing(selectedVehicle) },
                 onRequestDeleteVehicle = viewModel::requestDeleteVehicleConfirmation,
                 onLoadMoreTelemetryHistory = viewModel::loadMoreTelemetryHistory,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize().then(contentPadding)
             )
         }
     }
@@ -228,11 +226,7 @@ private fun VehicleListContent(
     onAddVehicle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -297,6 +291,7 @@ private fun VehicleListContent(
                     items(uiState.vehicles, key = { it.id.toString() }) { vehicle ->
                         VehicleCard(
                             vehicle = vehicle,
+                            isPrimary = vehicle.id == uiState.primaryVehicleId,
                             latestSnapshot = uiState.telemetryByVehicleId[vehicle.id.toString()],
                             isLoadingTelemetry = uiState.isLoadingVehicleTelemetry,
                             onClick = { onVehicleClick(vehicle) }
@@ -323,8 +318,7 @@ private fun VehicleRegistrationForm(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
@@ -395,7 +389,9 @@ private fun VehicleRegistrationForm(
         Button(
             onClick = onSubmit,
             enabled = !uiState.isRegisteringVehicle,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
             if (uiState.isRegisteringVehicle) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -420,6 +416,7 @@ private fun VehicleRegistrationForm(
 @Composable
 private fun VehicleCard(
     vehicle: Vehicle,
+    isPrimary: Boolean,
     latestSnapshot: TelemetrySnapshot?,
     isLoadingTelemetry: Boolean,
     onClick: () -> Unit
@@ -427,9 +424,10 @@ private fun VehicleCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -451,10 +449,15 @@ private fun VehicleCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                TelemetryStatusBadge(
-                    hasTelemetry = latestSnapshot != null,
-                    isLoading = isLoadingTelemetry
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (isPrimary) {
+                        PrimaryVehicleBadge()
+                    }
+                    TelemetryStatusBadge(
+                        hasTelemetry = latestSnapshot != null,
+                        isLoading = isLoadingTelemetry
+                    )
+                }
             }
 
             if (!vehicle.photoUrl.isNullOrBlank()) {
@@ -576,6 +579,7 @@ private fun VehicleMetric(
 private fun VehicleDetailContent(
     uiState: CustomerVehiclesUiState,
     vehicle: Vehicle,
+    isPrimary: Boolean,
     onEditVehicle: () -> Unit,
     onRequestDeleteVehicle: () -> Unit,
     onLoadMoreTelemetryHistory: () -> Unit,
@@ -584,15 +588,15 @@ private fun VehicleDetailContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            border = BorderStroke(1.dp, ShiftIQBorderSlate),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(20.dp)) {
                 Text(
@@ -613,31 +617,49 @@ private fun VehicleDetailContent(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (isPrimary) {
+                    Spacer(Modifier.height(10.dp))
+                    PrimaryVehicleBadge()
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Este es el vehículo principal de tu cuenta y no se puede eliminar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedButton(
-                onClick = onEditVehicle,
-                modifier = Modifier.weight(1f)
-            ) {
+        if (isPrimary) {
+            OutlinedButton(onClick = onEditVehicle, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Edit, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
                 Text("Editar")
             }
-            OutlinedButton(
-                onClick = onRequestDeleteVehicle,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Filled.Delete, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Eliminar")
+                OutlinedButton(
+                    onClick = onEditVehicle,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Editar")
+                }
+                OutlinedButton(
+                    onClick = onRequestDeleteVehicle,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Eliminar")
+                }
             }
         }
 
@@ -672,15 +694,32 @@ private fun VehicleDetailContent(
 }
 
 @Composable
+private fun PrimaryVehicleBadge() {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = PrimaryBlue.copy(alpha = 0.1f)
+    ) {
+        Text(
+            text = "Principal",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = GarageNavy,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
 private fun TelemetryCard(
     snapshot: TelemetrySnapshot?,
     isLoading: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -780,9 +819,10 @@ private fun TelemetryHistoryCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -1019,9 +1059,10 @@ private fun DtcAlertsCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),

@@ -35,6 +35,9 @@ kotlinSerialization = "2.4.21"
 # Añadido: Permite usar java.time.* (Instant, LocalDateTime) en dispositivos con minSdk 24 sin crasheos
 desugarJdkLibs = "2.1.5"
 
+# MapLibre Native (OpenFreeMap Positron — mirrors Flutter maplibre_gl)
+maplibre = "13.7.1"
+
 # Concurrencia y Pruebas Unitarias
 # Añadidos: Corrutinas para asincronía en DataStore/Retrofit, Turbine para testear Flows reactivos y MockK para mocks idiomáticos
 coroutines = "1.10.1"
@@ -89,6 +92,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 # Compatibilidad Java Time (Añadido: Desugaring de Bytecode para minSdk 24)
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+
+# MapLibre vector maps (OpenFreeMap Positron style asset)
+maplibre-android = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 
 # Concurrencia y Pruebas (Añadidos: Coroutines Test, Turbine y MockK)
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }

@@ -65,10 +65,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -156,7 +159,7 @@ fun MyGarageScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 110.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             PersonalFleetHeader(onAddVehicle = onAddVehicle)
@@ -204,38 +207,27 @@ private fun GarageTopBar(
     modifier: Modifier = Modifier
 ) {
     val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                horizontal = spacing.medium,
-                vertical = spacing.medium
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Mi Garaje - Historial",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        IconButton(
-            onClick = onNavigateToProfile,
-            modifier = Modifier
-                .size(spacing.badgeHeight + spacing.smallMedium)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f))
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Mi Perfil",
-                tint = Color.White,
-                modifier = Modifier.size(spacing.iconLarge)
-            )
+    ShiftIQPageHeader(
+        title = "Mi Garaje",
+        subtitle = "Historial y flota personal",
+        modifier = modifier,
+        actions = {
+            IconButton(
+                onClick = onNavigateToProfile,
+                modifier = Modifier
+                    .size(spacing.badgeHeight + spacing.smallMedium)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.15f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Mi Perfil",
+                    tint = Color.White,
+                    modifier = Modifier.size(spacing.iconLarge)
+                )
+            }
         }
-    }
+    )
 }
 
 @Composable
@@ -292,10 +284,10 @@ private fun VehicleFleetCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -453,7 +445,7 @@ private fun VehicleCardTopRow(
                     .padding(horizontal = spacing.small, vertical = spacing.extraSmall)
             ) {
                 Text(
-                    text = "Ppal",
+                    text = "Principal",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = Slate500
@@ -650,9 +642,10 @@ private fun GarageMetricCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -836,9 +829,10 @@ private fun MaintenanceTimelineCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -938,9 +932,10 @@ private fun OutsideNetworkServiceBanner(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier

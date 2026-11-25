@@ -2,19 +2,18 @@ package com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.detail
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,16 +26,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,8 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowBack
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
@@ -68,7 +63,6 @@ import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.Inv
 import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.InventorySectionCard
 import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.ProductInUseDialog
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     onBack: () -> Unit,
@@ -122,41 +116,21 @@ fun ProductDetailScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = Slate50,
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = detail?.name ?: "Detalle del producto",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        color = Slate900,
-                        maxLines = 1
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = arrowBack,
-                            contentDescription = "Atrás",
-                            tint = Slate900,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
-    ) { padding ->
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Slate50)
+    ) {
+        ShiftIQPageHeader(
+            title = detail?.name ?: "Detalle del producto",
+            subtitle = "Detalle de producto",
+            showBackButton = true,
+            onBackPressed = onBack
+        )
         when {
             state.isLoading && detail == null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = PrimaryBlue)
@@ -166,8 +140,7 @@ fun ProductDetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp),
+                        .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -181,7 +154,6 @@ fun ProductDetailScreen(
                     detail = detail,
                     isDeleting = state.isDeleting,
                     errorMessage = state.errorMessage,
-                    paddingTop = padding.calculateTopPadding(),
                     onEdit = { onEdit(productId) },
                     onBatchIn = { onBatchIn(productId) },
                     onAdjust = { onAdjust(productId) },
@@ -197,7 +169,6 @@ private fun ProductDetailContent(
     detail: ProductDetail,
     isDeleting: Boolean,
     errorMessage: String?,
-    paddingTop: androidx.compose.ui.unit.Dp,
     onEdit: () -> Unit,
     onBatchIn: () -> Unit,
     onAdjust: () -> Unit,
@@ -206,10 +177,9 @@ private fun ProductDetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = paddingTop)
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -245,8 +215,9 @@ private fun ProductDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(18.dp))
                 .background(Color.White)
+                .border(BorderStroke(1.dp, ShiftIQBorderSlate), RoundedCornerShape(18.dp))
                 .padding(16.dp)
         ) {
             Text("EXISTENCIAS ACTUALES", color = Slate500, fontSize = 11.sp, fontWeight = FontWeight.Bold)

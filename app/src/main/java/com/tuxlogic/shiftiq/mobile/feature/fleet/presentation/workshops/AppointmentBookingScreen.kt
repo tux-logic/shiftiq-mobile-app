@@ -56,11 +56,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -161,7 +164,7 @@ fun AppointmentBookingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.medium)
             ) {
                 WorkshopBookingSummaryCard(
@@ -174,11 +177,13 @@ fun AppointmentBookingScreen(
                     selectedIndex = uiState.selectedDayIndex,
                     onSelectDay = onSelectDay
                 )
-                BaySelectorSection(
-                    bays = uiState.availableBays,
-                    selectedBayId = uiState.selectedBayId,
-                    onSelectBay = onSelectBay
-                )
+                if (uiState.availableBays.isNotEmpty()) {
+                    BaySelectorSection(
+                        bays = uiState.availableBays,
+                        selectedBayId = uiState.selectedBayId,
+                        onSelectBay = onSelectBay
+                    )
+                }
                 BaySlotGridSection(
                     slots = uiState.availableSlots,
                     selectedIndex = uiState.selectedSlotIndex,
@@ -190,7 +195,6 @@ fun AppointmentBookingScreen(
                 )
                 PaymentGuaranteeBadge()
                 ConfirmBookingButton(onClick = onOpenConfirmation)
-                Spacer(modifier = Modifier.height(spacing.medium))
             }
         }
 
@@ -241,43 +245,13 @@ private fun BookingTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = statusBarPadding)
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.small),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Atrás",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(spacing.small))
-            Column {
-                Text(
-                    text = "Agendar Cita y Bahía",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = "Reserva técnica en taller certificado",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
+    ShiftIQPageHeader(
+        title = "Agendar Cita y Bahía",
+        subtitle = "Reserva técnica en taller certificado",
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -289,14 +263,15 @@ private fun WorkshopBookingSummaryCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
         ) {
             Row(
@@ -310,21 +285,12 @@ private fun WorkshopBookingSummaryCard(
                     fontWeight = FontWeight.Bold,
                     color = Slate900
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = ShiftIQWarning,
-                        modifier = Modifier.size(spacing.iconMedium)
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(
-                        text = "4.8",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                }
+                Text(
+                    text = "Red certificada",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
+                )
             }
 
             Text(
@@ -360,9 +326,10 @@ private fun VehicleRegistrationCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = Slate100),
-        border = BorderStroke(spacing.strokeThin, Slate200)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -421,14 +388,15 @@ private fun DaySelectorSection(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onSelectDay(index) },
-                    shape = RoundedCornerShape(spacing.radiusMedium),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.surface
+                        containerColor = if (isSelected) PrimaryBlue else Color.White
                     ),
                     border = BorderStroke(
                         spacing.strokeThin,
-                        if (isSelected) PrimaryBlue else Slate200
-                    )
+                        if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -474,14 +442,15 @@ private fun BaySelectorSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onSelectBay(bay.id) },
-                shape = RoundedCornerShape(spacing.radiusMedium),
+                shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) PrimaryBlue.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+                    containerColor = if (isSelected) PrimaryBlue.copy(alpha = 0.08f) else Color.White
                 ),
                 border = BorderStroke(
                     spacing.strokeThin,
-                    if (isSelected) PrimaryBlue else Slate200
-                )
+                    if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -579,14 +548,15 @@ private fun BaySlotCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(spacing.radiusMedium),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) PrimaryBlue else Color.White
         ),
         border = BorderStroke(
             spacing.strokeThin,
-            if (isSelected) PrimaryBlue else Slate200
-        )
+            if (isSelected) PrimaryBlue else ShiftIQBorderSlate
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -666,8 +636,9 @@ private fun ConfirmBookingButton(
         modifier = modifier
             .fillMaxWidth()
             .height(spacing.buttonHeight),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
     ) {
         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
         Spacer(modifier = Modifier.width(spacing.small))
@@ -704,9 +675,16 @@ private fun BookingConfirmationModal(
             ) {
                 ConfirmationDetailRow(label = "TALLER TÉCNICO", value = uiState.workshopName)
                 ConfirmationDetailRow(label = "FECHA Y TURNO", value = "$selectedDay • $selectedSlot")
-                ConfirmationDetailRow(label = "BAHÍA ASIGNADA", value = selectedBay?.name ?: "Bahía 2")
-                ConfirmationDetailRow(label = "VEHÍCULO", value = uiState.selectedVehicle?.let { "${it.brand} ${it.model} • ${it.plateNumber}" } ?: "ABC-123")
-                ConfirmationDetailRow(label = "PRESUPUESTO ESTIMADO", value = uiState.estimatedPricePen)
+                selectedBay?.name?.takeIf { it.isNotBlank() }?.let { bayName ->
+                    ConfirmationDetailRow(label = "BAHÍA ASIGNADA", value = bayName)
+                }
+                ConfirmationDetailRow(
+                    label = "VEHÍCULO",
+                    value = uiState.selectedVehicle?.let { "${it.brand} ${it.model} • ${it.plateNumber}" }.orEmpty()
+                )
+                if (uiState.estimatedPricePen.isNotBlank()) {
+                    ConfirmationDetailRow(label = "PRESUPUESTO ESTIMADO", value = uiState.estimatedPricePen)
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -727,7 +705,7 @@ private fun BookingConfirmationModal(
                 onClick = onConfirm,
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(spacing.iconMedium))
@@ -739,12 +717,12 @@ private fun BookingConfirmationModal(
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Modificar", color = Slate700)
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -802,7 +780,7 @@ private fun BookingSuccessModal(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(spacing.radiusMedium))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(Navy900)
                         .padding(spacing.smallMedium),
                     contentAlignment = Alignment.Center
@@ -817,8 +795,12 @@ private fun BookingSuccessModal(
 
                 ConfirmationDetailRow(label = "Taller", value = voucher.workshopName)
                 ConfirmationDetailRow(label = "Fecha y Turno", value = "${voucher.scheduledDate} • ${voucher.scheduledTime}")
-                ConfirmationDetailRow(label = "Bahía", value = voucher.bayName)
-                ConfirmationDetailRow(label = "Estimado a Pagar", value = "${voucher.estimatedPen} (Pago presencial)")
+                if (voucher.bayName.isNotBlank()) {
+                    ConfirmationDetailRow(label = "Bahía", value = voucher.bayName)
+                }
+                if (voucher.estimatedPen.isNotBlank()) {
+                    ConfirmationDetailRow(label = "Estimado a Pagar", value = "${voucher.estimatedPen} (Pago presencial)")
+                }
             }
         },
         confirmButton = {
@@ -826,7 +808,7 @@ private fun BookingSuccessModal(
                 onClick = onViewMyAppointments,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Ver en Mis Citas", fontWeight = FontWeight.Bold)
             }
@@ -835,12 +817,12 @@ private fun BookingSuccessModal(
             OutlinedButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Aceptar y Salir", color = Slate700)
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -905,12 +887,12 @@ private fun TurnConflictErrorDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                shape = RoundedCornerShape(spacing.radiusMedium)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Elegir Horario")
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
@@ -942,9 +924,10 @@ private fun BranchUnavailableDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelectBranch(branch) },
-                        shape = RoundedCornerShape(spacing.radiusSmall),
-                        colors = CardDefaults.cardColors(containerColor = Slate100),
-                        border = BorderStroke(spacing.strokeThin, Slate200)
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(spacing.small)) {
                             Text(text = branch.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Slate900)
@@ -955,11 +938,15 @@ private fun BranchUnavailableDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss, shape = RoundedCornerShape(spacing.radiusMedium)) {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                shape = RoundedCornerShape(14.dp)
+            ) {
                 Text("Cerrar")
             }
         },
-        shape = RoundedCornerShape(spacing.radiusLarge)
+        shape = RoundedCornerShape(18.dp)
     )
 }
 
