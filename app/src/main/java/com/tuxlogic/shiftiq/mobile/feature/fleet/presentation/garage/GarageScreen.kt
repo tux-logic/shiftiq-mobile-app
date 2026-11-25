@@ -71,6 +71,7 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeade
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -283,10 +284,10 @@ private fun VehicleFleetCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.elevationSmall)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -641,9 +642,10 @@ private fun GarageMetricCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -827,9 +829,10 @@ private fun MaintenanceTimelineCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -929,9 +932,10 @@ private fun OutsideNetworkServiceBanner(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier

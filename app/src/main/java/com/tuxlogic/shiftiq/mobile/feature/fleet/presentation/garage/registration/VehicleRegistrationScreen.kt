@@ -9,21 +9,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Check
@@ -36,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -54,8 +49,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.CanBusCyan
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
+import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.spacing
@@ -101,26 +98,26 @@ fun VehicleRegistrationScreen(
     var showPairingSheet by rememberSaveable { mutableStateOf(false) }
 
     val spacing = MaterialTheme.spacing
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        RegistrationTopBar(
-            currentStep = currentStep,
-            onBackClick = {
+        ShiftIQPageHeader(
+            title = "Registro de Vehículo",
+            subtitle = "Paso $currentStep de 3",
+            showBackButton = true,
+            onBackPressed = {
                 if (currentStep > 1) currentStep-- else onNavigateBack()
-            },
-            statusBarPadding = statusBarPadding
+            }
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             StepIndicatorHeader(currentStep = currentStep)
@@ -184,50 +181,6 @@ fun VehicleRegistrationScreen(
 }
 
 @Composable
-private fun RegistrationTopBar(
-    currentStep: Int,
-    onBackClick: () -> Unit,
-    statusBarPadding: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier
-) {
-    val spacing = MaterialTheme.spacing
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Navy900)
-            .padding(
-                top = statusBarPadding,
-                start = spacing.small,
-                end = spacing.medium,
-                bottom = spacing.smallMedium
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Atrás",
-                tint = Color.White
-            )
-        }
-        Spacer(modifier = Modifier.width(spacing.small))
-        Column {
-            Text(
-                text = "Registro de Vehículo",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Paso $currentStep de 3",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.7f)
-            )
-        }
-    }
-}
-
-@Composable
 private fun StepIndicatorHeader(
     currentStep: Int,
     modifier: Modifier = Modifier
@@ -271,9 +224,10 @@ private fun Step1OwnerForm(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -330,8 +284,8 @@ private fun Step1OwnerForm(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(spacing.buttonHeight),
-                shape = RoundedCornerShape(spacing.radiusMedium),
-                colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
             ) {
                 Text(
                     text = "Continuar a Vehículo y OBD-II",
@@ -390,9 +344,10 @@ private fun Step2VehicleForm(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -461,8 +416,8 @@ private fun Step2VehicleForm(
                     modifier = Modifier
                         .weight(1f)
                         .height(spacing.buttonHeight),
-                    shape = RoundedCornerShape(spacing.radiusMedium),
-                    colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
                 ) {
                     Text("Continuar")
                 }
@@ -612,9 +567,10 @@ private fun Step3Confirmation(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -634,8 +590,8 @@ private fun Step3Confirmation(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(spacing.buttonHeight),
-                shape = RoundedCornerShape(spacing.radiusMedium),
-                colors = ButtonDefaults.buttonColors(containerColor = Navy900, contentColor = Color.White)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
                 Spacer(modifier = Modifier.width(spacing.small))
