@@ -9,22 +9,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Refresh
@@ -34,17 +29,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,6 +51,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthErrorBanner
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthLabeledField
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthPrimaryButton
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthScaffold
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowBack
@@ -84,12 +75,10 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.NavActivePill
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Primary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQAccentSkyBlue
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQError
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQErrorContainer
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQPrimary
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
-import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate100
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate200
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate400
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Slate50
@@ -146,7 +135,6 @@ fun RegisterScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterContent(
     state: RegisterUiState,
@@ -414,254 +402,200 @@ private fun Step1OwnerContent(
 
     Spacer(modifier = Modifier.height(14.dp))
 
-    Text(text = "Nombre Completo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
     val showNameError = state.fullNameError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Nombre Completo *",
         value = state.fullName,
         onValueChange = onFullNameChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Rodrigo Alarcón Flores", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = person, contentDescription = null, tint = if (showNameError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
+        hint = "Rodrigo Alarcón Flores",
+        leadingIcon = person,
         isError = showNameError,
-        supportingText = {
-            state.fullNameError?.let { errorText ->
-                Text(text = errorText, color = SeverityCrimson, fontSize = 11.sp)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        errorMessage = state.fullNameError,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next)
     )
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Documento de Identidad (DNI)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Documento de Identidad (DNI) *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "8 dígitos", color = Slate500, fontSize = 11.sp)
-    }
-    Spacer(modifier = Modifier.height(4.dp))
     val showDniError = (state.documentNumber.isNotEmpty() && !state.isDniValid) || state.documentError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Documento de Identidad (DNI) *",
         value = state.documentNumber,
         onValueChange = onDocumentNumberChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("47891234", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = badgeIcon, contentDescription = null, tint = if (showDniError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
+        hint = "47891234",
+        leadingIcon = badgeIcon,
         isError = showDniError,
-        supportingText = {
-            if (showDniError) {
-                Text(
-                    text = state.documentError ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isLookingUpDni) {
-                Text(text = "Consultando en RENIEC...", color = Slate500, fontSize = 11.sp)
-            } else if (state.dniVerified) {
-                Text(text = "✓ DNI verificado en RENIEC", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            } else if (state.isDniValid) {
-                Text(text = "✓ DNI válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            } else {
-                Text(text = "8 dígitos numéricos", color = Slate500, fontSize = 11.sp)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        errorMessage = state.documentError
+            ?: "El DNI debe tener 8 dígitos numéricos (${state.documentNumber.length}/8)",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
     )
-
-    Spacer(modifier = Modifier.height(10.dp))
-
-    // Teléfono Celular WhatsApp
-    Text(text = "Teléfono Celular WhatsApp *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
-    val showPhoneError = (state.phone.isNotEmpty() && !state.isPhoneValid) || state.phoneError != null
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Box(
-            modifier = Modifier
-                .height(56.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Slate100)
-                .border(BorderStroke(1.dp, Slate200), RoundedCornerShape(12.dp))
-                .padding(horizontal = 14.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "+51", color = Slate800, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    if (!showDniError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        val dniHelper = when {
+            state.isLookingUpDni -> "Consultando en RENIEC..."
+            state.dniVerified -> "✓ DNI verificado en RENIEC"
+            state.isDniValid -> "✓ DNI válido"
+            else -> "8 dígitos numéricos"
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        OutlinedTextField(
-            value = state.phone,
-            onValueChange = onPhoneChange,
-            modifier = Modifier.fillMaxWidth(),
-            textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-            placeholder = { Text("987654321", color = Slate400, fontSize = 14.sp) },
-            leadingIcon = { Icon(imageVector = smartphone, contentDescription = null, tint = if (showPhoneError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-            singleLine = true,
-            isError = showPhoneError,
-            supportingText = {
-                if (showPhoneError) {
-                    Text(
-                        text = state.phoneError ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
-                        color = SeverityCrimson,
-                        fontSize = 11.sp
-                    )
-                } else if (state.isPhoneValid) {
-                    Text(text = "✓ Celular válido para alertas", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                } else {
-                    Text(text = "9 dígitos sin código de país", color = Slate500, fontSize = 11.sp)
-                }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-                focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-                errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-            )
+        val dniHelperColor = when {
+            state.dniVerified || state.isDniValid -> TelematicsGreen
+            else -> Slate500
+        }
+        Text(
+            text = dniHelper,
+            color = dniHelperColor,
+            fontSize = 11.sp,
+            fontWeight = if (state.dniVerified || state.isDniValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
         )
     }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Correo Electrónico
-    Text(text = "Correo Electrónico *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
-    val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = onEmailChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("usuario@ejemplo.com", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = mailOutline, contentDescription = null, tint = if (showEmailError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        singleLine = true,
-        isError = showEmailError,
-        supportingText = {
-            if (showEmailError) {
-                Text(
-                    text = state.emailError ?: "Ingresa un correo electrónico válido",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isEmailValid) {
-                Text(text = "✓ Correo válido", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+    val showPhoneError = (state.phone.isNotEmpty() && !state.isPhoneValid) || state.phoneError != null
+    AuthLabeledField(
+        label = "Teléfono Celular WhatsApp *",
+        value = state.phone,
+        onValueChange = onPhoneChange,
+        hint = "987654321",
+        leadingIcon = smartphone,
+        isError = showPhoneError,
+        errorMessage = state.phoneError
+            ?: "El celular debe tener 9 dígitos (${state.phone.length}/9)",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
     )
+    if (!showPhoneError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        val phoneHelper = if (state.isPhoneValid) {
+            "✓ Celular válido para alertas (+51)"
+        } else {
+            "9 dígitos sin código de país (+51)"
+        }
+        Text(
+            text = phoneHelper,
+            color = if (state.isPhoneValid) TelematicsGreen else Slate500,
+            fontSize = 11.sp,
+            fontWeight = if (state.isPhoneValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Contraseña
-    Text(text = "Contraseña *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(modifier = Modifier.height(4.dp))
+    val showEmailError = (state.email.isNotEmpty() && !state.isEmailValid) || state.emailError != null
+    AuthLabeledField(
+        label = "Correo Electrónico *",
+        value = state.email,
+        onValueChange = onEmailChange,
+        hint = "usuario@ejemplo.com",
+        leadingIcon = mailOutline,
+        isError = showEmailError,
+        errorMessage = state.emailError ?: "Ingresa un correo electrónico válido",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+    )
+    if (!showEmailError && state.isEmailValid) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "✓ Correo válido",
+            color = TelematicsGreen,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
     val showPasswordError = (state.password.isNotEmpty() && !state.isPasswordValid) || state.passwordError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Contraseña *",
         value = state.password,
         onValueChange = onPasswordChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Mínimo 8 caracteres", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = lockOutline, contentDescription = null, tint = if (showPasswordError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        trailingIcon = {
-            IconButton(onClick = onTogglePasswordVisibility) {
-                Icon(imageVector = if (state.isPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
-            }
-        },
-        singleLine = true,
-        visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        hint = "Mínimo 8 caracteres",
+        leadingIcon = lockOutline,
         isError = showPasswordError,
-        supportingText = {
-            if (showPasswordError) {
+        errorMessage = run {
+            if (state.passwordError != null) {
+                state.passwordError
+            } else if (showPasswordError) {
                 val missing = mutableListOf<String>()
                 if (!state.isPasswordLengthValid) missing.add("8+ caracteres")
                 if (!state.hasUppercase) missing.add("1 mayúscula")
                 if (!state.hasNumber) missing.add("1 número")
-                Text(
-                    text = state.passwordError ?: "Falta: ${missing.joinToString(", ")}",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.isPasswordValid) {
-                Text(text = "✓ Contraseña segura", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                "Falta: ${missing.joinToString(", ")}"
             } else {
-                Text(text = "Mínimo 8 caracteres, 1 mayúscula y 1 número", color = Slate500, fontSize = 11.sp)
+                null
             }
         },
+        visualTransformation = if (state.isPasswordVisible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        trailingIcon = {
+            IconButton(onClick = onTogglePasswordVisibility) {
+                Icon(
+                    imageVector = if (state.isPasswordVisible) visibilityOff else visibility,
+                    contentDescription = null,
+                    tint = Slate500,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     )
+    if (!showPasswordError) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = if (state.isPasswordValid) {
+                "✓ Contraseña segura"
+            } else {
+                "Mínimo 8 caracteres, 1 mayúscula y 1 número"
+            },
+            color = if (state.isPasswordValid) TelematicsGreen else Slate500,
+            fontSize = 11.sp,
+            fontWeight = if (state.isPasswordValid) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Confirmar Contraseña
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Confirmar Contraseña *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        if (state.doPasswordsMatch) {
-            Text(text = "✓ Coincide", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-    Spacer(modifier = Modifier.height(4.dp))
     val showConfirmError = (state.confirmPassword.isNotEmpty() && !state.doPasswordsMatch) || state.confirmPasswordError != null
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Confirmar Contraseña *",
         value = state.confirmPassword,
         onValueChange = onConfirmPasswordChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("Repite tu contraseña", color = Slate400, fontSize = 14.sp) },
-        leadingIcon = { Icon(imageVector = syncIcon, contentDescription = null, tint = if (showConfirmError) SeverityCrimson else Slate500, modifier = Modifier.size(20.dp)) },
-        trailingIcon = {
-            IconButton(onClick = onToggleConfirmPasswordVisibility) {
-                Icon(imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility, contentDescription = null, tint = Slate500, modifier = Modifier.size(20.dp))
-            }
-        },
-        singleLine = true,
-        visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        hint = "Repite tu contraseña",
+        leadingIcon = syncIcon,
         isError = showConfirmError,
-        supportingText = {
-            if (showConfirmError) {
-                Text(
-                    text = state.confirmPasswordError ?: "Las contraseñas no coinciden",
-                    color = SeverityCrimson,
-                    fontSize = 11.sp
-                )
-            } else if (state.doPasswordsMatch) {
-                Text(text = "✓ Las contraseñas coinciden", color = TelematicsGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
+        errorMessage = state.confirmPasswordError ?: "Las contraseñas no coinciden",
+        visualTransformation = if (state.isConfirmPasswordVisible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, errorTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200,
-            errorBorderColor = SeverityCrimson, errorContainerColor = Color.White
-        )
+        trailingIcon = {
+            IconButton(onClick = onToggleConfirmPasswordVisibility) {
+                Icon(
+                    imageVector = if (state.isConfirmPasswordVisible) visibilityOff else visibility,
+                    contentDescription = null,
+                    tint = Slate500,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     )
+    if (!showConfirmError && state.doPasswordsMatch) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "✓ Las contraseñas coinciden",
+            color = TelematicsGreen,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
 
     Spacer(modifier = Modifier.height(14.dp))
 
@@ -749,22 +683,7 @@ private fun Step1OwnerContent(
     }
 
     if (!state.errorMessage.isNullOrBlank()) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
-            border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.35f))
-        ) {
-            Row(
-                modifier = Modifier.padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = state.errorMessage, color = ShiftIQError, fontSize = 12.sp)
-            }
-        }
+        AuthErrorBanner(message = state.errorMessage)
     }
 
     Spacer(modifier = Modifier.height(20.dp))
@@ -860,107 +779,81 @@ private fun Step2VehicleContent(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Marca *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.brand,
-                onValueChange = onBrandChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
-                )
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Modelo *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.model,
-                onValueChange = onModelChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
-                )
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        AuthLabeledField(
+            label = "Marca *",
+            value = state.brand,
+            onValueChange = onBrandChange,
+            hint = "Toyota",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
+        AuthLabeledField(
+            label = "Modelo *",
+            value = state.model,
+            onValueChange = onModelChange,
+            hint = "Corolla",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Año de Fab. *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.year,
-                onValueChange = onYearChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
-                )
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Placa Vehicular *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            OutlinedTextField(
-                value = state.plateNumber,
-                onValueChange = onPlateNumberChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-                placeholder = { Text("ABC-123", color = Slate400, fontSize = 14.sp) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
-                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
-                )
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        AuthLabeledField(
+            label = "Año de Fab. *",
+            value = state.year,
+            onValueChange = onYearChange,
+            hint = "2020",
+            leadingIcon = Icons.Filled.AccessTime,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f)
+        )
+        AuthLabeledField(
+            label = "Placa Vehicular *",
+            value = state.plateNumber,
+            onValueChange = onPlateNumberChange,
+            hint = "ABC-123",
+            leadingIcon = directionsCar,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = "Número de Chasis (VIN) *", color = Slate800, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "17 caracteres", color = Slate500, fontSize = 11.sp)
-    }
-    Spacer(modifier = Modifier.height(4.dp))
-    OutlinedTextField(
+    AuthLabeledField(
+        label = "Número de Chasis (VIN) *",
         value = state.vin,
         onValueChange = onVinChange,
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Slate900, fontSize = 14.sp),
-        placeholder = { Text("3KPA24AB1KE129841", color = Slate400, fontSize = 14.sp) },
+        hint = "3KPA24AB1KE129841",
+        leadingIcon = badgeIcon,
         trailingIcon = {
             if (state.isVinValid) {
-                Icon(imageVector = checkCircle, contentDescription = null, tint = TelematicsGreen, modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = checkCircle,
+                    contentDescription = null,
+                    tint = TelematicsGreen,
+                    modifier = Modifier.size(18.dp)
+                )
             }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Slate900, unfocusedTextColor = Slate900, cursorColor = ShiftIQPrimary,
-            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White, focusedBorderColor = ShiftIQPrimary, unfocusedBorderColor = Slate200
-        )
+        }
     )
     Spacer(modifier = Modifier.height(4.dp))
-    Text(text = "Ubicado en la tarjeta de propiedad o base del parabrisas.", color = Slate500, fontSize = 11.sp)
+    Text(
+        text = "17 caracteres. Ubicado en la tarjeta de propiedad o base del parabrisas.",
+        color = Slate500,
+        fontSize = 11.sp,
+        modifier = Modifier.padding(start = 4.dp)
+    )
 
     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1155,25 +1048,11 @@ private fun Step3ConfirmContent(
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(ShiftIQPrimary)
-                .scaleOnPress(onClick = onSubmit),
-            contentAlignment = Alignment.Center
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Crear Cuenta y Finalizar", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(imageVector = arrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
+        AuthPrimaryButton(
+            label = "Crear Cuenta y Finalizar",
+            isLoading = state.isLoading,
+            onClick = onSubmit
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -1466,21 +1345,7 @@ private fun StepOtpContent(
 
         if (!state.errorMessage.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(14.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = ShiftIQErrorContainer),
-                border = BorderStroke(1.dp, SeverityCrimson.copy(alpha = 0.35f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(imageVector = errorOutline, contentDescription = null, tint = SeverityCrimson, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = state.errorMessage, color = ShiftIQError, fontSize = 12.sp)
-                }
-            }
+            AuthErrorBanner(message = state.errorMessage)
         }
 
         Spacer(modifier = Modifier.height(28.dp))
