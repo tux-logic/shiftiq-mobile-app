@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
+import com.tuxlogic.shiftiq.mobile.core.model.VehicleId
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetVehicleDtcAlertsUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.telemetry.GetVehicleTelemetryHistoryUseCase
@@ -33,6 +34,7 @@ data class CustomerVehiclesUiState(
     val isLoading: Boolean = true,
     val customerName: String? = null,
     val vehicles: List<Vehicle> = emptyList(),
+    val primaryVehicleId: VehicleId? = null,
     val isAddingVehicle: Boolean = false,
     val isEditingVehicle: Boolean = false,
     val isRegisteringVehicle: Boolean = false,
@@ -217,7 +219,16 @@ class CustomerVehiclesViewModel @Inject constructor(
     }
 
     fun requestDeleteVehicleConfirmation() {
-        if (_uiState.value.selectedVehicle == null) return
+        val selectedVehicle = _uiState.value.selectedVehicle ?: return
+        if (selectedVehicle.id == _uiState.value.primaryVehicleId) {
+            _uiState.update {
+                it.copy(
+                    showDeleteConfirmation = false,
+                    vehicleDeleteErrorMessage = "El vehículo principal de tu cuenta no se puede eliminar."
+                )
+            }
+            return
+        }
         _uiState.update {
             it.copy(showDeleteConfirmation = true, vehicleDeleteErrorMessage = null)
         }
@@ -231,8 +242,18 @@ class CustomerVehiclesViewModel @Inject constructor(
     }
 
     fun deleteSelectedVehicle() {
-        val vehicle = _uiState.value.selectedVehicle ?: return
-        if (_uiState.value.isDeletingVehicle) return
+        val state = _uiState.value
+        val vehicle = state.selectedVehicle ?: return
+        if (state.isDeletingVehicle) return
+        if (vehicle.id == state.primaryVehicleId) {
+            _uiState.update {
+                it.copy(
+                    showDeleteConfirmation = false,
+                    vehicleDeleteErrorMessage = "El vehículo principal de tu cuenta no se puede eliminar."
+                )
+            }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isDeletingVehicle = true, vehicleDeleteErrorMessage = null) }
@@ -294,10 +315,20 @@ class CustomerVehiclesViewModel @Inject constructor(
                     when (val vehiclesResult = getCustomerVehicles(CustomerId(customer.id))) {
                         is AppResult.Success -> {
                             val vehicles = vehiclesResult.data
+                            val savedPrimaryId = sessionDataStore.getPrimaryVehicleId(userId)
+                            val primaryId = savedPrimaryId?.takeIf { id ->
+                                vehicles.any { vehicle -> vehicle.id == id }
+                            } ?: vehicles.firstOrNull()?.id
+                            if (primaryId != null && primaryId != savedPrimaryId) {
+                                runCatching {
+                                    sessionDataStore.setPrimaryVehicleId(userId, primaryId)
+                                }
+                            }
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
                                     vehicles = vehicles,
+                                    primaryVehicleId = primaryId,
                                     telemetryByVehicleId = emptyMap(),
                                     isLoadingVehicleTelemetry = vehicles.isNotEmpty(),
                                     errorMessage = null
