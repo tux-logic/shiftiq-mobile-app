@@ -3,6 +3,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -155,13 +156,17 @@ fun WorkshopsScreen(
                 selectedFilter = uiState.selectedFilter,
                 onSelectFilter = onFilterSelected
             )
-            VectorGpsMapCard()
+            val workshops = uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops }
+            VectorGpsMapCard(
+                workshops = workshops,
+                onSelectWorkshop = onNavigateToDetail
+            )
             WorkshopsCatalogListHeader(
-                count = (uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops }).size,
+                count = workshops.size,
                 onNavigateToMyAppointments = onNavigateToMyAppointments
             )
             WorkshopsCatalogList(
-                workshops = uiState.filteredWorkshops.ifEmpty { uiState.allWorkshops },
+                workshops = workshops,
                 onNavigateToBooking = onNavigateToBooking,
                 onNavigateToDetail = onNavigateToDetail
             )
@@ -261,42 +266,82 @@ private fun WorkshopFilterChips(
     }
 }
 
+/**
+ * Positron-style workshop map chrome mirrored from Flutter [BranchMapView].
+ * Visual placeholder until MapLibre is wired on Android.
+ */
 @Composable
-private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
+private fun VectorGpsMapCard(
+    workshops: List<WorkshopItem>,
+    onSelectWorkshop: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val spacing = MaterialTheme.spacing
+    val focused = workshops.firstOrNull()
+    val pinSlots = listOf(
+        Offset(0.42f, 0.48f),
+        Offset(0.28f, 0.32f),
+        Offset(0.68f, 0.62f),
+        Offset(0.55f, 0.28f)
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(spacing.mapHeight),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+            .height(220.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PositronSurface),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val w = size.width
                 val h = size.height
-                val lineColor = Color.LightGray.copy(alpha = 0.5f)
-                drawLine(lineColor, Offset(0f, h * 0.35f), Offset(w, h * 0.35f), strokeWidth = 3f)
-                drawLine(lineColor, Offset(0f, h * 0.70f), Offset(w, h * 0.70f), strokeWidth = 3f)
-                drawLine(lineColor, Offset(w * 0.30f, 0f), Offset(w * 0.30f, h), strokeWidth = 3f)
-                drawLine(lineColor, Offset(w * 0.70f, 0f), Offset(w * 0.70f, h), strokeWidth = 3f)
-                drawCircle(PrimaryBlue, radius = 14f, center = Offset(w * 0.45f, h * 0.50f))
-                drawCircle(PrimaryBlue, radius = 28f, center = Offset(w * 0.45f, h * 0.50f), style = Stroke(width = 3f))
-                drawCircle(ObdTeal, radius = 12f, center = Offset(w * 0.25f, h * 0.30f))
-                drawCircle(ShiftIQWarning, radius = 12f, center = Offset(w * 0.75f, h * 0.65f))
+                // Soft Positron road grid
+                val road = SoftRoad.copy(alpha = 0.55f)
+                for (i in 1..5) {
+                    val y = h * (i / 6f)
+                    drawLine(road, Offset(0f, y), Offset(w, y), strokeWidth = 2.2f)
+                }
+                for (i in 1..4) {
+                    val x = w * (i / 5f)
+                    drawLine(road, Offset(x, 0f), Offset(x, h), strokeWidth = 2.2f)
+                }
+                // Blocks
+                drawRect(SoftBlock.copy(alpha = 0.35f), topLeft = Offset(w * 0.12f, h * 0.18f), size = androidx.compose.ui.geometry.Size(w * 0.18f, h * 0.14f))
+                drawRect(SoftBlock.copy(alpha = 0.28f), topLeft = Offset(w * 0.58f, h * 0.22f), size = androidx.compose.ui.geometry.Size(w * 0.22f, h * 0.12f))
+                drawRect(SoftBlock.copy(alpha = 0.3f), topLeft = Offset(w * 0.30f, h * 0.62f), size = androidx.compose.ui.geometry.Size(w * 0.20f, h * 0.12f))
+
+                workshops.take(pinSlots.size).forEachIndexed { index, _ ->
+                    val slot = pinSlots[index]
+                    val center = Offset(w * slot.x, h * slot.y)
+                    val selected = index == 0
+                    if (selected) {
+                        drawCircle(PrimaryBlue.copy(alpha = 0.18f), radius = 26f, center = center)
+                        drawCircle(PrimaryBlue.copy(alpha = 0.10f), radius = 38f, center = center)
+                    }
+                    drawCircle(
+                        color = if (selected) PrimaryBlue else Navy900,
+                        radius = if (selected) 9f else 6.5f,
+                        center = center
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = if (selected) 9f else 6.5f,
+                        center = center,
+                        style = Stroke(width = 2f)
+                    )
+                }
             }
 
-            // GPS Pill
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(spacing.smallMedium)
                     .clip(RoundedCornerShape(spacing.radiusFull))
-                    .background(Color.White.copy(alpha = 0.95f))
+                    .background(Color.White.copy(alpha = 0.96f))
+                    .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusFull))
                     .padding(horizontal = spacing.small, vertical = spacing.micro),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -308,66 +353,112 @@ private fun VectorGpsMapCard(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(spacing.extraSmall))
                 Text(
-                    text = "GPS EN VIVO",
+                    text = "MAPA · ${workshops.size} talleres",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Slate700
                 )
             }
 
-            // Map Controls Right
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(spacing.smallMedium),
                 verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
             ) {
+                MapControlButton(label = "+")
+                MapControlButton(label = "−")
                 Box(
                     modifier = Modifier
                         .size(spacing.controlButtonSize)
                         .clip(RoundedCornerShape(spacing.radiusSmall))
                         .background(Color.White)
+                        .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
                         .clickable {},
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("+", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
-                }
-                Box(
-                    modifier = Modifier
-                        .size(spacing.controlButtonSize)
-                        .clip(RoundedCornerShape(spacing.radiusSmall))
-                        .background(Color.White)
-                        .clickable {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("−", fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
-                }
-                Box(
-                    modifier = Modifier
-                        .size(spacing.controlButtonSize)
-                        .clip(RoundedCornerShape(spacing.radiusSmall))
-                        .background(Color.White)
-                        .clickable {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(spacing.iconSmall))
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(spacing.iconSmall)
+                    )
                 }
             }
 
-            // Pins overlay
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = spacing.extraExtraLarge)
-                    .clip(RoundedCornerShape(spacing.radiusSmall))
-                    .background(Navy900)
-                    .padding(horizontal = spacing.small, vertical = spacing.micro)
-            ) {
-                Text(text = "Silva (1.2 km)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            if (focused != null) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(spacing.smallMedium)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(14.dp))
+                        .clickable { onSelectWorkshop(focused.id) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(PrimaryBlue.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storefront,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = focused.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = "${focused.district.ifBlank { "Cercano" }} · ${focused.distanceKm} km",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Slate500
+                        )
+                    }
+                    Text(
+                        text = "Ver",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun MapControlButton(label: String) {
+    val spacing = MaterialTheme.spacing
+    Box(
+        modifier = Modifier
+            .size(spacing.controlButtonSize)
+            .clip(RoundedCornerShape(spacing.radiusSmall))
+            .background(Color.White)
+            .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
+            .clickable {},
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+private val PositronSurface = Color(0xFFF8FAFC)
+private val SoftRoad = Color(0xFFCBD5E1)
+private val SoftBlock = Color(0xFFE2E8F0)
 
 @Composable
 private fun WorkshopsCatalogListHeader(

@@ -56,12 +56,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -162,7 +164,7 @@ fun AppointmentBookingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.medium)
             ) {
                 WorkshopBookingSummaryCard(
@@ -191,7 +193,6 @@ fun AppointmentBookingScreen(
                 )
                 PaymentGuaranteeBadge()
                 ConfirmBookingButton(onClick = onOpenConfirmation)
-                Spacer(modifier = Modifier.height(spacing.medium))
             }
         }
 
@@ -260,14 +261,15 @@ private fun WorkshopBookingSummaryCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
         ) {
             Row(

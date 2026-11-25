@@ -53,9 +53,12 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.unit.dp
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.SeverityCrimson
+import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQSuccess
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQWarning
@@ -132,7 +135,7 @@ fun WorkshopDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = spacing.medium, vertical = spacing.smallMedium)
+                            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 32.dp)
                     )
                 }
             }
@@ -149,36 +152,13 @@ private fun WorkshopDetailTopBar(
     statusBarPadding: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
-    val spacing = MaterialTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Navy900,
-        shadowElevation = spacing.elevationSmall
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = statusBarPadding)
-                .height(spacing.topBarHeight)
-                .padding(horizontal = spacing.small),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                modifier = Modifier.weight(1f).padding(horizontal = spacing.small)
-            )
+    ShiftIQPageHeader(
+        title = title,
+        subtitle = "Perfil del taller certificado",
+        showBackButton = true,
+        onBackPressed = onNavigateBack,
+        modifier = modifier,
+        actions = {
             IconButton(onClick = onToggleFavorite) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -187,7 +167,7 @@ private fun WorkshopDetailTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -215,13 +195,12 @@ private fun WorkshopDetailContent(
                 .fillMaxWidth()
                 .height(spacing.buttonHeight),
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-            shape = RoundedCornerShape(spacing.radiusMedium)
+            shape = RoundedCornerShape(14.dp)
         ) {
             Icon(imageVector = Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(spacing.iconMedium))
             Spacer(modifier = Modifier.width(spacing.small))
             Text(text = "Agendar Cita en este Taller", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
         }
-        Spacer(modifier = Modifier.height(spacing.large))
     }
 }
 
@@ -233,14 +212,15 @@ private fun WorkshopHeroCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             Row(
@@ -334,14 +314,15 @@ private fun WorkshopInfrastructureCard(
     val spacing = MaterialTheme.spacing
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(spacing.radiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.medium),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -372,14 +353,15 @@ private fun WorkshopSpecialtiesSection(
         specialties.forEach { item ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(spacing.radiusMedium),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(spacing.strokeThin, MaterialTheme.colorScheme.outlineVariant)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(spacing.strokeThin, ShiftIQBorderSlate),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(spacing.medium),
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(spacing.micro)
                 ) {
                     Row(
