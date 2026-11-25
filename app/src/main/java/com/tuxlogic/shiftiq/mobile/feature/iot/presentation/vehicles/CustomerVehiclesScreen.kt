@@ -173,6 +173,7 @@ fun CustomerVehiclesScreen(
             VehicleDetailContent(
                 uiState = uiState,
                 vehicle = selectedVehicle,
+                isPrimary = selectedVehicle.id == uiState.primaryVehicleId,
                 onEditVehicle = { viewModel.startVehicleEditing(selectedVehicle) },
                 onRequestDeleteVehicle = viewModel::requestDeleteVehicleConfirmation,
                 onLoadMoreTelemetryHistory = viewModel::loadMoreTelemetryHistory,
@@ -290,6 +291,7 @@ private fun VehicleListContent(
                     items(uiState.vehicles, key = { it.id.toString() }) { vehicle ->
                         VehicleCard(
                             vehicle = vehicle,
+                            isPrimary = vehicle.id == uiState.primaryVehicleId,
                             latestSnapshot = uiState.telemetryByVehicleId[vehicle.id.toString()],
                             isLoadingTelemetry = uiState.isLoadingVehicleTelemetry,
                             onClick = { onVehicleClick(vehicle) }
@@ -414,6 +416,7 @@ private fun VehicleRegistrationForm(
 @Composable
 private fun VehicleCard(
     vehicle: Vehicle,
+    isPrimary: Boolean,
     latestSnapshot: TelemetrySnapshot?,
     isLoadingTelemetry: Boolean,
     onClick: () -> Unit
@@ -446,10 +449,15 @@ private fun VehicleCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                TelemetryStatusBadge(
-                    hasTelemetry = latestSnapshot != null,
-                    isLoading = isLoadingTelemetry
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (isPrimary) {
+                        PrimaryVehicleBadge()
+                    }
+                    TelemetryStatusBadge(
+                        hasTelemetry = latestSnapshot != null,
+                        isLoading = isLoadingTelemetry
+                    )
+                }
             }
 
             if (!vehicle.photoUrl.isNullOrBlank()) {
@@ -571,6 +579,7 @@ private fun VehicleMetric(
 private fun VehicleDetailContent(
     uiState: CustomerVehiclesUiState,
     vehicle: Vehicle,
+    isPrimary: Boolean,
     onEditVehicle: () -> Unit,
     onRequestDeleteVehicle: () -> Unit,
     onLoadMoreTelemetryHistory: () -> Unit,
@@ -608,31 +617,49 @@ private fun VehicleDetailContent(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (isPrimary) {
+                    Spacer(Modifier.height(10.dp))
+                    PrimaryVehicleBadge()
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Este es el vehículo principal de tu cuenta y no se puede eliminar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedButton(
-                onClick = onEditVehicle,
-                modifier = Modifier.weight(1f)
-            ) {
+        if (isPrimary) {
+            OutlinedButton(onClick = onEditVehicle, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Edit, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
                 Text("Editar")
             }
-            OutlinedButton(
-                onClick = onRequestDeleteVehicle,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Filled.Delete, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Eliminar")
+                OutlinedButton(
+                    onClick = onEditVehicle,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Editar")
+                }
+                OutlinedButton(
+                    onClick = onRequestDeleteVehicle,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Eliminar")
+                }
             }
         }
 
@@ -662,6 +689,22 @@ private fun VehicleDetailContent(
         DtcAlertsCard(
             alerts = uiState.dtcAlerts,
             isLoading = uiState.isLoadingDetails
+        )
+    }
+}
+
+@Composable
+private fun PrimaryVehicleBadge() {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = PrimaryBlue.copy(alpha = 0.1f)
+    ) {
+        Text(
+            text = "Principal",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = GarageNavy,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
         )
     }
 }
