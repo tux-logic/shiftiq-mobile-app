@@ -3,6 +3,7 @@ package com.tuxlogic.shiftiq.mobile.core.datastore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.Role
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
+import com.tuxlogic.shiftiq.mobile.core.model.VehicleId
 import kotlinx.coroutines.flow.Flow
 
 data class SessionState(
@@ -49,6 +50,12 @@ interface SessionDataStore {
      * Establece o cambia la sede activa en la que opera el usuario.
      */
     suspend fun setActiveBranchId(branchId: BranchId?)
+
+    /** Guarda en este dispositivo el vehículo principal de la cuenta. */
+    suspend fun setPrimaryVehicleId(userId: UserId, vehicleId: VehicleId)
+
+    /** Devuelve el vehículo principal guardado para esta cuenta en este dispositivo. */
+    suspend fun getPrimaryVehicleId(userId: UserId): VehicleId?
 
     /**
      * Elimina todos los datos de sesión almacenados (logout).
