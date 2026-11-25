@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.ble.ObdBluetoothScanner
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
+import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.CreateCustomerProfileUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LoginUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.RegisterUseCase
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
     private val loginUseCase: LoginUseCase,
+    private val sessionDataStore: SessionDataStore,
     private val createCustomerProfileUseCase: CreateCustomerProfileUseCase,
     private val registerVehicleUseCase: RegisterVehicleUseCase,
     private val lookupIdentityDocumentUseCase: LookupIdentityDocumentUseCase,
@@ -532,7 +534,10 @@ class RegisterViewModel @Inject constructor(
                             vin = state.vin.trim().uppercase()
                         )
 
-                        vehResult.onSuccess {
+                        vehResult.onSuccess { vehicle ->
+                            runCatching {
+                                sessionDataStore.setPrimaryVehicleId(user.id, vehicle.id)
+                            }
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
