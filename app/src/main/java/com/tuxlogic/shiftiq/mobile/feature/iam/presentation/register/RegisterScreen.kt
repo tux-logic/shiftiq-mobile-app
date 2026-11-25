@@ -63,6 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.AuthScaffold
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowBack
 import com.tuxlogic.shiftiq.mobile.core.designsystem.icon.arrowForward
@@ -179,56 +180,47 @@ fun RegisterContent(
     onResendOtp: () -> Unit = {}
 ) {
     val topBarTitle = when (state.step) {
-        RegisterStep.STEP_1_USER -> "Registro de Conductor"
+        RegisterStep.STEP_1_USER -> "Crear cuenta"
         RegisterStep.STEP_2_VEHICLE -> "Vehículo y Dongle"
         RegisterStep.STEP_3_CONFIRM -> "Confirmación Técnica"
         RegisterStep.OTP -> "Verificación de Correo"
         RegisterStep.SUCCESS -> "Registro Exitoso"
-        RegisterStep.ERROR -> "Registro de Conductor"
+        RegisterStep.ERROR -> "Crear cuenta"
+    }
+    val subtitle = when (state.step) {
+        RegisterStep.STEP_1_USER -> "Registra tus datos para acceder al portal cliente"
+        RegisterStep.STEP_2_VEHICLE -> "Vincula tu vehículo y el dongle OBD-II"
+        RegisterStep.STEP_3_CONFIRM -> "Revisa la información antes de continuar"
+        RegisterStep.OTP -> "Ingresa el código de 6 dígitos enviado a tu correo"
+        RegisterStep.SUCCESS -> "Tu cuenta quedó lista para iniciar sesión"
+        RegisterStep.ERROR -> "Corrige los datos o recupera el acceso existente"
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Color.White,
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            TopAppBar(
-                title = {
+    AuthScaffold(
+        title = topBarTitle,
+        subtitle = subtitle,
+        showBackButton = true,
+        showLogo = false,
+        onBack = onBack,
+        footer = {
+            if (state.step == RegisterStep.STEP_1_USER) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("¿Ya tienes cuenta? ", color = SoftSlate, fontSize = 13.sp)
                     Text(
-                        text = topBarTitle,
+                        text = "Inicia sesión",
                         color = ShiftIQPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(onClick = onNavigateToLogin)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = arrowBack,
-                            contentDescription = "Atrás",
-                            tint = ShiftIQPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+                }
+            }
         }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .navigationBarsPadding()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                // Stepper visible en los primeros 3 pasos
+    ) {
                 if (state.step in listOf(RegisterStep.STEP_1_USER, RegisterStep.STEP_2_VEHICLE, RegisterStep.STEP_3_CONFIRM)) {
                     WizardStepper(
                         currentStep = when (state.step) {
@@ -237,7 +229,7 @@ fun RegisterContent(
                             else -> 3
                         }
                     )
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
                 when (state.step) {
@@ -306,10 +298,10 @@ fun RegisterContent(
                         )
                     }
                 }
-            }
-        }
     }
 }
+
+private val SoftSlate = Slate500
 
 // Registration progress tabs. Stages are intentionally informational; the existing
 // Back and Continue actions remain the only controls that advance the registration flow.

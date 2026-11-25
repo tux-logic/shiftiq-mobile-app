@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.widget.Toast
@@ -168,7 +169,7 @@ fun DiagnosticsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.medium, vertical = spacing.smallMedium),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 110.dp),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             ProtocolBusHeaderCard()
@@ -184,7 +185,6 @@ fun DiagnosticsScreen(
                 onOfflineClick = onNavigateToOfflineMode,
                 onDownloadReport = onDownloadReport
             )
-            Spacer(modifier = Modifier.height(spacing.medium))
         }
     }
 }
