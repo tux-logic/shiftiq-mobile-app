@@ -52,17 +52,28 @@ class FleetRepositoryImpl @Inject constructor(
                 .map { it.toDomain() }
         }
 
+    override suspend fun getBranchAvailability(
+        branchId: UUID,
+        date: String
+    ): AppResult<com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.BranchAvailability> =
+        withContext(dispatchers.io) {
+            safeApiCall { fleetApiService.getBranchAvailability(branchId.toString(), date) }
+                .map { it.toDomain() }
+        }
+
     override suspend fun createAppointment(
         branchId: UUID,
         customerId: UUID,
         vehicleId: UUID,
         scheduledStart: String,
-        notes: String?
+        notes: String?,
+        bayId: UUID?
     ): AppResult<Appointment> = withContext(dispatchers.io) {
         val request = CreateAppointmentRequestDto(
             branchId = branchId.toString(),
             customerId = customerId.toString(),
             vehicleId = vehicleId.toString(),
+            bayId = bayId?.toString(),
             scheduledStart = scheduledStart,
             notes = notes
         )

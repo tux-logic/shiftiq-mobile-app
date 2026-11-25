@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.mapper
 
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.core.model.UserId
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchBayResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchCatalogResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.BranchSubscriptionResourceDto
@@ -15,6 +16,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.Unifie
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.WorkshopResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.WorkshopSpecialtyResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchBay
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchCatalogItem
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchSubscription
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
@@ -76,7 +78,20 @@ fun BranchCatalogResourceDto.toDomain(): BranchCatalogItem = BranchCatalogItem(
     address = address.orEmpty(),
     phone = phone.orEmpty(),
     latitude = latitude,
-    longitude = longitude
+    longitude = longitude,
+    averageRating = averageRating ?: 0.0,
+    reviewCount = reviewCount ?: 0,
+    activeBaysCount = activeBaysCount ?: 0,
+    freeBaysToday = freeBaysToday ?: 0
+)
+
+fun BranchBayResourceDto.toDomain(): BranchBay = BranchBay(
+    id = id,
+    branchId = branchId,
+    code = code,
+    name = name,
+    type = type,
+    active = active
 )
 
 fun BranchSubscriptionResourceDto.toDomain(): BranchSubscription = BranchSubscription(

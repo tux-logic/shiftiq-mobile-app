@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.domain.repository
 
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
+import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.BranchAvailability
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.CustomerRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.EmployeeRegistration
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.StaffCareerHistory
@@ -20,12 +21,15 @@ interface FleetRepository {
 
     suspend fun getAppointmentById(appointmentId: UUID): AppResult<Appointment>
 
+    suspend fun getBranchAvailability(branchId: UUID, date: String): AppResult<BranchAvailability>
+
     suspend fun createAppointment(
         branchId: UUID,
         customerId: UUID,
         vehicleId: UUID,
         scheduledStart: String,
-        notes: String? = null
+        notes: String? = null,
+        bayId: UUID? = null
     ): AppResult<Appointment>
 
     suspend fun updateAppointment(

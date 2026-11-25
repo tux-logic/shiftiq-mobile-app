@@ -23,10 +23,25 @@ data class Appointment(
     val branchId: UUID,
     val customerId: UUID,
     val vehicleId: UUID,
+    val bayId: UUID? = null,
     val scheduledStart: String,
     val scheduledEnd: String? = null,
     val status: AppointmentStatus,
     val notes: String? = null
+)
+
+data class BranchAvailability(
+    val branchId: String,
+    val date: String,
+    val activeBaysCount: Int,
+    val freeBaysNow: Int,
+    val slots: List<BranchAvailabilitySlot>
+)
+
+data class BranchAvailabilitySlot(
+    val start: String,
+    val end: String,
+    val availableBayIds: List<String>
 )
 
 data class EmployeeRegistration(

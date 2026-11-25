@@ -1,6 +1,7 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.api
 
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.AppointmentDto
+import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.BranchAvailabilityDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CreateAppointmentRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CreateCustomerRegistrationRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.fleet.infrastructure.remote.dto.CreateEmployeeRegistrationRequestDto
@@ -53,6 +54,12 @@ interface FleetApiService {
     suspend fun deleteAppointment(
         @Path("appointmentId") appointmentId: String
     ): Response<Unit>
+
+    @GET("api/v1/branches/{branchId}/availability")
+    suspend fun getBranchAvailability(
+        @Path("branchId") branchId: String,
+        @Query("date") date: String
+    ): Response<BranchAvailabilityDto>
 
     // === Technical Staff (Employee Registrations) ===
 

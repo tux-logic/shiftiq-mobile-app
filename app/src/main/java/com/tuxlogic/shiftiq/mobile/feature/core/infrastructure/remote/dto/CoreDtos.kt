@@ -138,7 +138,30 @@ data class BranchCatalogResourceDto(
     @SerializedName("latitude")
     val latitude: Double? = null,
     @SerializedName("longitude")
-    val longitude: Double? = null
+    val longitude: Double? = null,
+    @SerializedName("averageRating")
+    val averageRating: Double? = null,
+    @SerializedName("reviewCount")
+    val reviewCount: Int? = null,
+    @SerializedName("activeBaysCount")
+    val activeBaysCount: Int? = null,
+    @SerializedName("freeBaysToday")
+    val freeBaysToday: Int? = null
+)
+
+data class BranchBayResourceDto(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("branchId")
+    val branchId: String,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("type")
+    val type: String,
+    @SerializedName("active")
+    val active: Boolean = true
 )
 
 data class CreateBranchRequestDto(

@@ -33,7 +33,11 @@ data class BranchCatalogItem(
     val address: String,
     val phone: String,
     val latitude: Double? = null,
-    val longitude: Double? = null
+    val longitude: Double? = null,
+    val averageRating: Double = 0.0,
+    val reviewCount: Int = 0,
+    val activeBaysCount: Int = 0,
+    val freeBaysToday: Int = 0
 ) {
     val displayName: String
         get() = listOf(workshopBrandName, branchName)
@@ -41,6 +45,15 @@ data class BranchCatalogItem(
             .joinToString(" · ")
             .ifBlank { workshopBusinessName.ifBlank { branchCode } }
 }
+
+data class BranchBay(
+    val id: String,
+    val branchId: String,
+    val code: String,
+    val name: String,
+    val type: String,
+    val active: Boolean = true
+)
 
 data class WorkshopSpecialty(
     val id: String,

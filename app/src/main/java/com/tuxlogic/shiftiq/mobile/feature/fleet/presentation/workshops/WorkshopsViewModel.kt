@@ -9,8 +9,6 @@ import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchCatalogUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByUserIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.CreateAppointmentUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetAppointmentsUseCase
-import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.B2CVehicleItem
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.WorkshopItem
 import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.vehicles.GetCustomerVehiclesUseCase
@@ -35,7 +33,6 @@ class WorkshopsViewModel @Inject constructor(
     private val sessionDataStore: SessionDataStore,
     private val getCustomerByUserId: GetCustomerByUserIdUseCase,
     private val getCustomerVehicles: GetCustomerVehiclesUseCase,
-    private val getAppointments: GetAppointmentsUseCase,
     private val createAppointment: CreateAppointmentUseCase,
     private val addressGeocoder: AddressGeocoder
 ) : ViewModel() {
@@ -60,8 +57,11 @@ class WorkshopsViewModel @Inject constructor(
                         name = item.displayName,
                         address = item.address,
                         phone = item.phone,
+                        rating = item.averageRating,
+                        reviewCount = item.reviewCount,
                         district = item.address.substringAfterLast(",").trim().ifBlank { item.address },
                         isCertifiedShiftIQ = true,
+                        hasFreeBaysToday = item.freeBaysToday > 0,
                         latitude = item.latitude,
                         longitude = item.longitude
                     )
@@ -75,56 +75,20 @@ class WorkshopsViewModel @Inject constructor(
             }
 
             val vehicle = loadPrimaryVehicle()
-            val withAvailability = enrichAvailabilityFromAppointments(workshops)
 
             _uiState.update { current ->
                 current.copy(
                     isLoading = false,
-                    allWorkshops = withAvailability,
-                    filteredWorkshops = applyFilters(withAvailability, current.searchQuery, current.selectedFilter),
+                    allWorkshops = workshops,
+                    filteredWorkshops = applyFilters(workshops, current.searchQuery, current.selectedFilter),
                     selectedVehicle = vehicle,
-                    errorMessage = if (withAvailability.isEmpty()) {
+                    errorMessage = if (workshops.isEmpty()) {
                         "No workshops are available to book yet."
                     } else null
                 )
             }
 
-            enrichWorkshopCoordinates(withAvailability)
-        }
-    }
-
-    /**
-     * Backend catalog does not expose bay occupancy or ratings yet.
-     * Approximate "free bay today" from remaining bookable slots after the
-     * customer's own PENDING appointments at each branch for today.
-     */
-    private suspend fun enrichAvailabilityFromAppointments(
-        workshops: List<WorkshopItem>
-    ): List<WorkshopItem> {
-        val userId = sessionDataStore.userId.firstOrNull()?.value?.toString() ?: return workshops
-        val customer = (getCustomerByUserId(userId) as? AppResult.Success)?.data ?: return workshops
-        val appointments = (getAppointments(customerId = UUID.fromString(customer.id)) as? AppResult.Success)
-            ?.data
-            .orEmpty()
-            .filter { it.status == AppointmentStatus.PENDING }
-
-        val today = LocalDate.now()
-        val bookedByBranch = appointments
-            .mapNotNull { appointment ->
-                val start = runCatching {
-                    LocalDateTime.parse(appointment.scheduledStart, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                }.getOrNull() ?: return@mapNotNull null
-                if (start.toLocalDate() != today) return@mapNotNull null
-                appointment.branchId.toString() to start.toLocalTime()
-            }
-            .groupBy({ it.first }, { it.second })
-
-        return workshops.map { workshop ->
-            val bookedTimes = bookedByBranch[workshop.id].orEmpty()
-            val freeSlots = DEFAULT_DAY_SLOTS.count { slot ->
-                bookedTimes.none { booked -> booked == slot }
-            }
-            workshop.copy(hasFreeBaysToday = freeSlots > 0)
+            enrichWorkshopCoordinates(workshops)
         }
     }
 
@@ -330,16 +294,5 @@ class WorkshopsViewModel @Inject constructor(
 
     fun onDismissVoucherDialog() {
         _uiState.update { it.copy(bookingSuccessVoucher = null) }
-    }
-
-    companion object {
-        private val DEFAULT_DAY_SLOTS = listOf(
-            LocalTime.of(8, 30),
-            LocalTime.of(10, 0),
-            LocalTime.of(11, 30),
-            LocalTime.of(14, 0),
-            LocalTime.of(15, 30),
-            LocalTime.of(17, 0)
-        )
     }
 }

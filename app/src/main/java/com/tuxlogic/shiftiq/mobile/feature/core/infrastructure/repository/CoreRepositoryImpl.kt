@@ -157,6 +157,15 @@ class CoreRepositoryImpl @Inject constructor(
                 .map { dtoList -> dtoList.map { it.toDomain() } }
         }
 
+    override suspend fun getBranchBays(
+        branchId: String,
+        activeOnly: Boolean
+    ): AppResult<List<com.tuxlogic.shiftiq.mobile.feature.core.domain.model.BranchBay>> =
+        withContext(dispatchers.io) {
+            safeApiCall { coreApiService.getBranchBays(branchId, activeOnly) }
+                .map { dtoList -> dtoList.map { it.toDomain() } }
+        }
+
     override suspend fun getBranchById(branchId: String): AppResult<Branch> =
         withContext(dispatchers.io) {
             safeApiCall { coreApiService.getBranchById(branchId) }
