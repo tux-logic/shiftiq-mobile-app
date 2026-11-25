@@ -1,7 +1,6 @@
 package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.workshops
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,20 +51,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.MapLibreMapController
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPositronMap
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.scaleOnPress
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.workshopMapPins
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.Navy900
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ObdTeal
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
@@ -267,8 +270,7 @@ private fun WorkshopFilterChips(
 }
 
 /**
- * Positron-style workshop map chrome mirrored from Flutter [BranchMapView].
- * Visual placeholder until MapLibre is wired on Android.
+ * MapLibre OpenFreeMap Positron workshop map mirrored from Flutter [BranchMapView].
  */
 @Composable
 private fun VectorGpsMapCard(
@@ -278,12 +280,8 @@ private fun VectorGpsMapCard(
 ) {
     val spacing = MaterialTheme.spacing
     val focused = workshops.firstOrNull()
-    val pinSlots = listOf(
-        Offset(0.42f, 0.48f),
-        Offset(0.28f, 0.32f),
-        Offset(0.68f, 0.62f),
-        Offset(0.55f, 0.28f)
-    )
+    val pins = remember(workshops) { workshopMapPins(workshops.map { it.id }) }
+    var mapController by remember { mutableStateOf<MapLibreMapController?>(null) }
 
     Card(
         modifier = modifier
@@ -295,45 +293,13 @@ private fun VectorGpsMapCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
-                // Soft Positron road grid
-                val road = SoftRoad.copy(alpha = 0.55f)
-                for (i in 1..5) {
-                    val y = h * (i / 6f)
-                    drawLine(road, Offset(0f, y), Offset(w, y), strokeWidth = 2.2f)
-                }
-                for (i in 1..4) {
-                    val x = w * (i / 5f)
-                    drawLine(road, Offset(x, 0f), Offset(x, h), strokeWidth = 2.2f)
-                }
-                // Blocks
-                drawRect(SoftBlock.copy(alpha = 0.35f), topLeft = Offset(w * 0.12f, h * 0.18f), size = androidx.compose.ui.geometry.Size(w * 0.18f, h * 0.14f))
-                drawRect(SoftBlock.copy(alpha = 0.28f), topLeft = Offset(w * 0.58f, h * 0.22f), size = androidx.compose.ui.geometry.Size(w * 0.22f, h * 0.12f))
-                drawRect(SoftBlock.copy(alpha = 0.3f), topLeft = Offset(w * 0.30f, h * 0.62f), size = androidx.compose.ui.geometry.Size(w * 0.20f, h * 0.12f))
-
-                workshops.take(pinSlots.size).forEachIndexed { index, _ ->
-                    val slot = pinSlots[index]
-                    val center = Offset(w * slot.x, h * slot.y)
-                    val selected = index == 0
-                    if (selected) {
-                        drawCircle(PrimaryBlue.copy(alpha = 0.18f), radius = 26f, center = center)
-                        drawCircle(PrimaryBlue.copy(alpha = 0.10f), radius = 38f, center = center)
-                    }
-                    drawCircle(
-                        color = if (selected) PrimaryBlue else Navy900,
-                        radius = if (selected) 9f else 6.5f,
-                        center = center
-                    )
-                    drawCircle(
-                        color = Color.White,
-                        radius = if (selected) 9f else 6.5f,
-                        center = center,
-                        style = Stroke(width = 2f)
-                    )
-                }
-            }
+            ShiftIQPositronMap(
+                pins = pins,
+                selectedPinId = focused?.id,
+                onPinClick = onSelectWorkshop,
+                onMapReady = { mapController = it },
+                modifier = Modifier.fillMaxSize()
+            )
 
             Row(
                 modifier = Modifier
@@ -366,15 +332,15 @@ private fun VectorGpsMapCard(
                     .padding(spacing.smallMedium),
                 verticalArrangement = Arrangement.spacedBy(spacing.extraSmall)
             ) {
-                MapControlButton(label = "+")
-                MapControlButton(label = "−")
+                MapControlButton(label = "+") { mapController?.zoomBy(1.0) }
+                MapControlButton(label = "−") { mapController?.zoomBy(-1.0) }
                 Box(
                     modifier = Modifier
                         .size(spacing.controlButtonSize)
                         .clip(RoundedCornerShape(spacing.radiusSmall))
                         .background(Color.White)
                         .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
-                        .clickable {},
+                        .clickable { mapController?.recenter(pins) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -441,7 +407,7 @@ private fun VectorGpsMapCard(
 }
 
 @Composable
-private fun MapControlButton(label: String) {
+private fun MapControlButton(label: String, onClick: () -> Unit) {
     val spacing = MaterialTheme.spacing
     Box(
         modifier = Modifier
@@ -449,7 +415,7 @@ private fun MapControlButton(label: String) {
             .clip(RoundedCornerShape(spacing.radiusSmall))
             .background(Color.White)
             .border(BorderStroke(spacing.strokeThin, ShiftIQBorderSlate), RoundedCornerShape(spacing.radiusSmall))
-            .clickable {},
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(label, fontWeight = FontWeight.Bold, color = Slate700, style = MaterialTheme.typography.labelMedium)
@@ -457,8 +423,6 @@ private fun MapControlButton(label: String) {
 }
 
 private val PositronSurface = Color(0xFFF8FAFC)
-private val SoftRoad = Color(0xFFCBD5E1)
-private val SoftBlock = Color(0xFFE2E8F0)
 
 @Composable
 private fun WorkshopsCatalogListHeader(

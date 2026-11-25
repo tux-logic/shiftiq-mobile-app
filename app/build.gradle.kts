@@ -109,6 +109,11 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     // ---------------------------------------------------------------------------------------------
+    // MAPAS (MapLibre + OpenFreeMap Positron — parity with Flutter maplibre_gl)
+    // ---------------------------------------------------------------------------------------------
+    implementation(libs.maplibre.android)
+
+    // ---------------------------------------------------------------------------------------------
     // PRUEBAS UNITARIAS (TESTING)
     // ---------------------------------------------------------------------------------------------
     testImplementation(libs.junit)
