@@ -34,7 +34,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
