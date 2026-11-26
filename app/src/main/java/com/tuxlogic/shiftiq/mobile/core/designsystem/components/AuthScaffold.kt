@@ -34,7 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -186,39 +186,7 @@ fun AuthScaffold(
 
 @Composable
 private fun AuthLanguageToggle() {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 20f / 255f))
-            .border(1.dp, Color.White.copy(alpha = 35f / 255f), RoundedCornerShape(20.dp))
-            .padding(3.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AuthLangPill(label = "ES", selected = true, onTap = {})
-        AuthLangPill(label = "EN", selected = false, onTap = {})
-    }
-}
-
-@Composable
-private fun AuthLangPill(
-    label: String,
-    selected: Boolean,
-    onTap: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) Color.White else Color.Transparent)
-            .clickable(onClick = onTap)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (selected) Navy900 else Color.White.copy(alpha = 0.7f)
-        )
-    }
+    AppLanguageToggle()
 }
 
 @Composable
