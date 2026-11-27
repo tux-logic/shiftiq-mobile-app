@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,25 +21,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,17 +58,22 @@ import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.UUID
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun AppointmentListScreen(
     uiState: AppointmentListUiState,
     onRefresh: () -> Unit,
     onFilterSelected: (AppointmentStatus?) -> Unit,
     onMarkStatus: (Appointment, AppointmentStatus) -> Unit,
-    onDeleteAppointment: (UUID) -> Unit,
     onNavigateToCreate: () -> Unit,
-    onNavigateBack: () -> Unit,
+    onOpenWorkOrder: (Appointment) -> Unit,
+    onNavigateToCustomerDirectory: () -> Unit = {},
+    onSelectDate: (LocalDate) -> Unit = {},
     onClearMessages: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -92,20 +99,18 @@ fun AppointmentListScreen(
             ShiftIQPageHeader(
                 title = "Agenda de Citas",
                 subtitle = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Agenda de citas B2B",
-                showBackButton = true,
-                onBackPressed = onNavigateBack,
                 actions = {
-                    IconButton(onClick = onRefresh) {
+                    IconButton(onClick = onNavigateToCustomerDirectory) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Recargar",
+                            imageVector = Icons.Default.Groups,
+                            contentDescription = "Directorio de clientes",
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = onNavigateToCreate) {
+                    IconButton(onClick = onRefresh, enabled = !uiState.isLoading) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Agendar Cita",
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Actualizar",
                             tint = Color.White
                         )
                     }
@@ -116,109 +121,109 @@ fun AppointmentListScreen(
                     .fillMaxSize()
                     .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp)
             ) {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            AppointmentDateStrip(uiState.selectedDate, onSelectDate)
+            val statusTabs = listOf(null, AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED)
+            val selectedTab = statusTabs.indexOf(uiState.selectedStatusFilter).coerceAtLeast(0)
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = 8.dp,
+                containerColor = Color.Transparent,
+                contentColor = PrimaryBlue
             ) {
-                item {
-                    FilterChip(
-                        selected = uiState.selectedStatusFilter == null,
-                        onClick = { onFilterSelected(null) },
-                        label = { Text("Todas (${uiState.appointments.size})") },
-                        colors = FilterChipDefaults.filterChipColors()
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = uiState.selectedStatusFilter == AppointmentStatus.PENDING,
-                        onClick = { onFilterSelected(AppointmentStatus.PENDING) },
-                        label = {
-                            Text("Pendientes (${uiState.appointments.count { it.status == AppointmentStatus.PENDING }})")
-                        }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = uiState.selectedStatusFilter == AppointmentStatus.COMPLETED,
-                        onClick = { onFilterSelected(AppointmentStatus.COMPLETED) },
-                        label = {
-                            Text("Completadas (${uiState.appointments.count { it.status == AppointmentStatus.COMPLETED }})")
-                        }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = uiState.selectedStatusFilter == AppointmentStatus.CANCELED,
-                        onClick = { onFilterSelected(AppointmentStatus.CANCELED) },
-                        label = {
-                            Text("Canceladas (${uiState.appointments.count { it.status == AppointmentStatus.CANCELED }})")
+                statusTabs.forEachIndexed { index, status ->
+                    val count = uiState.appointments.count { appointment ->
+                        appointment.scheduledStart.take(10) == uiState.selectedDate.toString() &&
+                            (status == null || appointment.status == status)
+                    }
+                    Tab(
+                        selected = index == selectedTab,
+                        onClick = { onFilterSelected(status) },
+                        text = {
+                            val label = when (status) {
+                                null -> "Todas"
+                                AppointmentStatus.PENDING -> "Pendientes"
+                                AppointmentStatus.CONFIRMED -> "Confirmadas"
+                                AppointmentStatus.COMPLETED -> "Completadas"
+                                AppointmentStatus.CANCELED -> "Canceladas"
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(label)
+                                if (count > 0) Text(count.toString(), style = MaterialTheme.typography.labelSmall)
+                            }
                         }
                     )
                 }
             }
 
-            if (uiState.isLoading && uiState.appointments.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            } else if (uiState.filteredAppointments.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+            Column(Modifier.weight(1f).fillMaxWidth()) {
+                when {
+                    uiState.isLoading && uiState.appointments.isEmpty() -> LazyColumn(Modifier.fillMaxSize()) {
+                        item {
+                            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+
+                    uiState.filteredAppointments.isEmpty() -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(32.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Event,
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                        item {
+                            Column(
+                                modifier = Modifier.fillParentMaxWidth().padding(vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Event,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(36.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No hay citas agendadas para esta fecha",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Selecciona otro día o agenda una nueva cita para comenzar.",
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = onNavigateToCreate) {
+                                    Icon(Icons.Default.Event, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Agendar en bahía")
+                                }
+                            }
+                        }
+                    }
+
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.filteredAppointments, key = { it.id }) { appointment ->
+                            AppointmentCard(
+                                appointment = appointment,
+                                onConfirm = { onMarkStatus(appointment, AppointmentStatus.CONFIRMED) },
+                                onCancel = { onMarkStatus(appointment, AppointmentStatus.CANCELED) },
+                                onComplete = { onMarkStatus(appointment, AppointmentStatus.COMPLETED) },
+                                onOpenWorkOrder = { onOpenWorkOrder(appointment) }
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No hay citas registradas",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Agenda una nueva cita para tu sede usando el botón '+' inferior.",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.filteredAppointments, key = { it.id }) { appointment ->
-                        AppointmentCard(
-                            appointment = appointment,
-                            onMarkCompleted = { onMarkStatus(appointment, AppointmentStatus.COMPLETED) },
-                            onMarkCanceled = { onMarkStatus(appointment, AppointmentStatus.CANCELED) },
-                            onDelete = { onDeleteAppointment(appointment.id) }
-                        )
                     }
                 }
             }
@@ -232,11 +237,51 @@ fun AppointmentListScreen(
 }
 
 @Composable
+private fun AppointmentDateStrip(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val dates = (-2L..4L).map(selectedDate::plusDays)
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(dates) { date ->
+            val selected = date == selectedDate
+            Surface(
+                modifier = Modifier.clickable { onDateSelected(date) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (selected) PrimaryBlue else Color.White,
+                border = if (selected) null else BorderStroke(1.dp, ShiftIQBorderSlate)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).uppercase(),
+                        color = if (selected) Color.White.copy(alpha = 0.8f) else Color(0xFF64748B),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Text(
+                        date.dayOfMonth.toString(),
+                        color = if (selected) Color.White else Color(0xFF1E293B),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun AppointmentCard(
     appointment: Appointment,
-    onMarkCompleted: () -> Unit,
-    onMarkCanceled: () -> Unit,
-    onDelete: () -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+    onComplete: () -> Unit,
+    onOpenWorkOrder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -253,63 +298,76 @@ fun AppointmentCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Event,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = appointment.scheduledStart.replace("T", " ").take(16),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = PrimaryBlue.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.24f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(14.dp), tint = PrimaryBlue)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Bahía ${appointment.bayNumber}", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = PrimaryBlue))
+                    }
                 }
-
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = formatAppointmentTime(appointment.scheduledStart),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Color(0xFF475569)
+                )
+                Spacer(Modifier.weight(1f))
                 StatusPill(status = appointment.status)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Cliente",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                    Text(
-                        text = appointment.customerId.toString().take(8) + "...",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val initials = appointment.customerName.split(" ").filter(String::isNotBlank)
+                    .take(2).mapNotNull { it.firstOrNull()?.uppercaseChar() }.joinToString("")
+                Surface(shape = CircleShape, color = PrimaryBlue.copy(alpha = 0.1f), modifier = Modifier.size(40.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(initials.ifBlank { "C" }, color = PrimaryBlue, fontWeight = FontWeight.Bold)
+                    }
                 }
+                Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
+                    Text(appointment.customerName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                    if (appointment.customerPhone.isNotBlank()) {
+                        Text(appointment.customerPhone, style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                    }
+                }
+                Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF0F172A)) {
                     Text(
-                        text = "Vehículo",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                    Text(
-                        text = appointment.vehicleId.toString().take(8) + "...",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                        appointment.vehiclePlate,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
             }
 
-            appointment.notes?.takeIf { it.isNotBlank() }?.let { notes ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Notas: $notes",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
+            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xFFF8FAFC),
+                border = BorderStroke(1.dp, ShiftIQBorderSlate.copy(alpha = 0.8f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(appointment.vehicleModel, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(appointment.serviceType, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, color = PrimaryBlue))
+                    appointment.notes?.takeIf { it.isNotBlank() }?.let { notes ->
+                        Text(notes, style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -322,54 +380,72 @@ fun AppointmentCard(
             ) {
                 if (appointment.status == AppointmentStatus.PENDING) {
                     OutlinedButton(
-                        onClick = onMarkCompleted,
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFF2E7D32)
+                        onClick = onCancel,
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Completar", style = MaterialTheme.typography.labelMedium)
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    OutlinedButton(
-                        onClick = onMarkCanceled,
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Cancelar", style = MaterialTheme.typography.labelMedium)
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = onConfirm,
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF15803D))
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Confirmar", style = MaterialTheme.typography.labelMedium)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
+                if (appointment.status == AppointmentStatus.CONFIRMED) {
+                    OutlinedButton(
+                        onClick = onComplete,
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Completar", style = MaterialTheme.typography.labelMedium)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                Button(
+                    onClick = onOpenWorkOrder,
+                    shape = RoundedCornerShape(18.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("Abrir OT", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
     }
+}
+
+private fun formatAppointmentTime(raw: String): String = runCatching {
+    val dateTime = java.time.OffsetDateTime.parse(raw).atZoneSameInstant(java.time.ZoneId.systemDefault())
+    dateTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+}.getOrElse {
+    runCatching {
+        java.time.LocalDateTime.parse(raw).format(
+            java.time.format.DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+        )
+    }.getOrDefault(raw.substringAfter('T').take(5))
 }
 
 @Composable
@@ -379,6 +455,7 @@ fun StatusPill(
 ) {
     val (bgColor, textColor) = when (status) {
         AppointmentStatus.PENDING -> Pair(Color(0xFFFFF3E0), Color(0xFFE65100))
+        AppointmentStatus.CONFIRMED -> Pair(Color(0xFFEFF6FF), PrimaryBlue)
         AppointmentStatus.COMPLETED -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
         AppointmentStatus.CANCELED -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828))
     }
@@ -441,9 +518,8 @@ private fun AppointmentListPreview() {
             onRefresh = {},
             onFilterSelected = {},
             onMarkStatus = { _, _ -> },
-            onDeleteAppointment = {},
             onNavigateToCreate = {},
-            onNavigateBack = {},
+            onOpenWorkOrder = {},
             onClearMessages = {}
         )
     }
@@ -461,9 +537,8 @@ private fun EmptyAppointmentListPreview() {
             onRefresh = {},
             onFilterSelected = {},
             onMarkStatus = { _, _ -> },
-            onDeleteAppointment = {},
             onNavigateToCreate = {},
-            onNavigateBack = {},
+            onOpenWorkOrder = {},
             onClearMessages = {}
         )
     }
@@ -483,9 +558,10 @@ private fun AppointmentCardPreview() {
                 status = AppointmentStatus.PENDING,
                 notes = "Revisión técnica de motor."
             ),
-            onMarkCompleted = {},
-            onMarkCanceled = {},
-            onDelete = {},
+            onConfirm = {},
+            onCancel = {},
+            onComplete = {},
+            onOpenWorkOrder = {},
             modifier = Modifier.padding(16.dp)
         )
     }
