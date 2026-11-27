@@ -373,6 +373,8 @@ fun MainB2CScreen(
                 val orderId = activeChildScreen?.removePrefix("live_work_order:").orEmpty()
                 LiveWorkOrderRoute(
                     workOrderId = orderId,
+                    isOwnerAdmin = false,
+                    canExecuteTasks = false,
                     onNavigateBack = { activeChildScreen = null }
                 )
             }
