@@ -17,6 +17,7 @@ import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DeviceStatus
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcAlert
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcAlertId
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcSeverity
+import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.DtcStatus
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.MacAddress
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.Obd2Device
 import com.tuxlogic.shiftiq.mobile.feature.iot.domain.model.PlateNumber
@@ -73,8 +74,20 @@ fun DtcAlertResourceDto.toDomain(): DtcAlert = DtcAlert(
     branchId = BranchId(branchId),
     dtcCode = dtcCode,
     description = description,
-    severity = runCatching { DtcSeverity.valueOf(severity.uppercase()) }.getOrDefault(DtcSeverity.MEDIUM),
-    createdAt = createdAt
+    severity = when (severity.uppercase()) {
+        "CRITICAL" -> DtcSeverity.CRITICAL
+        "LOW" -> DtcSeverity.LOW
+        else -> DtcSeverity.MEDIUM
+    },
+    createdAt = createdAt,
+    vehicleId = vehicleId,
+    vehiclePlate = vehiclePlate?.takeIf(String::isNotBlank) ?: "S/P",
+    vehicleModel = vehicleModel.orEmpty(),
+    customerName = customerName.orEmpty(),
+    systemCategory = systemCategory.orEmpty(),
+    aiDiagnosticRecommendation = aiDiagnosticRecommendation.orEmpty(),
+    status = runCatching { DtcStatus.valueOf(status?.uppercase().orEmpty()) }.getOrDefault(DtcStatus.ACTIVE),
+    freezeFrame = freezeFrame.orEmpty().mapValues { (_, value) -> value?.toString().orEmpty() }
 )
 
 fun TelemetryBatch.toDto(): TelemetryBatchRequestDto = TelemetryBatchRequestDto(
