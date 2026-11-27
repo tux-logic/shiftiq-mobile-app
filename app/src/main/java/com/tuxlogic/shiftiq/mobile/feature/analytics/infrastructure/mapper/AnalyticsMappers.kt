@@ -9,6 +9,9 @@ import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.AnalyticsSnaps
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary
+import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.EmployeeAnalyticsSummary
+import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.EmployeeAssignedWorkOrderSummary
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.EmployeeAnalyticsSummaryResourceDto
 
 fun BranchDailySummaryResourceDto.toDomain(): BranchDailySummary = BranchDailySummary(
     branchId = BranchId(branchId),
@@ -37,3 +40,25 @@ fun NetworkSummaryResourceDto.toDomain(): NetworkAnalyticsSummary = NetworkAnaly
     totalNetworkAppointments = totalNetworkAppointments,
     totalNetworkDtcAlerts = totalNetworkDtcAlerts
 )
+
+fun EmployeeAnalyticsSummaryResourceDto.toDomain(): EmployeeAnalyticsSummary =
+    EmployeeAnalyticsSummary(
+        employeeId = employeeId,
+        branchIds = branchIds.orEmpty(),
+        assignedWorkOrdersCount = assignedWorkOrdersCount,
+        pendingTasksCount = pendingTasksCount,
+        inProgressTasksCount = 0,
+        completedTasksCount = completedTasksCount,
+        activeDtcAlertsCount = activeDtcAlertsCount,
+        assignedWorkOrders = assignedWorkOrders.orEmpty().map { order ->
+            EmployeeAssignedWorkOrderSummary(
+                workOrderId = order.workOrderId,
+                branchId = order.branchId,
+                vehicleId = order.vehicleId,
+                internalNumber = order.internalNumber,
+                status = order.status,
+                assignedTasksCount = order.assignedTasksCount,
+                pendingTasksCount = order.pendingTasksCount
+            )
+        }
+    )
