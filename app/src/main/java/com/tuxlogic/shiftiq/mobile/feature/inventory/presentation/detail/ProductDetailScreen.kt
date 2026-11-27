@@ -19,20 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -61,60 +51,17 @@ import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductBatch
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductDetail
 import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.InventoryPrimaryButton
 import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.InventorySectionCard
-import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.components.ProductInUseDialog
 
 @Composable
 fun ProductDetailScreen(
     onBack: () -> Unit,
-    onEdit: (String) -> Unit,
     onBatchIn: (String) -> Unit,
-    onAdjust: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val detail = state.detail
     val productId = detail?.id?.toString().orEmpty()
-
-    LaunchedEffect(state.navigateBack) {
-        if (state.navigateBack) {
-            viewModel.onNavigatedBack()
-            onBack()
-        }
-    }
-
-    if (state.showInUseDialog && detail != null) {
-        ProductInUseDialog(
-            productName = detail.name,
-            onDismiss = viewModel::dismissInUseDialog
-        )
-    }
-
-    if (state.showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = viewModel::dismissDeleteConfirm,
-            title = { Text("¿Eliminar repuesto?") },
-            text = {
-                Text(
-                    "Esta acción eliminará el producto y sus lotes. " +
-                        "Si está asociado a órdenes de trabajo, el sistema bloqueará la baja."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = viewModel::confirmDelete,
-                    colors = ButtonDefaults.buttonColors(containerColor = SeverityCrimson)
-                ) {
-                    Text("Eliminar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::dismissDeleteConfirm) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
 
     Column(
         modifier = modifier
@@ -152,12 +99,8 @@ fun ProductDetailScreen(
             else -> {
                 ProductDetailContent(
                     detail = detail,
-                    isDeleting = state.isDeleting,
                     errorMessage = state.errorMessage,
-                    onEdit = { onEdit(productId) },
-                    onBatchIn = { onBatchIn(productId) },
-                    onAdjust = { onAdjust(productId) },
-                    onDelete = viewModel::requestDelete
+                    onBatchIn = { onBatchIn(productId) }
                 )
             }
         }
@@ -167,12 +110,8 @@ fun ProductDetailScreen(
 @Composable
 private fun ProductDetailContent(
     detail: ProductDetail,
-    isDeleting: Boolean,
     errorMessage: String?,
-    onEdit: () -> Unit,
-    onBatchIn: () -> Unit,
-    onAdjust: () -> Unit,
-    onDelete: () -> Unit
+    onBatchIn: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -271,54 +210,8 @@ private fun ProductDetailContent(
         InventoryPrimaryButton(
             text = "Ingresar Nuevo Lote",
             onClick = onBatchIn,
-            enabled = !isDeleting,
             leadingIcon = Icons.Default.Add
         )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(
-                onClick = onAdjust,
-                enabled = !isDeleting,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, Slate200)
-            ) {
-                Icon(Icons.Default.Remove, contentDescription = null, tint = Slate700, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.size(6.dp))
-                Text("Ajustar Stock", color = Slate800, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-            }
-            OutlinedButton(
-                onClick = onEdit,
-                enabled = !isDeleting,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, Slate200)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = null, tint = Slate700, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.size(6.dp))
-                Text("Editar Información", color = Slate800, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-            }
-        }
-
-        InventorySectionCard(title = "Zona de peligro", badge = "Eliminar") {
-            Text(
-                text = "Elimina el repuesto del catálogo. Solo es posible si no está vinculado a órdenes de trabajo.",
-                color = Slate600,
-                fontSize = 12.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = onDelete,
-                enabled = !isDeleting,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2), contentColor = SeverityCrimson)
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.size(6.dp))
-                Text("Eliminar repuesto", fontWeight = FontWeight.Bold)
-            }
-        }
 
         errorMessage?.let {
             Text(text = it, color = SeverityCrimson, fontSize = 13.sp)
