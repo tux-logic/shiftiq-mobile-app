@@ -29,13 +29,29 @@ sealed class AppDestination(val route: String) {
         fun createRoute(workshopId: String) = "core/workshops/$workshopId/branches/create"
     }
     data object OwnerProfile : AppDestination("core/profile/owner")
+    data object OperatingHours : AppDestination("core/operating-hours")
+    data object Profile : AppDestination("core/profile/me")
+    data object CustomerDirectory : AppDestination("fleet/customers")
+    data object Billing : AppDestination("billing/dashboard")
+    data object BillingVoucher : AppDestination("billing/vouchers/{voucherId}") {
+        fun createRoute(voucherId: String) = "billing/vouchers/$voucherId"
+    }
+    data object ServiceCatalog : AppDestination("operations/services")
 
     // Rutas operativas
     data object BranchSelection : AppDestination("branches/select")
     data object BranchSelector : AppDestination("branches/select")
     // Feature Fleet: Citas y gestión de personal
+    data object WorkOrders : AppDestination("operations/work-orders")
+    data object CreateWorkOrder : AppDestination("operations/work-orders/create")
+    data object WorkOrderDetail : AppDestination("operations/work-orders/{workOrderId}") {
+        fun createRoute(workOrderId: String) = "operations/work-orders/$workOrderId"
+    }
     data object Appointments : AppDestination("fleet/appointments")
-    data object CreateAppointment : AppDestination("fleet/appointments/create")
+    data object CreateAppointment : AppDestination("fleet/appointments/create?branchId={branchId}&customerId={customerId}") {
+        fun createRoute(branchId: String? = null, customerId: String? = null) =
+            "fleet/appointments/create?branchId=${branchId.orEmpty()}&customerId=${customerId.orEmpty()}"
+    }
     data object StaffManagement : AppDestination("fleet/staff")
     // Feature Inventory: catálogo, ficha, alta, lote FIFO y ajuste
     data object Inventory : AppDestination("inventory/products")
@@ -48,14 +64,8 @@ sealed class AppDestination(val route: String) {
     data object InventoryProductDetail : AppDestination("inventory/products/{productId}") {
         fun createRoute(productId: String) = "inventory/products/$productId"
     }
-    data object InventoryEditProduct : AppDestination("inventory/products/{productId}/edit") {
-        fun createRoute(productId: String) = "inventory/products/$productId/edit"
-    }
     data object InventoryBatchIn : AppDestination("inventory/products/{productId}/batch") {
         fun createRoute(productId: String) = "inventory/products/$productId/batch"
-    }
-    data object InventoryStockAdjust : AppDestination("inventory/products/{productId}/adjust") {
-        fun createRoute(productId: String) = "inventory/products/$productId/adjust"
     }
     data object Telemetry : AppDestination("iot/telemetry")
     data object CustomerVehicles : AppDestination("iot/customer-vehicles")
