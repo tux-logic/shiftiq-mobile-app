@@ -18,12 +18,19 @@ fun AppointmentDto.toDomain(): Appointment = Appointment(
     id = UUID.fromString(id),
     branchId = UUID.fromString(branchId),
     customerId = UUID.fromString(customerId),
+    customerName = customerName,
+    customerPhone = customerPhone,
     vehicleId = UUID.fromString(vehicleId),
+    vehiclePlate = vehiclePlate,
+    vehicleModel = vehicleModel,
     bayId = bayId?.let { runCatching { UUID.fromString(it) }.getOrNull() },
     scheduledStart = scheduledStart,
     scheduledEnd = scheduledEnd,
+    serviceType = serviceType,
     status = AppointmentStatus.fromString(status),
-    notes = notes
+    notes = notes,
+    bayNumber = bayNumber,
+    createdAt = createdAt
 )
 
 fun BranchAvailabilityDto.toDomain(): BranchAvailability = BranchAvailability(
