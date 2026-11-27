@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 data class AppointmentListUiState(
@@ -25,6 +28,7 @@ data class AppointmentListUiState(
     val appointments: List<Appointment> = emptyList(),
     val filteredAppointments: List<Appointment> = emptyList(),
     val selectedStatusFilter: AppointmentStatus? = null,
+    val selectedDate: LocalDate = LocalDate.now(),
     val activeBranchId: UUID? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null
@@ -57,7 +61,7 @@ class AppointmentListViewModel @Inject constructor(
                         state.copy(
                             isLoading = false,
                             appointments = list,
-                            filteredAppointments = filterList(list, state.selectedStatusFilter)
+                            filteredAppointments = filterList(list, state.selectedStatusFilter, state.selectedDate)
                         )
                     }
                 }
@@ -76,7 +80,16 @@ class AppointmentListViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 selectedStatusFilter = status,
-                filteredAppointments = filterList(state.appointments, status)
+                filteredAppointments = filterList(state.appointments, status, state.selectedDate)
+            )
+        }
+    }
+
+    fun selectDate(date: LocalDate) {
+        _uiState.update { state ->
+            state.copy(
+                selectedDate = date,
+                filteredAppointments = filterList(state.appointments, state.selectedStatusFilter, date)
             )
         }
     }
@@ -98,7 +111,7 @@ class AppointmentListViewModel @Inject constructor(
                     state.copy(
                         isLoading = false,
                         appointments = updatedList,
-                        filteredAppointments = filterList(updatedList, state.selectedStatusFilter),
+                        filteredAppointments = filterList(updatedList, state.selectedStatusFilter, state.selectedDate),
                         successMessage = "Cita actualizada a ${newStatus.label}"
                     )
                 }
@@ -118,7 +131,7 @@ class AppointmentListViewModel @Inject constructor(
                         state.copy(
                             isLoading = false,
                             appointments = updatedList,
-                            filteredAppointments = filterList(updatedList, state.selectedStatusFilter),
+                            filteredAppointments = filterList(updatedList, state.selectedStatusFilter, state.selectedDate),
                             successMessage = "Cita eliminada correctamente"
                         )
                     }
@@ -135,8 +148,14 @@ class AppointmentListViewModel @Inject constructor(
 
     private fun filterList(
         list: List<Appointment>,
-        status: AppointmentStatus?
+        status: AppointmentStatus?,
+        date: LocalDate
     ): List<Appointment> {
-        return if (status == null) list else list.filter { it.status == status }
+        return list.filter { appointment ->
+            val instant = runCatching { Instant.parse(appointment.scheduledStart) }.getOrNull()
+            val appointmentDate = instant?.atZone(ZoneId.systemDefault())?.toLocalDate()
+                ?: runCatching { LocalDate.parse(appointment.scheduledStart.take(10)) }.getOrNull()
+            appointmentDate == date && (status == null || appointment.status == status)
+        }
     }
 }
