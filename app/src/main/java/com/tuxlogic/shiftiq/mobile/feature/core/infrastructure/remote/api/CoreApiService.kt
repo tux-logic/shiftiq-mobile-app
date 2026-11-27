@@ -17,6 +17,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.Employ
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.OwnerResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.SpecialtyRevisionResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UnifiedProfileResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateProfileImageRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateBranchRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateCustomerRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateEmployeeRequestDto
@@ -236,6 +237,11 @@ interface CoreApiService {
 
     @GET("api/v1/profiles/me")
     suspend fun getProfileMe(): Response<UnifiedProfileResourceDto>
+
+    @PUT("api/v1/profiles/me/image")
+    suspend fun updateMyProfileImage(
+        @Body request: UpdateProfileImageRequestDto
+    ): Response<UnifiedProfileResourceDto>
 
     @GET("api/v1/profiles/roles")
     suspend fun getRolesByUserId(
