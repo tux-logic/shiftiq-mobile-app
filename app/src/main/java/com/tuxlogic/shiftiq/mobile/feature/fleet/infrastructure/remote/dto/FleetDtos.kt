@@ -8,12 +8,19 @@ data class AppointmentDto(
     @SerializedName("id") val id: String,
     @SerializedName("branchId") val branchId: String,
     @SerializedName("customerId") val customerId: String,
+    @SerializedName("customerName") val customerName: String = "Cliente del Taller",
+    @SerializedName("customerPhone") val customerPhone: String = "",
     @SerializedName("vehicleId") val vehicleId: String,
+    @SerializedName("vehiclePlate") val vehiclePlate: String = "S/P",
+    @SerializedName("vehicleModel") val vehicleModel: String = "Vehículo General",
     @SerializedName("bayId") val bayId: String? = null,
     @SerializedName("scheduledStart") val scheduledStart: String,
     @SerializedName("scheduledEnd") val scheduledEnd: String? = null,
+    @SerializedName("serviceType") val serviceType: String = "Mantenimiento General",
     @SerializedName("status") val status: String,
-    @SerializedName("notes") val notes: String? = null
+    @SerializedName("notes") val notes: String? = null,
+    @SerializedName("bayNumber") val bayNumber: Int = 1,
+    @SerializedName("createdAt") val createdAt: String? = null
 )
 
 data class CreateAppointmentRequestDto(
