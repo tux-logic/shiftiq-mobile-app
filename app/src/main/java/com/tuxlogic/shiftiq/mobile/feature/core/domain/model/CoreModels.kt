@@ -129,6 +129,7 @@ data class CustomerProfile(
 
 data class UnifiedProfile(
     val userId: UserId,
+    val profileImageUrl: String? = null,
     val roles: List<String>,
     val owner: OwnerProfile? = null,
     val employee: UnifiedEmployeeSummary? = null,

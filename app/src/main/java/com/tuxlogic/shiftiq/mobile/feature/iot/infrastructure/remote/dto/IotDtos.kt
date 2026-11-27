@@ -103,7 +103,15 @@ data class DtcAlertResourceDto(
     @SerializedName("dtcCode") val dtcCode: String,
     @SerializedName("description") val description: String,
     @SerializedName("severity") val severity: String,
-    @SerializedName("createdAt") val createdAt: String
+    @SerializedName("createdAt") val createdAt: String = "",
+    @SerializedName(value = "vehicleId", alternate = ["vehicle_id"]) val vehicleId: String? = null,
+    @SerializedName(value = "vehiclePlate", alternate = ["vehicle_plate"]) val vehiclePlate: String? = null,
+    @SerializedName(value = "vehicleModel", alternate = ["vehicle_model"]) val vehicleModel: String? = null,
+    @SerializedName(value = "customerName", alternate = ["customer_name"]) val customerName: String? = null,
+    @SerializedName(value = "systemCategory", alternate = ["system_category"]) val systemCategory: String? = null,
+    @SerializedName(value = "aiDiagnosticRecommendation", alternate = ["ai_diagnostic_recommendation"]) val aiDiagnosticRecommendation: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("freezeFrame") val freezeFrame: Map<String, Any?>? = null
 )
 
 data class BatchDtcItemDto(

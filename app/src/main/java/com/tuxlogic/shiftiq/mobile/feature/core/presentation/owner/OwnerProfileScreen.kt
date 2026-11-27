@@ -22,12 +22,17 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import androidx.compose.runtime.Composable
@@ -54,6 +59,10 @@ import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.OwnerProfile
 fun OwnerProfileScreen(
     viewModel: OwnerProfileViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToOperatingHours: () -> Unit = {},
+    onNavigateToServiceCatalog: () -> Unit = {},
+    onNavigateToWorkshops: () -> Unit = {},
+    onNavigateToStaff: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -66,6 +75,10 @@ fun OwnerProfileScreen(
         onPhoneChanged = viewModel::onPhoneChanged,
         onSubmit = viewModel::saveProfile,
         onNavigateBack = onNavigateBack,
+        onNavigateToOperatingHours = onNavigateToOperatingHours,
+        onNavigateToServiceCatalog = onNavigateToServiceCatalog,
+        onNavigateToWorkshops = onNavigateToWorkshops,
+        onNavigateToStaff = onNavigateToStaff,
         modifier = modifier
     )
 }
@@ -79,6 +92,10 @@ fun OwnerProfileContent(
     onPhoneChanged: (String) -> Unit,
     onSubmit: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToOperatingHours: () -> Unit = {},
+    onNavigateToServiceCatalog: () -> Unit = {},
+    onNavigateToWorkshops: () -> Unit = {},
+    onNavigateToStaff: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -207,6 +224,50 @@ fun OwnerProfileContent(
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))
+
+                        OutlinedButton(
+                            onClick = onNavigateToServiceCatalog,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Build, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Catálogo de servicios")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = onNavigateToWorkshops,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Storefront, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Talleres y sedes")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = onNavigateToStaff,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Groups, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Equipo y personal")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = onNavigateToOperatingHours,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Schedule, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Horarios y Feriados")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         ShiftIQButton(
                             text = "Volver a Mis Talleres",

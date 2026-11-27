@@ -5,6 +5,7 @@ import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary
+import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.EmployeeAnalyticsSummary
 
 interface AnalyticsRepository {
 
@@ -19,4 +20,6 @@ interface AnalyticsRepository {
     ): AppResult<List<BranchDailySnapshot>>
 
     suspend fun getNetworkAnalyticsSummary(): AppResult<NetworkAnalyticsSummary>
+
+    suspend fun getEmployeeAnalyticsSummary(): AppResult<EmployeeAnalyticsSummary>
 }

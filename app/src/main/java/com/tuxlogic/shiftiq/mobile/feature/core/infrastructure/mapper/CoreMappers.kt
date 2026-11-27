@@ -148,6 +148,7 @@ fun UnifiedEmployeeSummaryDto.toDomain(): UnifiedEmployeeSummary = UnifiedEmploy
 
 fun UnifiedProfileResourceDto.toDomain(): UnifiedProfile = UnifiedProfile(
     userId = UserId(userId),
+    profileImageUrl = profileImageUrl,
     roles = roles,
     owner = owner?.toDomain(),
     employee = employee?.toDomain(),

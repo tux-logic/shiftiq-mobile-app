@@ -34,6 +34,7 @@ kotlinSerialization = "2.4.21"
 # Compatibilidad de APIs modernas de Java (Desugaring)
 # Añadido: Permite usar java.time.* (Instant, LocalDateTime) en dispositivos con minSdk 24 sin crasheos
 desugarJdkLibs = "2.1.5"
+biometric = "1.1.0"
 
 # MapLibre Native (OpenFreeMap Positron — mirrors Flutter maplibre_gl)
 maplibre = "13.7.1"
@@ -50,6 +51,7 @@ espressoCore = "3.7.0"
 [libraries]
 # AndroidX Base
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashScreen" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }

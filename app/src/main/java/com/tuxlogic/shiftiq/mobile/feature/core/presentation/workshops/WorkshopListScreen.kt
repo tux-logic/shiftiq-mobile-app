@@ -135,11 +135,6 @@ fun WorkshopListContent(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        ShiftIQButton(
-                            text = "Reintentar",
-                            onClick = onRefresh
-                        )
                     }
                 }
                 uiState.workshops.isEmpty() -> {

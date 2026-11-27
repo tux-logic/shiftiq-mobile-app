@@ -5,10 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
-import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.DeleteProductUseCase
 import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductId
-import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.isProductInUseError
 import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.mapInventoryError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,8 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val deleteProductUseCase: DeleteProductUseCase
+    private val getProductByIdUseCase: GetProductByIdUseCase
 ) : ViewModel() {
 
     private val productId: ProductId? =
@@ -54,45 +51,8 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
-    fun requestDelete() {
-        _uiState.update { it.copy(showDeleteConfirm = true) }
-    }
-
-    fun dismissDeleteConfirm() {
-        _uiState.update { it.copy(showDeleteConfirm = false) }
-    }
-
-    fun confirmDelete() {
-        val id = productId ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isDeleting = true, showDeleteConfirm = false, errorMessage = null) }
-            deleteProductUseCase(id)
-                .onSuccess {
-                    _uiState.update { it.copy(isDeleting = false, navigateBack = true) }
-                }
-                .onFailure { error ->
-                    val message = mapInventoryError(error)
-                    _uiState.update {
-                        it.copy(
-                            isDeleting = false,
-                            errorMessage = message,
-                            showInUseDialog = isProductInUseError(message)
-                        )
-                    }
-                }
-        }
-    }
-
-    fun dismissInUseDialog() {
-        _uiState.update { it.copy(showInUseDialog = false) }
-    }
-
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null) }
-    }
-
-    fun onNavigatedBack() {
-        _uiState.update { it.copy(navigateBack = false) }
     }
 
     companion object {

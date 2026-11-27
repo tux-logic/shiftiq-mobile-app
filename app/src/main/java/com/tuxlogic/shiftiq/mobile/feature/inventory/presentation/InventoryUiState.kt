@@ -3,39 +3,37 @@ package com.tuxlogic.shiftiq.mobile.feature.inventory.presentation
 import com.tuxlogic.shiftiq.mobile.core.model.Money
 import com.tuxlogic.shiftiq.mobile.feature.inventory.domain.model.ProductItem
 
-data class InventoryBranchUi(
-    val id: String,
-    val name: String
-)
+enum class InventoryStockFilter {
+    ALL,
+    LOW_STOCK,
+    OUT_OF_STOCK
+}
 
 data class InventoryUiState(
     val isLoading: Boolean = false,
-    val branches: List<InventoryBranchUi> = listOf(
-        InventoryBranchUi("b1000000-0000-0000-0000-000000000001", "Sede Central - ShiftIQ"),
-        InventoryBranchUi("b1000000-0000-0000-0000-000000000002", "Sede Norte - Taller Express"),
-        InventoryBranchUi("b1000000-0000-0000-0000-000000000003", "Sede Sur - Mantenimiento Pesado")
-    ),
-    val selectedBranchId: String? = "b1000000-0000-0000-0000-000000000001",
+    val selectedBranchId: String? = null,
+    val activeBranchName: String = "Sede Principal",
     val products: List<ProductItem> = emptyList(),
     val searchQuery: String = "",
-    val categoryFilter: String = "",
-    val lowStockOnly: Boolean = false,
+    val stockFilter: InventoryStockFilter = InventoryStockFilter.ALL,
     val errorMessage: String? = null,
     val infoMessage: String? = null
 ) {
-    val availableCategories: List<String>
-        get() = (InventorySuggestedCategoriesLocal + products.map { it.category })
-            .distinct()
-            .sorted()
+    val visibleProducts: List<ProductItem>
+        get() = when (stockFilter) {
+            InventoryStockFilter.ALL -> products
+            InventoryStockFilter.LOW_STOCK -> products.filter { it.lowStockAlert }
+            InventoryStockFilter.OUT_OF_STOCK -> products.filter { it.currentStock <= 0 }
+        }
 
     val criticalCount: Int
         get() = products.count { it.lowStockAlert }
+
+    val outOfStockCount: Int
+        get() = products.count { it.currentStock <= 0 }
 
     val warehouseValue: Money
         get() = products.fold(Money.ZERO) { acc, item ->
             acc + (item.salePrice * item.currentStock)
         }
 }
-
-private val InventorySuggestedCategoriesLocal =
-    listOf("Filtros", "Frenos", "Aceites", "Suspensión", "Lubricantes", "Eléctrico")

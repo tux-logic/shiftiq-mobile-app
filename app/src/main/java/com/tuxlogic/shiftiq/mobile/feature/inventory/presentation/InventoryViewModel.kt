@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.event.ActiveBranchChangedEvent
 import com.tuxlogic.shiftiq.mobile.core.common.event.DomainEventBus
 import com.tuxlogic.shiftiq.mobile.core.common.event.subscribe
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.model.BranchId
 import com.tuxlogic.shiftiq.mobile.feature.inventory.application.usecase.GetProductsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,6 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
+    private val getBranchById: GetBranchByIdUseCase,
     private val sessionDataStore: SessionDataStore,
     private val eventBus: DomainEventBus
 ) : ViewModel() {
@@ -38,6 +41,7 @@ class InventoryViewModel @Inject constructor(
                 val branchIdStr = session.activeBranchId?.toString()
                 if (branchIdStr != null && branchIdStr != _uiState.value.selectedBranchId) {
                     _uiState.update { it.copy(selectedBranchId = branchIdStr) }
+                    refreshActiveBranchName(branchIdStr)
                     loadProducts()
                 }
             }
@@ -46,17 +50,13 @@ class InventoryViewModel @Inject constructor(
         viewModelScope.launch {
             eventBus.subscribe<ActiveBranchChangedEvent>().collect { event ->
                 _uiState.update {
-                    it.copy(selectedBranchId = event.newBranchId.toString(), categoryFilter = "")
+                    it.copy(selectedBranchId = event.newBranchId.toString())
                 }
+                refreshActiveBranchName(event.newBranchId.toString())
                 loadProducts()
             }
         }
 
-        loadProducts()
-    }
-
-    fun selectBranch(branchId: String) {
-        _uiState.update { it.copy(selectedBranchId = branchId, categoryFilter = "") }
         loadProducts()
     }
 
@@ -69,24 +69,19 @@ class InventoryViewModel @Inject constructor(
         }
     }
 
-    fun setCategoryFilter(category: String) {
-        val next = if (_uiState.value.categoryFilter.equals(category, ignoreCase = true)) "" else category
-        _uiState.update { it.copy(categoryFilter = next) }
-        loadProducts()
-    }
-
-    fun clearCategoryFilter() {
-        _uiState.update { it.copy(categoryFilter = "") }
-        loadProducts()
-    }
-
-    fun setLowStockOnly(lowStockOnly: Boolean) {
-        _uiState.update { it.copy(lowStockOnly = lowStockOnly) }
-        loadProducts()
+    fun setStockFilter(filter: InventoryStockFilter) {
+        _uiState.update { it.copy(stockFilter = filter) }
     }
 
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null, infoMessage = null) }
+    }
+
+    private suspend fun refreshActiveBranchName(branchId: String) {
+        when (val result = getBranchById(branchId)) {
+            is AppResult.Success -> _uiState.update { it.copy(activeBranchName = result.data.name) }
+            is AppResult.Failure -> Unit
+        }
     }
 
     fun loadProducts() {
@@ -96,8 +91,8 @@ class InventoryViewModel @Inject constructor(
             val result = getProductsUseCase(
                 branchId = BranchId(branchIdStr),
                 name = _uiState.value.searchQuery,
-                category = _uiState.value.categoryFilter.takeIf { it.isNotBlank() },
-                lowStockOnly = if (_uiState.value.lowStockOnly) true else null
+                category = null,
+                lowStockOnly = null
             )
             result.onSuccess { items ->
                 _uiState.update { it.copy(isLoading = false, products = items) }

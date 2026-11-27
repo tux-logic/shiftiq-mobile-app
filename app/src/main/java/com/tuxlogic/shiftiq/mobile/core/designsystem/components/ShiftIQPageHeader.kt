@@ -130,10 +130,7 @@ fun ShiftIQPageHeader(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
-                content = {
-                    actions()
-                    AppLanguageToggle()
-                }
+                content = actions
             )
         }
     }

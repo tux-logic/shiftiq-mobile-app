@@ -3,6 +3,7 @@ package com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.api
 import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySnapshotResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.BranchDailySummaryResourceDto
 import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.NetworkSummaryResourceDto
+import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.dto.EmployeeAnalyticsSummaryResourceDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -24,4 +25,7 @@ interface AnalyticsApiService {
 
     @GET("api/v1/analytics/network/summary")
     suspend fun getNetworkSummary(): Response<NetworkSummaryResourceDto>
+
+    @GET("api/v1/analytics/me/employee-summary")
+    suspend fun getEmployeeSummary(): Response<EmployeeAnalyticsSummaryResourceDto>
 }

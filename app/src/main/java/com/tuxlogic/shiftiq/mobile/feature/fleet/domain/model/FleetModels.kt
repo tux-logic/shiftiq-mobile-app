@@ -4,12 +4,14 @@ import java.util.UUID
 
 enum class AppointmentStatus(val label: String) {
     PENDING("Pending"),
+    CONFIRMED("Confirmed"),
     COMPLETED("Completed"),
     CANCELED("Canceled");
 
     companion object {
         fun fromString(value: String?): AppointmentStatus {
             return when (value?.uppercase()) {
+                "CONFIRMED" -> CONFIRMED
                 "COMPLETED" -> COMPLETED
                 "CANCELED" -> CANCELED
                 else -> PENDING
@@ -22,12 +24,19 @@ data class Appointment(
     val id: UUID,
     val branchId: UUID,
     val customerId: UUID,
+    val customerName: String = "Cliente del Taller",
+    val customerPhone: String = "",
     val vehicleId: UUID,
+    val vehiclePlate: String = "S/P",
+    val vehicleModel: String = "Vehículo General",
     val bayId: UUID? = null,
     val scheduledStart: String,
     val scheduledEnd: String? = null,
+    val serviceType: String = "Mantenimiento General",
     val status: AppointmentStatus,
-    val notes: String? = null
+    val notes: String? = null,
+    val bayNumber: Int = 1,
+    val createdAt: String? = null
 )
 
 data class BranchAvailability(

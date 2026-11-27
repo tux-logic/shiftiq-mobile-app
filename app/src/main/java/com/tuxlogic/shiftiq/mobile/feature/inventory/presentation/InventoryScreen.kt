@@ -7,7 +7,6 @@ import com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.catalog.Produc
 
 @Composable
 fun InventoryScreen(
-    onBack: () -> Unit = {},
     onOpenDetail: (String) -> Unit = {},
     onCreateProduct: (branchId: String?) -> Unit = {},
     onBatchIn: (String) -> Unit = {},
@@ -15,7 +14,6 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = hiltViewModel()
 ) {
     ProductCatalogScreen(
-        onBack = onBack,
         onOpenDetail = onOpenDetail,
         onCreateProduct = onCreateProduct,
         onBatchIn = onBatchIn,

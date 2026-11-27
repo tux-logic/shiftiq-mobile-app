@@ -69,6 +69,7 @@ dependencies {
     // Añadido: Fuentes de Google Fonts descargables en Compose (Inter / Roboto)
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.biometric)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     // Añadido: Navegación declarativa Compose para flujo de pantallas e integración de NavHost

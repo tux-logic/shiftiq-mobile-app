@@ -19,6 +19,7 @@ import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.Update
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateCustomerRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateEmployeeRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateOwnerRequestDto
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateProfileImageRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateWorkshopRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.dto.UpdateWorkshopSpecialtyRequestDto
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.Branch
@@ -431,6 +432,15 @@ class CoreRepositoryImpl @Inject constructor(
         withContext(dispatchers.io) {
             safeApiCall { coreApiService.getProfileMe() }
                 .map { it.toDomain() }
+        }
+
+    override suspend fun updateProfileImage(profileImageUrl: String): AppResult<UnifiedProfile> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                coreApiService.updateMyProfileImage(
+                    UpdateProfileImageRequestDto(profileImageUrl)
+                )
+            }.map { it.toDomain() }
         }
 
     override suspend fun getRolesByUserId(userId: String): AppResult<List<String>> =
