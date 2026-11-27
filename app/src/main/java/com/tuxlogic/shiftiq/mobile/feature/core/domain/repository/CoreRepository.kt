@@ -154,6 +154,7 @@ interface CoreRepository {
 
     // === Unified Profiles & Lookups ===
     suspend fun getProfileMe(): AppResult<UnifiedProfile>
+    suspend fun updateProfileImage(profileImageUrl: String): AppResult<UnifiedProfile>
     suspend fun getRolesByUserId(userId: String): AppResult<List<String>>
     suspend fun lookupProfileByDocumentNumber(documentNumber: String): AppResult<DocumentProfileLookup>
 }
