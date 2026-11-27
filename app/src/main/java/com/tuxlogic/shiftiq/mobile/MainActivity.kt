@@ -1,7 +1,8 @@
 package com.tuxlogic.shiftiq.mobile
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.biometric.BiometricManager
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -10,37 +11,68 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
+import com.tuxlogic.shiftiq.mobile.core.datastore.SessionState
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQLoadingScreen
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
 import com.tuxlogic.shiftiq.mobile.core.model.Role
+import com.tuxlogic.shiftiq.mobile.core.localization.AppLanguageStore
+import com.tuxlogic.shiftiq.mobile.core.localization.AppTranslations
+import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import com.tuxlogic.shiftiq.mobile.core.navigation.AppDestination
+import com.tuxlogic.shiftiq.mobile.core.navigation.RoleBottomNavigationBar
+import com.tuxlogic.shiftiq.mobile.core.navigation.roleTabRoutes
+import com.tuxlogic.shiftiq.mobile.core.security.BiometricLockOverlay
+import com.tuxlogic.shiftiq.mobile.core.security.BiometricPreferences
 import com.tuxlogic.shiftiq.mobile.feature.iam.application.usecase.LogoutUseCase
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.branch.BranchSelectionScreen
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.branch.BranchSelectionViewModel
-import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.dashboard.RoleDashboardScreen
+import com.tuxlogic.shiftiq.mobile.feature.analytics.presentation.dashboard.EmployeeDashboardRoute
+import com.tuxlogic.shiftiq.mobile.feature.analytics.presentation.dashboard.OwnerDashboardRoute
+import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorder.LiveWorkOrderRoute
+import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorders.WorkOrderListRoute
+import com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorders.DtcWorkOrderPrefill
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.login.LoginScreen
 import com.tuxlogic.shiftiq.mobile.feature.iam.presentation.login.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
+private const val DTC_WORK_ORDER_PREFILL_KEY = "dtc_work_order_prefill"
+private const val WORK_ORDER_APPOINTMENT_PREFILL_KEY = "work_order_appointment_prefill"
+
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var sessionDataStore: SessionDataStore
@@ -58,23 +90,155 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShiftIQTheme {
-                val sessionState by sessionDataStore.sessionState.collectAsState(initial = null)
-                LaunchedEffect(sessionState) {
-                    if (sessionState != null) isSessionReady = true
+                var sessionState by remember { mutableStateOf<SessionState?>(null) }
+                var sessionLoadFallbackUsed by remember { mutableStateOf(false) }
+                LaunchedEffect(sessionDataStore) {
+                    val initialSession = try {
+                        withTimeoutOrNull(8_000L) { sessionDataStore.sessionState.first() }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        null
+                    }
+
+                    sessionState = initialSession ?: SessionState()
+                    sessionLoadFallbackUsed = initialSession == null
+                    isSessionReady = true
+
+                    sessionDataStore.sessionState
+                        .catch { emit(SessionState()) }
+                        .collect { latestSession ->
+                            sessionState = latestSession
+                            isSessionReady = true
+                        }
                 }
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                var biometricGateChecked by remember { mutableStateOf(false) }
+                var biometricGateRequired by remember { mutableStateOf(false) }
+                LaunchedEffect(sessionState) {
+                    val session = sessionState ?: return@LaunchedEffect
+                    if (!biometricGateChecked) {
+                        val userId = session.userId?.value?.toString().orEmpty()
+                        val biometricAvailable = BiometricManager.from(this@MainActivity).canAuthenticate(
+                            BiometricManager.Authenticators.BIOMETRIC_WEAK
+                        ) == BiometricManager.BIOMETRIC_SUCCESS
+                        biometricGateRequired = session.isAuthenticated && userId.isNotBlank() &&
+                            biometricAvailable && BiometricPreferences.isEnabled(this@MainActivity, userId)
+                        biometricGateChecked = true
+                    }
+                }
+
+                val navController = rememberNavController()
+                val scope = rememberCoroutineScope()
+                val backStackEntry by navController.currentBackStackEntryAsState()
+                var loginNavigationHandled by remember { mutableStateOf(false) }
+
+                LaunchedEffect(sessionState, sessionLoadFallbackUsed, loginNavigationHandled) {
+                    val session = sessionState ?: return@LaunchedEffect
+                    if (!sessionLoadFallbackUsed || !session.isAuthenticated || loginNavigationHandled) {
+                        return@LaunchedEffect
+                    }
+                    if (navController.currentDestination?.route == AppDestination.Login.route) {
+                        val destination = when {
+                            session.userRole == Role.ROLE_USER -> AppDestination.CustomerDashboard.route
+                            session.activeBranchId == null -> AppDestination.BranchSelection.route
+                            else -> AppDestination.Dashboard.route
+                        }
+                        navController.navigate(destination) {
+                            popUpTo(AppDestination.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+
+                when {
+                    !isSessionReady || !biometricGateChecked -> ShiftIQLoadingScreen()
+                    biometricGateRequired && sessionState?.isAuthenticated == true -> BiometricLockOverlay(
+                        activity = this@MainActivity,
+                        username = sessionState?.userEmail.orEmpty(),
+                        onUnlocked = { biometricGateRequired = false },
+                        onSwitchAccount = {
+                            scope.launch { logoutUseCase() }
+                        }
+                    )
+                    else -> Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    floatingActionButton = {
+                        val role = sessionState?.userRole
+                        val route = backStackEntry?.destination?.route
+                        val action = if (sessionState?.isAuthenticated == true && role != Role.ROLE_USER) {
+                            when (route) {
+                                AppDestination.WorkOrders.route -> Triple("Nueva OT", Icons.Default.Add) {
+                                    navController.navigate(AppDestination.CreateWorkOrder.route)
+                                }
+                                AppDestination.Appointments.route -> Triple("Nueva cita", Icons.Default.Add) {
+                                    navController.navigate(
+                                        AppDestination.CreateAppointment.createRoute(
+                                            branchId = sessionState?.activeBranchId?.value?.toString()
+                                        )
+                                    )
+                                }
+                                AppDestination.Inventory.route -> Triple("Nuevo producto", Icons.Default.Add) {
+                                    navController.navigate(
+                                        AppDestination.InventoryCreateProduct.createRoute(
+                                            sessionState?.activeBranchId?.value?.toString()
+                                        )
+                                    )
+                                }
+                                else -> null
+                            }
+                        } else null
+
+                        action?.let { (label, icon, onClick) ->
+                            ExtendedFloatingActionButton(
+                                onClick = onClick,
+                                icon = { Icon(icon, contentDescription = null) },
+                                text = { Text(label) },
+                                containerColor = Color(0xFF2563EB),
+                                contentColor = Color.White,
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                        }
+                    },
+                    bottomBar = {
+                        val role = sessionState?.userRole
+                        val route = backStackEntry?.destination?.route
+                        if (sessionState?.isAuthenticated == true && role != null &&
+                            role != Role.ROLE_USER && route in roleTabRoutes(role)
+                        ) {
+                            RoleBottomNavigationBar(
+                                role = role,
+                                currentRoute = route,
+                                onNavigate = { destination ->
+                                    if (destination != route) {
+                                        navController.navigate(destination) {
+                                            popUpTo(AppDestination.Dashboard.route) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                ) { innerPadding ->
                     val session = sessionState
                     if (session == null) {
                         ShiftIQLoadingScreen()
                     } else {
-                        val navController = rememberNavController()
-                        val scope = rememberCoroutineScope()
+                        val onLogout: () -> Unit = {
+                            scope.launch {
+                                logoutUseCase()
+                                navController.navigate(AppDestination.Login.route) {
+                                    popUpTo(navController.graph.id) { inclusive = true }
+                                }
+                            }
+                        }
 
                         val startDestination = when {
                             !session.isAuthenticated -> AppDestination.Login.route
                             session.userRole == Role.ROLE_USER -> AppDestination.CustomerDashboard.route
-                            session.userRole == Role.ROLE_OWNER && session.activeBranchId == null -> AppDestination.BranchSelection.route
+                            session.activeBranchId == null -> AppDestination.BranchSelection.route
                             else -> AppDestination.Dashboard.route
                         }
 
@@ -117,22 +281,14 @@ class MainActivity : ComponentActivity() {
                                     onPasswordChanged = loginViewModel::onPasswordChanged,
                                     onLoginClick = { loginViewModel.login() },
                                     onLoginSuccess = { role ->
-                                        when (role) {
-                                            Role.ROLE_OWNER -> {
-                                                navController.navigate(AppDestination.BranchSelection.route) {
-                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
-                                                }
-                                            }
-                                            Role.ROLE_USER -> {
-                                                navController.navigate(AppDestination.CustomerDashboard.route) {
-                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
-                                                }
-                                            }
-                                            else -> {
-                                                navController.navigate(AppDestination.Dashboard.route) {
-                                                    popUpTo(AppDestination.Login.route) { inclusive = true }
-                                                }
-                                            }
+                                        loginNavigationHandled = true
+                                        val destination = if (role == Role.ROLE_USER) {
+                                            AppDestination.CustomerDashboard.route
+                                        } else {
+                                            AppDestination.BranchSelection.route
+                                        }
+                                        navController.navigate(destination) {
+                                            popUpTo(AppDestination.Login.route) { inclusive = true }
                                         }
                                     },
                                     onNavigateToRegister = {
@@ -187,40 +343,115 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(AppDestination.Dashboard.route) {
-                                RoleDashboardScreen(
-                                    userRole = session.userRole,
-                                    activeBranchId = session.activeBranchId,
-                                    userId = session.userId,
-                                    onNavigateToWorkshops = {
-                                        navController.navigate(AppDestination.WorkshopList.route)
-                                    },
-                                    onNavigateToOwnerProfile = {
-                                        navController.navigate(AppDestination.OwnerProfile.route)
-                                    },
-                                    onNavigateToAppointments = {
-                                        navController.navigate(AppDestination.Appointments.route)
-                                    },
-                                    onNavigateToStaff = {
-                                        navController.navigate(AppDestination.StaffManagement.route)
-                                    },
-                                    onNavigateToInventory = {
-                                        navController.navigate(AppDestination.Inventory.route)
-                                    },
-                                    onNavigateToCustomerVehicles = {
-                                        navController.navigate(AppDestination.CustomerVehicles.route)
-                                    },
-                                    onNavigateToCustomerDashboard = {
-                                        navController.navigate(AppDestination.CustomerDashboard.route)
-                                    },
-                                    onLogoutClick = {
-                                        scope.launch {
-                                            logoutUseCase()
-                                            navController.navigate(AppDestination.Login.route) {
-                                                popUpTo(navController.graph.id) {
-                                                    inclusive = true
-                                                }
+                                if (session.userRole == Role.ROLE_OWNER || session.userRole == Role.ROLE_ADMIN) {
+                                    OwnerDashboardRoute(
+                                        onNavigateToBilling = { navController.navigate(AppDestination.Billing.route) },
+                                        onSwitchBranch = { navController.navigate(AppDestination.BranchSelection.route) },
+                                        onNavigateToProfile = { navController.navigate(AppDestination.Profile.route) },
+                                        onNavigateToOrders = { navController.navigate(AppDestination.WorkOrders.route) },
+                                        onNavigateToAppointments = { navController.navigate(AppDestination.Appointments.route) },
+                                        onNavigateToInventory = { navController.navigate(AppDestination.Inventory.route) },
+                                        onNavigateToTelemetry = { navController.navigate(AppDestination.Telemetry.route) }
+                                    )
+                                } else {
+                                    EmployeeDashboardRoute(
+                                        onNavigateToBilling = { navController.navigate(AppDestination.Billing.route) },
+                                        onSwitchBranch = { navController.navigate(AppDestination.BranchSelection.route) },
+                                        onNavigateToProfile = { navController.navigate(AppDestination.Profile.route) },
+                                        onNavigateToOrders = { navController.navigate(AppDestination.WorkOrders.route) },
+                                        onNavigateToAppointments = { navController.navigate(AppDestination.Appointments.route) },
+                                        onNavigateToInventory = { navController.navigate(AppDestination.Inventory.route) },
+                                        onNavigateToTelemetry = { navController.navigate(AppDestination.Telemetry.route) },
+                                        onOpenWorkOrder = { id -> navController.navigate(AppDestination.WorkOrderDetail.createRoute(id)) }
+                                    )
+                                }
+                            }
+
+                            composable(AppDestination.WorkOrders.route) {
+                                WorkOrderListRoute(
+                                    canCreateWorkOrder = session.userRole != Role.ROLE_USER,
+                                    onCreateWorkOrder = { navController.navigate(AppDestination.CreateWorkOrder.route) },
+                                    onOpenWorkOrder = { id ->
+                                        navController.navigate(AppDestination.WorkOrderDetail.createRoute(id))
+                                    }
+                                )
+                            }
+
+                            composable(AppDestination.CreateWorkOrder.route) { backStackEntry ->
+                                val initialDtcPrefill = remember(backStackEntry) {
+                                    navController.previousBackStackEntry?.savedStateHandle
+                                        ?.remove<DtcWorkOrderPrefill>(DTC_WORK_ORDER_PREFILL_KEY)
+                                }
+                                val initialAppointmentId = remember(backStackEntry) {
+                                    navController.previousBackStackEntry?.savedStateHandle
+                                        ?.remove<String>(WORK_ORDER_APPOINTMENT_PREFILL_KEY)
+                                }
+                                val canCreateFromDtcAlert =
+                                    initialDtcPrefill != null && session.userRole != Role.ROLE_USER
+                                if (session.userRole == Role.ROLE_OWNER ||
+                                    session.userRole == Role.ROLE_ADMIN ||
+                                    canCreateFromDtcAlert
+                                ) {
+                                    com.tuxlogic.shiftiq.mobile.feature.operations.presentation.workorders.CreateWorkOrderRoute(
+                                        onNavigateBack = { navController.popBackStack() },
+                                        initialDtcPrefill = initialDtcPrefill,
+                                        initialAppointmentId = initialAppointmentId,
+                                        onWorkOrderCreated = {
+                                            navController.navigate(AppDestination.WorkOrders.route) {
+                                                popUpTo(AppDestination.WorkOrders.route) { inclusive = true }
+                                                launchSingleTop = true
                                             }
                                         }
+                                    )
+                                } else {
+                                    LaunchedEffect(Unit) { navController.popBackStack() }
+                                }
+                            }
+
+                            composable(AppDestination.Telemetry.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.iot.presentation.telemetry.TelemetryDashboardRoute(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onCreateWorkOrderFromAlert = { alert ->
+                                        val recommendation = alert.aiDiagnosticRecommendation
+                                        val diagnostic = buildString {
+                                            append("${AppTranslations.translate("Alerta OBD", AppLanguageStore.current)} ${alert.dtcCode}: ${alert.description}.")
+                                            if (recommendation.isNotBlank()) {
+                                                append(" ${AppTranslations.translate("Recomendación de diagnóstico", AppLanguageStore.current)}: $recommendation")
+                                            }
+                                        }
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            DTC_WORK_ORDER_PREFILL_KEY,
+                                            DtcWorkOrderPrefill(
+                                                branchId = alert.branchId.value.toString(),
+                                                vehicleId = alert.vehicleId.orEmpty(),
+                                                dtcCode = alert.dtcCode,
+                                                plate = alert.vehiclePlate,
+                                                model = alert.vehicleModel,
+                                                customerName = alert.customerName,
+                                                diagnosticSummary = diagnostic
+                                            )
+                                        )
+                                        navController.navigate(AppDestination.CreateWorkOrder.route)
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.WorkOrderDetail.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("workOrderId") {
+                                        type = androidx.navigation.NavType.StringType
+                                    }
+                                )
+                            ) { backStackEntry ->
+                                val workOrderId = backStackEntry.arguments?.getString("workOrderId").orEmpty()
+                                LiveWorkOrderRoute(
+                                    workOrderId = workOrderId,
+                                    isOwnerAdmin = session.userRole == Role.ROLE_OWNER || session.userRole == Role.ROLE_ADMIN,
+                                    canExecuteTasks = session.userRole != Role.ROLE_USER,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onOpenVoucher = { voucherId ->
+                                        navController.navigate(AppDestination.BillingVoucher.createRoute(voucherId))
                                     }
                                 )
                             }
@@ -310,9 +541,27 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(AppDestination.OwnerProfile.route) {
-                                val viewModel: com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner.OwnerProfileViewModel = hiltViewModel()
-                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.owner.OwnerProfileScreen(
-                                    viewModel = viewModel,
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.profile.ProfileRoute(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onLogout = onLogout,
+                                    onNavigateToServiceCatalog = { navController.navigate(AppDestination.ServiceCatalog.route) },
+                                    onNavigateToBranches = { navController.navigate(AppDestination.BranchSelection.route) },
+                                    onNavigateToOperatingHours = { navController.navigate(AppDestination.OperatingHours.route) }
+                                )
+                            }
+
+                            composable(AppDestination.ServiceCatalog.route) {
+                                if (session.userRole == Role.ROLE_OWNER || session.userRole == Role.ROLE_ADMIN) {
+                                    com.tuxlogic.shiftiq.mobile.feature.operations.presentation.services.ServicesCatalogRoute(
+                                        onNavigateBack = { navController.popBackStack() }
+                                    )
+                                } else {
+                                    LaunchedEffect(Unit) { navController.popBackStack() }
+                                }
+                            }
+
+                            composable(AppDestination.OperatingHours.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.operatinghours.OperatingHoursRoute(
                                     onNavigateBack = { navController.popBackStack() }
                                 )
                             }
@@ -327,16 +576,35 @@ class MainActivity : ComponentActivity() {
                                     onRefresh = viewModel::loadAppointments,
                                     onFilterSelected = viewModel::setStatusFilter,
                                     onMarkStatus = viewModel::markAppointmentStatus,
-                                    onDeleteAppointment = viewModel::deleteAppointment,
-                                    onNavigateToCreate = { navController.navigate(AppDestination.CreateAppointment.route) },
-                                    onNavigateBack = { navController.popBackStack() },
+                                    onNavigateToCreate = { navController.navigate(AppDestination.CreateAppointment.createRoute()) },
+                                    onOpenWorkOrder = { appointment ->
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            WORK_ORDER_APPOINTMENT_PREFILL_KEY,
+                                            appointment.id.toString()
+                                        )
+                                        navController.navigate(AppDestination.CreateWorkOrder.route)
+                                    },
+                                    onNavigateToCustomerDirectory = { navController.navigate(AppDestination.CustomerDirectory.route) },
+                                    onSelectDate = viewModel::selectDate,
                                     onClearMessages = viewModel::clearMessages
                                 )
                             }
 
-                            composable(AppDestination.CreateAppointment.route) {
+                            composable(
+                                route = AppDestination.CreateAppointment.route,
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("branchId") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                                    androidx.navigation.navArgument("customerId") { type = androidx.navigation.NavType.StringType; defaultValue = "" }
+                                )
+                            ) { backStackEntry ->
                                 val viewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentViewModel = hiltViewModel()
                                 val uiState by viewModel.uiState.collectAsState()
+                                val branchId = backStackEntry.arguments?.getString("branchId").orEmpty()
+                                val customerId = backStackEntry.arguments?.getString("customerId").orEmpty()
+                                LaunchedEffect(branchId, customerId) {
+                                    if (branchId.isNotBlank()) viewModel.onBranchIdChanged(branchId)
+                                    if (customerId.isNotBlank()) viewModel.onCustomerIdChanged(customerId)
+                                }
 
                                 com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentScreen(
                                     uiState = uiState,
@@ -348,6 +616,46 @@ class MainActivity : ComponentActivity() {
                                     onSubmit = viewModel::createAppointment,
                                     onNavigateBack = { navController.popBackStack() },
                                     onAppointmentCreated = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(AppDestination.CustomerDirectory.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.customers.CustomerDirectoryRoute(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onCreateAppointment = { branchId, customerId ->
+                                        navController.navigate(AppDestination.CreateAppointment.createRoute(branchId, customerId))
+                                    }
+                                )
+                            }
+
+                            composable(AppDestination.Billing.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.billing.presentation.BillingDashboardRoute(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onOpenVoucher = { voucherId ->
+                                        navController.navigate(AppDestination.BillingVoucher.createRoute(voucherId))
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = AppDestination.BillingVoucher.route,
+                                arguments = listOf(androidx.navigation.navArgument("voucherId") {
+                                    type = androidx.navigation.NavType.StringType
+                                })
+                            ) { backStackEntry ->
+                                com.tuxlogic.shiftiq.mobile.feature.billing.presentation.BillingVoucherDetailRoute(
+                                    voucherId = backStackEntry.arguments?.getString("voucherId").orEmpty(),
+                                    onNavigateBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(AppDestination.Profile.route) {
+                                com.tuxlogic.shiftiq.mobile.feature.core.presentation.profile.ProfileRoute(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onLogout = onLogout,
+                                    onNavigateToServiceCatalog = { navController.navigate(AppDestination.ServiceCatalog.route) },
+                                    onNavigateToBranches = { navController.navigate(AppDestination.BranchSelection.route) },
+                                    onNavigateToOperatingHours = { navController.navigate(AppDestination.OperatingHours.route) }
                                 )
                             }
 
@@ -377,7 +685,6 @@ class MainActivity : ComponentActivity() {
                             // IMPORTANT: declare /create before /{productId} so "create" is not treated as an id.
                             composable(AppDestination.Inventory.route) {
                                 com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.InventoryScreen(
-                                    onBack = { navController.popBackStack() },
                                     onOpenDetail = { productId ->
                                         navController.navigate(
                                             AppDestination.InventoryProductDetail.createRoute(productId)
@@ -424,34 +731,11 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.detail.ProductDetailScreen(
                                     onBack = { navController.popBackStack() },
-                                    onEdit = { productId ->
-                                        navController.navigate(
-                                            AppDestination.InventoryEditProduct.createRoute(productId)
-                                        )
-                                    },
                                     onBatchIn = { productId ->
                                         navController.navigate(
                                             AppDestination.InventoryBatchIn.createRoute(productId)
                                         )
-                                    },
-                                    onAdjust = { productId ->
-                                        navController.navigate(
-                                            AppDestination.InventoryStockAdjust.createRoute(productId)
-                                        )
                                     }
-                                )
-                            }
-
-                            composable(
-                                route = AppDestination.InventoryEditProduct.route,
-                                arguments = listOf(
-                                    androidx.navigation.navArgument("productId") {
-                                        type = androidx.navigation.NavType.StringType
-                                    }
-                                )
-                            ) {
-                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.form.ProductFormScreen(
-                                    onBack = { navController.popBackStack() }
                                 )
                             }
 
@@ -468,20 +752,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            composable(
-                                route = AppDestination.InventoryStockAdjust.route,
-                                arguments = listOf(
-                                    androidx.navigation.navArgument("productId") {
-                                        type = androidx.navigation.NavType.StringType
-                                    }
-                                )
-                            ) {
-                                com.tuxlogic.shiftiq.mobile.feature.inventory.presentation.stock.StockAdjustmentScreen(
-                                    onBack = { navController.popBackStack() }
-                                )
-                            }
                         }
                     }
+                }
                 }
             }
         }
