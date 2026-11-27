@@ -3,6 +3,9 @@ package com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.di
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.api.CoreApiService
 import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.repository.CoreRepositoryImpl
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.CoreRepository
+import com.tuxlogic.shiftiq.mobile.feature.core.domain.repository.OperatingHoursRepository
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.remote.api.OperatingHoursApiService
+import com.tuxlogic.shiftiq.mobile.feature.core.infrastructure.repository.OperatingHoursRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -21,6 +24,12 @@ abstract class CoreInfrastructureModule {
         impl: CoreRepositoryImpl
     ): CoreRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindOperatingHoursRepository(
+        impl: OperatingHoursRepositoryImpl
+    ): OperatingHoursRepository
+
     companion object {
         @Provides
         @Singleton
@@ -29,5 +38,10 @@ abstract class CoreInfrastructureModule {
         ): CoreApiService {
             return retrofit.create(CoreApiService::class.java)
         }
+
+        @Provides
+        @Singleton
+        fun provideOperatingHoursApiService(retrofit: Retrofit): OperatingHoursApiService =
+            retrofit.create(OperatingHoursApiService::class.java)
     }
 }
