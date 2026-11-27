@@ -12,6 +12,7 @@ import com.tuxlogic.shiftiq.mobile.feature.analytics.infrastructure.remote.api.A
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySnapshot
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.BranchDailySummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.NetworkAnalyticsSummary
+import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.model.EmployeeAnalyticsSummary
 import com.tuxlogic.shiftiq.mobile.feature.analytics.domain.repository.AnalyticsRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -62,6 +63,13 @@ class AnalyticsRepositoryImpl @Inject constructor(
         withContext(dispatchers.io) {
             safeApiCall {
                 analyticsApiService.getNetworkSummary()
+            }.map { it.toDomain() }
+        }
+
+    override suspend fun getEmployeeAnalyticsSummary(): AppResult<EmployeeAnalyticsSummary> =
+        withContext(dispatchers.io) {
+            safeApiCall {
+                analyticsApiService.getEmployeeSummary()
             }.map { it.toDomain() }
         }
 }
