@@ -376,6 +376,8 @@ data class UpdateEmployeeRequestDto(
 data class UnifiedProfileResourceDto(
     @SerializedName("userId")
     val userId: String,
+    @SerializedName("profileImageUrl")
+    val profileImageUrl: String? = null,
     @SerializedName("roles")
     val roles: List<String> = emptyList(),
     @SerializedName("owner")
@@ -384,6 +386,11 @@ data class UnifiedProfileResourceDto(
     val employee: UnifiedEmployeeSummaryDto? = null,
     @SerializedName("customer")
     val customer: CustomerResourceDto? = null
+)
+
+data class UpdateProfileImageRequestDto(
+    @SerializedName("profileImageUrl")
+    val profileImageUrl: String
 )
 
 data class UnifiedEmployeeSummaryDto(
