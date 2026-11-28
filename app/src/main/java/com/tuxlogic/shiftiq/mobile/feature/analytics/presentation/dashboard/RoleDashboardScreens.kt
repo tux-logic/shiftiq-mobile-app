@@ -7,11 +7,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Person
@@ -68,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQSkeletonDetail
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
@@ -84,6 +88,7 @@ fun OwnerDashboardRoute(
     onNavigateToBilling: () -> Unit,
     onSwitchBranch: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCustomerDirectory: () -> Unit,
     onNavigateToOrders: () -> Unit,
     onNavigateToAppointments: () -> Unit,
     onNavigateToInventory: () -> Unit,
@@ -98,6 +103,7 @@ fun OwnerDashboardRoute(
         onNavigateToBilling = onNavigateToBilling,
         onSwitchBranch = onSwitchBranch,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToCustomerDirectory = onNavigateToCustomerDirectory,
         onNavigateToOrders = onNavigateToOrders,
         onNavigateToAppointments = onNavigateToAppointments,
         onNavigateToInventory = onNavigateToInventory,
@@ -114,6 +120,7 @@ fun OwnerDashboardScreen(
     onNavigateToBilling: () -> Unit,
     onSwitchBranch: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCustomerDirectory: () -> Unit,
     onNavigateToOrders: () -> Unit,
     onNavigateToAppointments: () -> Unit,
     onNavigateToInventory: () -> Unit,
@@ -128,9 +135,8 @@ fun OwnerDashboardScreen(
             badgeLabel = "PROPIETARIO · ADMIN",
             onTitleClick = onSwitchBranch,
             actions = {
+                DashboardHeaderAction(Icons.Default.Groups, "Directorio de clientes", onNavigateToCustomerDirectory)
                 DashboardHeaderAction(Icons.AutoMirrored.Filled.ReceiptLong, "Facturación", onNavigateToBilling)
-                DashboardHeaderAction(Icons.Default.Business, "Cambiar de sede", onSwitchBranch)
-                DashboardHeaderAction(Icons.Default.Refresh, "Refrescar KPIs", onRefresh)
                 DashboardHeaderAction(Icons.Default.Person, "Mi perfil", onNavigateToProfile)
             }
         )
@@ -140,7 +146,7 @@ fun OwnerDashboardScreen(
             modifier = Modifier.weight(1f).fillMaxWidth()
         ) {
             when {
-                uiState.isLoading && uiState.branchSummary == null -> LoadingState()
+                uiState.isLoading && uiState.branchSummary == null -> ShiftIQSkeletonDetail(Modifier.fillMaxSize())
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = 16.dp, top = 18.dp, end = 16.dp, bottom = 28.dp),
@@ -226,12 +232,8 @@ fun OwnerDashboardScreen(
 
 @Composable
 fun EmployeeDashboardRoute(
-    onNavigateToBilling: () -> Unit,
-    onSwitchBranch: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToOrders: () -> Unit,
-    onNavigateToAppointments: () -> Unit,
-    onNavigateToInventory: () -> Unit,
     onNavigateToTelemetry: () -> Unit,
     onOpenWorkOrder: (String) -> Unit,
     viewModel: EmployeeDashboardViewModel = hiltViewModel()
@@ -241,12 +243,8 @@ fun EmployeeDashboardRoute(
     EmployeeDashboardScreen(
         uiState = uiState,
         onRefresh = viewModel::refresh,
-        onNavigateToBilling = onNavigateToBilling,
-        onSwitchBranch = onSwitchBranch,
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToOrders = onNavigateToOrders,
-        onNavigateToAppointments = onNavigateToAppointments,
-        onNavigateToInventory = onNavigateToInventory,
         onNavigateToTelemetry = onNavigateToTelemetry,
         onOpenWorkOrder = onOpenWorkOrder,
     )
@@ -257,26 +255,20 @@ fun EmployeeDashboardRoute(
 fun EmployeeDashboardScreen(
     uiState: EmployeeDashboardUiState,
     onRefresh: () -> Unit,
-    onNavigateToBilling: () -> Unit,
-    onSwitchBranch: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToOrders: () -> Unit,
-    onNavigateToAppointments: () -> Unit,
-    onNavigateToInventory: () -> Unit,
     onNavigateToTelemetry: () -> Unit,
     onOpenWorkOrder: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val summary = uiState.summary
+    val assignedWorkOrders = summary?.assignedWorkOrders.orEmpty()
     Column(modifier.fillMaxSize().background(DashboardBackground)) {
         RoleDashboardHeader(
             title = "Mi Resumen",
             subtitle = "Cola operativa · ${uiState.activeBranchName}",
-            onTitleClick = onSwitchBranch,
+            onTitleClick = null,
             actions = {
-                DashboardHeaderAction(Icons.AutoMirrored.Filled.ReceiptLong, "Facturación", onNavigateToBilling)
-                DashboardHeaderAction(Icons.Default.Business, "Cambiar de sede", onSwitchBranch)
-                DashboardHeaderAction(Icons.Default.Refresh, "Actualizar resumen", onRefresh)
                 DashboardHeaderAction(Icons.Default.Person, "Mi perfil", onNavigateToProfile)
             }
         )
@@ -286,13 +278,13 @@ fun EmployeeDashboardScreen(
             modifier = Modifier.weight(1f).fillMaxWidth()
         ) {
             when {
-                uiState.isLoading && summary == null -> LoadingState()
+                uiState.isLoading && summary == null -> ShiftIQSkeletonDetail(Modifier.fillMaxSize())
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                uiState.errorMessage?.let { message -> item { MessageCard(message = message) } }
+                uiState.errorMessage?.let { message -> item { DashboardErrorBanner(message, onRefresh) } }
                 summary?.takeIf { it.activeDtcAlertsCount > 0 }?.let { active ->
                     item { DtcAlertBanner(active.activeDtcAlertsCount, onNavigateToTelemetry) }
                 }
@@ -309,15 +301,13 @@ fun EmployeeDashboardScreen(
                         averageMinutes = summary?.avgCompletionMinutes
                     )
                 }
-                item {
-                    QuickActionRow(
-                        onNewOrder = onNavigateToOrders,
-                        onNewAppointment = onNavigateToAppointments,
-                        onNewBatch = onNavigateToInventory
-                    )
-                }
-                if (!summary?.assignedWorkOrders.isNullOrEmpty()) {
-                    item { EmployeeQueueWorkloadChart(summary!!.assignedWorkOrders) }
+                if (assignedWorkOrders.isNotEmpty()) {
+                    item {
+                        EmployeeQueueWorkloadChart(
+                            orders = assignedWorkOrders,
+                            onOpenWorkOrder = onOpenWorkOrder
+                        )
+                    }
                 }
                 item {
                     Row(
@@ -329,10 +319,10 @@ fun EmployeeDashboardScreen(
                         TextButton(onClick = onNavigateToOrders) { Text("Ver todas") }
                     }
                 }
-                if (summary?.assignedWorkOrders.isNullOrEmpty()) {
+                if (assignedWorkOrders.isEmpty()) {
                     item { EmployeeEmptyQueueCard() }
                 } else {
-                    items(summary!!.assignedWorkOrders.take(6), key = { it.workOrderId }) { order ->
+                    items(assignedWorkOrders, key = { it.workOrderId }) { order ->
                         EmployeeAssignedOrderCard(
                             order = order,
                             onClick = { onOpenWorkOrder(order.workOrderId) }
@@ -499,6 +489,8 @@ private fun WorkOrderStatus.dashboardLabel(): String = when (this) {
     WorkOrderStatus.PENDING -> "Pendiente"
     WorkOrderStatus.IN_PROGRESS -> "En progreso"
     WorkOrderStatus.COMPLETED -> "Completada"
+    WorkOrderStatus.PAID -> "Pagada"
+    WorkOrderStatus.DELETED -> "Cancelada"
     WorkOrderStatus.CANCELLED -> "Cancelada"
 }
 
@@ -506,6 +498,8 @@ private fun WorkOrderStatus.dashboardColor(): Color = when (this) {
     WorkOrderStatus.PENDING -> Color(0xFFF59E0B)
     WorkOrderStatus.IN_PROGRESS -> PrimaryBlue
     WorkOrderStatus.COMPLETED -> Color(0xFF16A34A)
+    WorkOrderStatus.PAID -> PrimaryBlue
+    WorkOrderStatus.DELETED -> Color(0xFFE11D48)
     WorkOrderStatus.CANCELLED -> Color(0xFFE11D48)
 }
 
@@ -514,11 +508,15 @@ private fun EmployeeAssignedOrderCard(
     order: EmployeeAssignedWorkOrderSummary,
     onClick: () -> Unit
 ) {
+    val isInProgress = order.status.equals("IN_PROGRESS", ignoreCase = true)
+    val statusColor = if (isInProgress) Color(0xFF0FB5BA) else Color(0xFFFBBF24)
+    val statusLabel = if (isInProgress) "En progreso" else "Pendiente"
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, ShiftIQBorderSlate)
+        border = BorderStroke(1.dp, Color(0xFFE8EDF4)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             Modifier.fillMaxWidth().padding(14.dp),
@@ -526,29 +524,39 @@ private fun EmployeeAssignedOrderCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
-                Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(Color(0xFFEFF6FF)),
+                Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1E3A8A).copy(alpha = 0.08f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Build, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(21.dp))
+                Icon(Icons.Default.Build, contentDescription = null, tint = Color(0xFF1E3A8A), modifier = Modifier.size(20.dp))
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("OT-${order.internalNumber}", fontWeight = FontWeight.Bold, color = Color(0xFF1E293B), modifier = Modifier.weight(1f))
-                    Text(
-                        order.status.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = PrimaryBlue,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Text("Vehículo ${order.vehicleId}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B), maxLines = 1)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    "OT #${order.internalNumber.toString().padStart(6, '0')}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
+                )
                 Text(
                     "${order.assignedTasksCount} tareas · ${order.pendingTasksCount} pendientes",
-                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 12.sp,
                     color = Color(0xFF64748B)
                 )
             }
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+            Surface(shape = RoundedCornerShape(999.dp), color = statusColor.copy(alpha = 0.09f)) {
+                Text(
+                    statusLabel,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = statusColor
+                )
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
@@ -713,6 +721,31 @@ private fun MessageCard(message: String) {
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun DashboardErrorBanner(message: String, onRetry: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+        border = BorderStroke(1.dp, Color(0xFFE11D48).copy(alpha = 0.24f))
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(20.dp))
+            Text(
+                message,
+                modifier = Modifier.weight(1f),
+                color = Color(0xFFE11D48),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            TextButton(onClick = onRetry) { Text("Reintentar") }
         }
     }
 }
@@ -925,31 +958,57 @@ private fun EmployeeWeeklyActivityChart(
 }
 
 @Composable
-private fun EmployeeQueueWorkloadChart(orders: List<EmployeeAssignedWorkOrderSummary>) {
+private fun EmployeeQueueWorkloadChart(
+    orders: List<EmployeeAssignedWorkOrderSummary>,
+    onOpenWorkOrder: (String) -> Unit
+) {
+    val maxTasks = orders.maxOfOrNull { it.assignedTasksCount }?.coerceAtLeast(1) ?: 1
     Card(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, ShiftIQBorderSlate)
     ) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Carga por orden", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Avance por Orden", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    WorkloadLegendDot(Color(0xFF3DBE6C), "Listas")
+                    WorkloadLegendDot(Color(0xFFFBBF24), "Pend.")
+                }
+            }
             orders.take(5).forEach { order ->
-                val total = order.assignedTasksCount.coerceAtLeast(order.pendingTasksCount)
-                val doneRatio = if (total == 0) 0f else (total - order.pendingTasksCount).toFloat() / total
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                val total = order.assignedTasksCount.coerceAtLeast(0)
+                val pending = order.pendingTasksCount.coerceIn(0, total)
+                val completed = (total - pending).coerceIn(0, total)
+                val totalFraction = total.toFloat() / maxTasks
+                val completedFraction = if (total == 0) 0f else completed.toFloat() / total
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenWorkOrder(order.workOrderId) }
+                        .padding(vertical = 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Orden #${order.internalNumber}", fontWeight = FontWeight.SemiBold)
-                        Text("${order.pendingTasksCount} pendientes", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("OT #${order.internalNumber.toString().padStart(6, '0')}", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text("$completed/$total completadas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    LinearProgressIndicator(
-                        progress = { doneRatio.coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth().height(7.dp),
-                        color = PrimaryBlue,
-                        trackColor = Color(0xFFE2E8F0)
-                    )
+                    BoxWithConstraints(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(999.dp)).background(Color(0xFFF1F5F9))) {
+                        Box(Modifier.fillMaxWidth(totalFraction.coerceIn(0f, 1f)).fillMaxSize().clip(RoundedCornerShape(999.dp)).background(Color(0x75FBBF24))) {
+                            Box(Modifier.fillMaxWidth(completedFraction).fillMaxHeight().clip(RoundedCornerShape(999.dp)).background(Color(0xFF3DBE6C)))
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WorkloadLegendDot(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(color))
+        Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF475569))
     }
 }
 
