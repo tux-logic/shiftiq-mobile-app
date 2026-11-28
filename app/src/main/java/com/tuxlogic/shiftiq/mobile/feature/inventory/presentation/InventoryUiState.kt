@@ -15,6 +15,7 @@ data class InventoryUiState(
     val activeBranchName: String = "Sede Principal",
     val products: List<ProductItem> = emptyList(),
     val searchQuery: String = "",
+    val selectedCategory: String = "TODOS",
     val stockFilter: InventoryStockFilter = InventoryStockFilter.ALL,
     val errorMessage: String? = null,
     val infoMessage: String? = null
