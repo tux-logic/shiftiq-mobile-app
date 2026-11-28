@@ -91,6 +91,7 @@ class LiveWorkOrderViewModel @Inject constructor(
                         workOrder = order,
                         vehicleDescription = vehicleDescription,
                         customerName = customer?.displayName.orEmpty(),
+                        customerPhone = customer?.phone.orEmpty(),
                         customerDocumentType = customer?.documentType?.uppercase()?.takeIf { it == "RUC" } ?: "DNI",
                         customerDocumentNumber = customer?.documentNumber.orEmpty(),
                         currentEmployeeIds = identity.first,
