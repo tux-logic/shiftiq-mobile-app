@@ -90,6 +90,25 @@ object AppTranslations {
         "Prueba con otro término o revisa los registros de esta sede." to "Try another search term or check this branch's registrations.",
         "Selecciona una sede activa para ver sus clientes." to "Select an active branch to view its customers.",
         "Nueva cita" to "New appointment",
+        "Agendar Nueva Cita" to "Schedule New Appointment",
+        "Seleccionar Cliente Registrado (Opcional)" to "Select Registered Customer (Optional)",
+        "Cliente Nuevo / Ingresar Manualmente" to "New Customer / Enter Manually",
+        "Nombre Completo *" to "Full Name *",
+        "Vehículo registrado" to "Registered vehicle",
+        "Seleccionar vehículo registrado" to "Select registered vehicle",
+        "Bahía Asignada:" to "Assigned Bay:",
+        "Elegir fecha" to "Choose date",
+        "Elegir hora" to "Choose time",
+        "Cargando servicios de la sede..." to "Loading branch services...",
+        "No hay servicios creados en esta sede." to "There are no services created at this branch.",
+        "Confirmar y Agendar" to "Confirm and Schedule",
+        "Ingrese el cliente" to "Enter the customer name",
+        "Ingrese el cliente." to "Enter the customer name.",
+        "Ingrese placa" to "Enter the license plate",
+        "Ingrese la placa del vehículo." to "Enter the vehicle license plate.",
+        "Seleccione un servicio." to "Select a service.",
+        "Selecciona una sede activa para agendar una cita." to "Select an active branch to schedule an appointment.",
+        "La sede activa no tiene un identificador válido." to "The active branch has an invalid identifier.",
         "Facturación" to "Billing",
         "Comprobantes y cotizaciones" to "Vouchers and quotes",
         "Comprobantes" to "Vouchers",
@@ -696,7 +715,39 @@ object AppTranslations {
         "¿Ya tienes cuenta? " to "Already have an account? ",
         "¿Ya tienes una cuenta? " to "Already have an account? ",
         "✓ Correo válido" to "✓ Valid email",
-        "✓ Las contraseñas coinciden" to "✓ Passwords match"
+        "✓ Las contraseñas coinciden" to "✓ Passwords match",
+        "Liquidación y facturación" to "Billing and checkout",
+        "Emisión de comprobante interno" to "Internal voucher issuance",
+        "ORDEN DE TRABAJO" to "WORK ORDER",
+        "TIPO DE COMPROBANTE" to "VOUCHER TYPE",
+        "Boleta de venta" to "Sales receipt",
+        "Factura" to "Invoice",
+        "DATOS DEL CLIENTE Y DOCUMENTO" to "CUSTOMER AND DOCUMENT DETAILS",
+        "Nombre / razón social" to "Name / legal business name",
+        "Número de documento" to "Document number",
+        "Dirección fiscal" to "Fiscal address",
+        "DETALLE DE SERVICIOS Y REPUESTOS EN BAHÍA" to "BAY SERVICES AND PARTS",
+        "Cant:" to "Qty:",
+        "Subtotal" to "Subtotal",
+        "IGV (18%)" to "VAT (18%)",
+        "MÉTODO DE PAGO Y COBRO EN CAJA" to "PAYMENT METHOD AND COUNTER COLLECTION",
+        "Efectivo en Caja" to "Cash at counter",
+        "Tarjeta de Crédito" to "Credit card",
+        "Tarjeta de Débito" to "Debit card",
+        "Transferencia Bancaria" to "Bank transfer",
+        "Cotización aprobada" to "Approved quote",
+        "No hay cotizaciones aprobadas disponibles para emitir un comprobante." to "No approved quotes are available to issue a voucher.",
+        "La cotización no contiene conceptos detallados." to "The quote has no item details.",
+        "El comprobante se emite desde la cotización aprobada seleccionada." to "The voucher is issued from the selected approved quote.",
+        "Ingresa el nombre o razón social." to "Enter the name or legal business name.",
+        "Ingresa el número de documento." to "Enter the document number.",
+        "DNI requiere 8 dígitos." to "DNI must contain 8 digits.",
+        "RUC requiere 11 dígitos." to "RUC must contain 11 digits.",
+        "La factura requiere un RUC válido." to "An invoice requires a valid RUC.",
+        "Emitir comprobante" to "Issue voucher",
+        "EMITIR BOLETA" to "ISSUE RECEIPT",
+        "EMITIR FACTURA" to "ISSUE INVOICE",
+        "Emitiendo comprobante…" to "Issuing voucher…"
     )
 
     @Synchronized
@@ -736,6 +787,7 @@ object AppTranslations {
 
     private fun translatePattern(text: String, language: AppLanguage): String? {
         if (language == AppLanguage.ENGLISH) {
+            Regex("^Bahía (\\d+)$").matchEntire(text)?.let { return "Bay " + it.groupValues[1] }
             Regex("^A (.+) km de tu ubicación$").matchEntire(text)?.let {
                 return "About " + it.groupValues[1] + " km from your location"
             }
@@ -858,6 +910,7 @@ object AppTranslations {
             Regex("^\\((.+) reseñas\\)$").matchEntire(text)?.let { return "(" + it.groupValues[1] + " reviews)" }
             Regex("^\\((.+) reseñas\\)$").matchEntire(text)?.let { return "(" + it.groupValues[1] + " reviews)" }
         } else {
+            Regex("^Bay (\\d+)$").matchEntire(text)?.let { return "Bahía " + it.groupValues[1] }
             Regex("^About (.+) km from your location$").matchEntire(text)?.let {
                 return "A " + it.groupValues[1] + " km de tu ubicación"
             }
