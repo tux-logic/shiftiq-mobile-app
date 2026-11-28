@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
+import com.tuxlogic.shiftiq.mobile.core.model.CustomerId
 import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetCustomerByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.core.domain.model.CustomerProfile
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.GetCustomerRegistrationsUseCase
+import com.tuxlogic.shiftiq.mobile.feature.iot.application.usecase.vehicles.GetCustomerVehiclesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,7 +24,9 @@ data class CustomerDirectoryEntry(
     val customerId: String,
     val name: String,
     val phone: String,
-    val document: String
+    val document: String,
+    val vehiclePlate: String = "",
+    val vehicleModel: String = ""
 )
 
 data class CustomerDirectoryUiState(
@@ -36,6 +40,7 @@ data class CustomerDirectoryUiState(
 class CustomerDirectoryViewModel @Inject constructor(
     private val getCustomerRegistrations: GetCustomerRegistrationsUseCase,
     private val getCustomerById: GetCustomerByIdUseCase,
+    private val getCustomerVehicles: GetCustomerVehiclesUseCase,
     private val sessionDataStore: SessionDataStore
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CustomerDirectoryUiState())
@@ -61,8 +66,17 @@ class CustomerDirectoryViewModel @Inject constructor(
                 is AppResult.Success -> {
                     val customers = result.data.map { registration ->
                         async {
-                            val profile = (getCustomerById(registration.customerId.toString()) as? AppResult.Success)?.data
-                            profile.toDirectoryEntry(registration.customerId.toString())
+                            val customerId = registration.customerId.toString()
+                            val profile = (getCustomerById(customerId) as? AppResult.Success)?.data
+                            val vehicle = (getCustomerVehicles(CustomerId(customerId)) as? AppResult.Success)?.data?.firstOrNull()
+                            profile.toDirectoryEntry(customerId).copy(
+                                vehiclePlate = vehicle?.plateNumber?.value.orEmpty(),
+                                vehicleModel = listOfNotNull(
+                                    vehicle?.brand?.takeIf(String::isNotBlank),
+                                    vehicle?.model?.takeIf(String::isNotBlank),
+                                    vehicle?.year?.toString()
+                                ).joinToString(" ")
+                            )
                         }
                     }.awaitAll().sortedBy { it.name.lowercase() }
                     _uiState.value = CustomerDirectoryUiState(
