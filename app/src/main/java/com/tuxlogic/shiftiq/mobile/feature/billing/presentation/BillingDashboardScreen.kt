@@ -2,6 +2,7 @@ package com.tuxlogic.shiftiq.mobile.feature.billing.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,7 +40,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +49,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +67,7 @@ import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.DocumentType
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.Quote
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.QuoteId
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.QuoteStatus
+import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.PaymentMethod
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.Voucher
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherType
 import kotlinx.coroutines.launch
@@ -104,7 +108,7 @@ fun BillingDashboardScreen(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedVoucherType by remember { mutableStateOf<VoucherType?>(null) }
-    var showEmissionDialog by remember { mutableStateOf(false) }
+    var showCheckout by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val issuedQuoteIds = remember(uiState.vouchers) { uiState.vouchers.map { it.quoteId }.toSet() }
@@ -115,12 +119,32 @@ fun BillingDashboardScreen(
         uiState.vouchers.filter { selectedVoucherType == null || it.type == selectedVoucherType }
     }
 
-    Scaffold(
+    BackHandler(enabled = showCheckout) { showCheckout = false }
+    if (showCheckout) {
+        CheckoutVoucherScreen(
+            approvedQuotes = emitEligibleQuotes,
+            isEmitting = uiState.isEmittingVoucher,
+            backendError = uiState.errorMessage,
+            onNavigateBack = { showCheckout = false },
+            onEmit = { quoteId, type, documentType, documentNumber, customerName, onError ->
+                onEmitVoucher(quoteId, type, documentType, documentNumber, customerName) { result ->
+                    when (result) {
+                        is AppResult.Success -> {
+                            showCheckout = false
+                            onOpenVoucher(result.data.id.toString())
+                        }
+                        is AppResult.Failure -> onError(result.error.message)
+                    }
+                }
+            },
+            modifier = modifier
+        )
+    } else Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { showEmissionDialog = true },
+                onClick = { showCheckout = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("Emitir comprobante") },
                 containerColor = PrimaryBlue,
@@ -224,118 +248,243 @@ fun BillingDashboardScreen(
         }
     }
 
-    if (showEmissionDialog) {
-        VoucherEmissionDialog(
-            approvedQuotes = emitEligibleQuotes,
-            isEmitting = uiState.isEmittingVoucher,
-            onDismiss = { if (!uiState.isEmittingVoucher) showEmissionDialog = false },
-            onEmit = { quoteId, type, documentType, documentNumber, customerName, onComplete ->
-                onEmitVoucher(quoteId, type, documentType, documentNumber, customerName) { result ->
-                    when (result) {
-                        is AppResult.Success -> {
-                            showEmissionDialog = false
-                            onOpenVoucher(result.data.id.toString())
-                        }
-                        is AppResult.Failure -> onComplete(result.error.message)
-                    }
-                }
-            }
-        )
-    }
 }
 
 @Composable
-private fun VoucherEmissionDialog(
+private fun CheckoutVoucherScreen(
     approvedQuotes: List<Quote>,
     isEmitting: Boolean,
-    onDismiss: () -> Unit,
+    backendError: String?,
+    onNavigateBack: () -> Unit,
     onEmit: (
         QuoteId, VoucherType, DocumentType, String, String, (String) -> Unit
-    ) -> Unit
+    ) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var selectedQuote by remember(approvedQuotes) { mutableStateOf(approvedQuotes.firstOrNull()) }
-    var quoteMenuExpanded by remember { mutableStateOf(false) }
+    var documentMenuExpanded by remember { mutableStateOf(false) }
     var voucherType by remember { mutableStateOf(VoucherType.RECEIPT) }
-    var documentNumber by remember { mutableStateOf("") }
-    var customerName by remember { mutableStateOf("") }
+    var documentType by remember { mutableStateOf(DocumentType.DNI) }
+    var documentNumber by remember { mutableStateOf(VoucherCheckoutDemoData.dni) }
+    var customerName by remember { mutableStateOf(VoucherCheckoutDemoData.customerName) }
+    var fiscalAddress by remember { mutableStateOf(VoucherCheckoutDemoData.fiscalAddress) }
+    var paymentMethod by remember { mutableStateOf(PaymentMethod.CASH) }
     var validationMessage by remember { mutableStateOf<String?>(null) }
-    val documentType = if (voucherType == VoucherType.RECEIPT) DocumentType.DNI else DocumentType.RUC
-    val maxDigits = if (documentType == DocumentType.DNI) 8 else 11
+    val maxDigits = when (documentType) {
+        DocumentType.DNI -> 8
+        DocumentType.RUC -> 11
+        DocumentType.CE -> 12
+    }
+    val total = VoucherCheckoutDemoData.items.sumOf { it.totalPrice }
+    val subtotal = total / 1.18
+    val tax = total - subtotal
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Emitir comprobante") },
-        text = {
-            Column(
-                Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+    Column(modifier.fillMaxSize()) {
+        ShiftIQPageHeader(
+            title = "Liquidación y facturación",
+            subtitle = "Emisión de comprobante interno",
+            showBackButton = true,
+            onBackPressed = onNavigateBack
+        )
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text("ORDEN DE TRABAJO", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = PrimaryBlue.copy(alpha = 0.08f)),
+                border = BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.2f)),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                if (approvedQuotes.isEmpty()) {
-                    Text("No hay cotizaciones aprobadas disponibles para emitir un comprobante.", color = MaterialTheme.colorScheme.error)
-                } else {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Build, contentDescription = null, tint = PrimaryBlue)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text("Vehículo: ${VoucherCheckoutDemoData.vehicle}", fontWeight = FontWeight.Bold)
+                        Text("Orden de Trabajo: #${VoucherCheckoutDemoData.workOrderNumber}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+                Text("TIPO DE COMPROBANTE", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = voucherType == VoucherType.RECEIPT,
+                        onClick = {
+                            voucherType = VoucherType.RECEIPT
+                            documentType = DocumentType.DNI
+                            if (documentNumber == VoucherCheckoutDemoData.ruc) {
+                                documentNumber = VoucherCheckoutDemoData.dni
+                                customerName = VoucherCheckoutDemoData.customerName
+                            }
+                        },
+                        label = { Text("Boleta de venta") }
+                    )
+                    FilterChip(
+                        selected = voucherType == VoucherType.INVOICE,
+                        onClick = {
+                            voucherType = VoucherType.INVOICE
+                            documentType = DocumentType.RUC
+                            if (documentNumber == VoucherCheckoutDemoData.dni) {
+                                documentNumber = VoucherCheckoutDemoData.ruc
+                                customerName = VoucherCheckoutDemoData.invoiceCustomerName
+                            }
+                        },
+                        label = { Text("Factura") }
+                    )
+                }
+
+                Text("DATOS DEL CLIENTE Y DOCUMENTO", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box {
-                        OutlinedButton(onClick = { quoteMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text(selectedQuote?.let { "Orden ${it.workOrderId} · ${it.totalAmount.formatted()}" } ?: "Selecciona una cotización")
-                        }
-                        DropdownMenu(expanded = quoteMenuExpanded, onDismissRequest = { quoteMenuExpanded = false }) {
-                            approvedQuotes.forEach { quote ->
+                        OutlinedButton(onClick = { documentMenuExpanded = true }) { Text(documentType.name) }
+                        DropdownMenu(expanded = documentMenuExpanded, onDismissRequest = { documentMenuExpanded = false }) {
+                            DocumentType.entries.forEach { type ->
                                 DropdownMenuItem(
-                                    text = { Text("Orden ${quote.workOrderId} · ${quote.totalAmount.formatted()}") },
-                                    onClick = { selectedQuote = quote; quoteMenuExpanded = false }
+                                    text = { Text(type.name) },
+                                    onClick = {
+                                        documentType = type
+                                        documentNumber = documentNumber.take(when (type) {
+                                            DocumentType.DNI -> 8
+                                            DocumentType.RUC -> 11
+                                            DocumentType.CE -> 12
+                                        })
+                                        documentMenuExpanded = false
+                                    }
                                 )
                             }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = voucherType == VoucherType.RECEIPT,
-                            onClick = { voucherType = VoucherType.RECEIPT; documentNumber = "" },
-                            label = { Text("Boleta") }
-                        )
-                        FilterChip(
-                            selected = voucherType == VoucherType.INVOICE,
-                            onClick = { voucherType = VoucherType.INVOICE; documentNumber = "" },
-                            label = { Text("Factura") }
-                        )
-                    }
-                    OutlinedTextField(
-                        value = customerName,
-                        onValueChange = { customerName = it; validationMessage = null },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = { Text("Nombre / razón social") }
-                    )
                     OutlinedTextField(
                         value = documentNumber,
                         onValueChange = { documentNumber = it.filter(Char::isDigit).take(maxDigits); validationMessage = null },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        label = { Text(documentType.name) }
+                        label = { Text("Número de documento") }
                     )
-                    Text("El comprobante se emitirá desde la cotización aprobada del backend.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    validationMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = !isEmitting && selectedQuote != null,
-                onClick = {
-                    when {
-                        customerName.isBlank() -> validationMessage = "Ingresa el nombre o razón social."
-                        documentNumber.length != maxDigits -> validationMessage = "$documentType debe tener $maxDigits dígitos."
-                        selectedQuote == null -> validationMessage = "Selecciona una cotización aprobada."
-                        else -> onEmit(selectedQuote!!.id, voucherType, documentType, documentNumber, customerName) { validationMessage = it }
+                OutlinedTextField(
+                    value = customerName,
+                    onValueChange = { customerName = it; validationMessage = null },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text("Nombre / razón social") }
+                )
+                OutlinedTextField(
+                    value = fiscalAddress,
+                    onValueChange = { fiscalAddress = it },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text("Dirección fiscal") }
+                )
+
+                Text("DETALLE DE SERVICIOS Y REPUESTOS EN BAHÍA", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                    border = BorderStroke(1.dp, ShiftIQBorderSlate),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    VoucherCheckoutDemoData.items.forEachIndexed { index, item ->
+                        Row(
+                            Modifier.fillMaxWidth().padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                if (item.type == VoucherDemoItemType.SERVICE) Icons.Default.Build else Icons.Default.Inventory2,
+                                contentDescription = null,
+                                tint = PrimaryBlue
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(item.description, fontWeight = FontWeight.Medium)
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text("Cant:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${item.quantity} x ${item.unitPrice.currencyText()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(item.totalPrice.currencyText(), fontWeight = FontWeight.Bold)
+                        }
+                        if (index < VoucherCheckoutDemoData.items.lastIndex) androidx.compose.material3.HorizontalDivider()
                     }
                 }
-            ) {
-                if (isEmitting) CircularProgressIndicator(Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
-                Text(if (isEmitting) "Emitiendo…" else "Emitir comprobante")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !isEmitting) { Text("Cancelar") } }
-    )
+                FiscalSummary(subtotal = subtotal, tax = tax, total = total)
+
+                Text("MÉTODO DE PAGO Y COBRO EN CAJA", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PaymentMethod.entries.forEach { method ->
+                        FilterChip(
+                            selected = paymentMethod == method,
+                            onClick = { paymentMethod = method },
+                            label = { Text(method.displayName()) }
+                        )
+                    }
+                }
+                (validationMessage ?: backendError)?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+                Button(
+                    enabled = !isEmitting,
+                    onClick = {
+                        when {
+                            customerName.isBlank() -> validationMessage = "Ingresa el nombre o razón social."
+                            documentNumber.isBlank() -> validationMessage = "Ingresa el número de documento."
+                            documentType == DocumentType.DNI && documentNumber.length != 8 -> validationMessage = "DNI requiere 8 dígitos."
+                            documentType == DocumentType.RUC && documentNumber.length != 11 -> validationMessage = "RUC requiere 11 dígitos."
+                            voucherType == VoucherType.INVOICE && documentType != DocumentType.RUC -> validationMessage = "La factura requiere un RUC válido."
+                            selectedQuote == null -> validationMessage = "No hay una cotización aprobada para emitir el comprobante."
+                            else -> onEmit(selectedQuote!!.id, voucherType, documentType, documentNumber, customerName) { validationMessage = it }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (isEmitting) CircularProgressIndicator(Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
+                    if (isEmitting) Text("Emitiendo comprobante…") else Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null)
+                        Text(if (voucherType == VoucherType.RECEIPT) "EMITIR BOLETA" else "EMITIR FACTURA")
+                        Text(total.currencyText())
+                    }
+                }
+        }
+    }
+}
+
+@Composable
+private fun FiscalSummary(subtotal: Double, tax: Double, total: Double) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryRow("Subtotal", subtotal.currencyText())
+            SummaryRow("IGV (18%)", tax.currencyText())
+            androidx.compose.material3.HorizontalDivider()
+            SummaryRow("Total", total.currencyText(), bold = true)
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String, bold: Boolean = false) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
+        Text(value, fontWeight = FontWeight.Bold)
+    }
+}
+
+private fun Double.currencyText(): String = "S/ ${"%.2f".format(this)}"
+
+private fun PaymentMethod.displayName(): String = when (this) {
+    PaymentMethod.CASH -> "Efectivo en Caja"
+    PaymentMethod.CREDIT_CARD -> "Tarjeta de Crédito"
+    PaymentMethod.DEBIT_CARD -> "Tarjeta de Débito"
+    PaymentMethod.BANK_TRANSFER -> "Transferencia Bancaria"
 }
 
 @Composable
