@@ -14,6 +14,7 @@ data class LiveWorkOrderUiState(
     val workOrder: WorkOrder? = null,
     val vehicleDescription: String = "",
     val customerName: String = "",
+    val customerPhone: String = "",
     val customerDocumentType: String = "DNI",
     val customerDocumentNumber: String = "",
     val emittedVoucher: Voucher? = null,
