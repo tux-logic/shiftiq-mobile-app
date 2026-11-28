@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.tuxlogic.shiftiq.mobile.core.common.result.onFailure
 import com.tuxlogic.shiftiq.mobile.core.common.result.onSuccess
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
+import com.tuxlogic.shiftiq.mobile.core.common.result.AppResult
+import com.tuxlogic.shiftiq.mobile.feature.core.application.usecase.GetBranchByIdUseCase
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.Appointment
 import com.tuxlogic.shiftiq.mobile.feature.fleet.domain.model.AppointmentStatus
 import com.tuxlogic.shiftiq.mobile.feature.fleet.application.usecase.DeleteAppointmentUseCase
@@ -30,6 +32,7 @@ data class AppointmentListUiState(
     val selectedStatusFilter: AppointmentStatus? = null,
     val selectedDate: LocalDate = LocalDate.now(),
     val activeBranchId: UUID? = null,
+    val activeBranchName: String = "Sede Principal",
     val errorMessage: String? = null,
     val successMessage: String? = null
 )
@@ -39,7 +42,8 @@ class AppointmentListViewModel @Inject constructor(
     private val getAppointmentsUseCase: GetAppointmentsUseCase,
     private val updateAppointmentUseCase: UpdateAppointmentUseCase,
     private val deleteAppointmentUseCase: DeleteAppointmentUseCase,
-    private val sessionDataStore: SessionDataStore
+    private val sessionDataStore: SessionDataStore,
+    private val getBranchById: GetBranchByIdUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppointmentListUiState())
@@ -54,6 +58,10 @@ class AppointmentListViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
             val branchId = sessionDataStore.activeBranchId.firstOrNull()?.value
             _uiState.update { it.copy(activeBranchId = branchId) }
+            val branchName = branchId?.let {
+                (getBranchById(it.toString()) as? AppResult.Success)?.data?.name
+            } ?: _uiState.value.activeBranchName
+            _uiState.update { it.copy(activeBranchName = branchName) }
 
             getAppointmentsUseCase(branchId = branchId)
                 .onSuccess { list ->

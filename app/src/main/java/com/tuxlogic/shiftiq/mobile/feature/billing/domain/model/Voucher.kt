@@ -9,7 +9,8 @@ enum class VoucherType {
 
 enum class DocumentType {
     DNI,
-    RUC
+    RUC,
+    CE
 }
 
 enum class VoucherStatus {

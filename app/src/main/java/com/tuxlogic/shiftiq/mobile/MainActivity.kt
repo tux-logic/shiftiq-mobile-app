@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +38,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionDataStore
 import com.tuxlogic.shiftiq.mobile.core.datastore.SessionState
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQLoadingScreen
@@ -70,6 +74,7 @@ import javax.inject.Inject
 
 private const val DTC_WORK_ORDER_PREFILL_KEY = "dtc_work_order_prefill"
 private const val WORK_ORDER_APPOINTMENT_PREFILL_KEY = "work_order_appointment_prefill"
+private const val CUSTOMER_DIRECTORY_APPOINTMENT_DATE_KEY = "customer_directory_appointment_date"
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -132,6 +137,7 @@ class MainActivity : FragmentActivity() {
                 val scope = rememberCoroutineScope()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 var loginNavigationHandled by remember { mutableStateOf(false) }
+                var requestCreateAppointmentSheet by remember { mutableStateOf(false) }
 
                 LaunchedEffect(sessionState, sessionLoadFallbackUsed, loginNavigationHandled) {
                     val session = sessionState ?: return@LaunchedEffect
@@ -166,17 +172,14 @@ class MainActivity : FragmentActivity() {
                     floatingActionButton = {
                         val role = sessionState?.userRole
                         val route = backStackEntry?.destination?.route
-                        val action = if (sessionState?.isAuthenticated == true && role != Role.ROLE_USER) {
+                        val canManageWorkshop = role == Role.ROLE_OWNER || role == Role.ROLE_ADMIN
+                        val action = if (sessionState?.isAuthenticated == true && canManageWorkshop) {
                             when (route) {
                                 AppDestination.WorkOrders.route -> Triple("Nueva OT", Icons.Default.Add) {
                                     navController.navigate(AppDestination.CreateWorkOrder.route)
                                 }
                                 AppDestination.Appointments.route -> Triple("Nueva cita", Icons.Default.Add) {
-                                    navController.navigate(
-                                        AppDestination.CreateAppointment.createRoute(
-                                            branchId = sessionState?.activeBranchId?.value?.toString()
-                                        )
-                                    )
+                                    requestCreateAppointmentSheet = true
                                 }
                                 AppDestination.Inventory.route -> Triple("Nuevo producto", Icons.Default.Add) {
                                     navController.navigate(
@@ -348,6 +351,7 @@ class MainActivity : FragmentActivity() {
                                         onNavigateToBilling = { navController.navigate(AppDestination.Billing.route) },
                                         onSwitchBranch = { navController.navigate(AppDestination.BranchSelection.route) },
                                         onNavigateToProfile = { navController.navigate(AppDestination.Profile.route) },
+                                        onNavigateToCustomerDirectory = { navController.navigate(AppDestination.CustomerDirectory.route) },
                                         onNavigateToOrders = { navController.navigate(AppDestination.WorkOrders.route) },
                                         onNavigateToAppointments = { navController.navigate(AppDestination.Appointments.route) },
                                         onNavigateToInventory = { navController.navigate(AppDestination.Inventory.route) },
@@ -355,12 +359,8 @@ class MainActivity : FragmentActivity() {
                                     )
                                 } else {
                                     EmployeeDashboardRoute(
-                                        onNavigateToBilling = { navController.navigate(AppDestination.Billing.route) },
-                                        onSwitchBranch = { navController.navigate(AppDestination.BranchSelection.route) },
                                         onNavigateToProfile = { navController.navigate(AppDestination.Profile.route) },
                                         onNavigateToOrders = { navController.navigate(AppDestination.WorkOrders.route) },
-                                        onNavigateToAppointments = { navController.navigate(AppDestination.Appointments.route) },
-                                        onNavigateToInventory = { navController.navigate(AppDestination.Inventory.route) },
                                         onNavigateToTelemetry = { navController.navigate(AppDestination.Telemetry.route) },
                                         onOpenWorkOrder = { id -> navController.navigate(AppDestination.WorkOrderDetail.createRoute(id)) }
                                     )
@@ -369,7 +369,9 @@ class MainActivity : FragmentActivity() {
 
                             composable(AppDestination.WorkOrders.route) {
                                 WorkOrderListRoute(
-                                    canCreateWorkOrder = session.userRole != Role.ROLE_USER,
+                                    onNavigateToProfile = { navController.navigate(AppDestination.Profile.route) },
+                                    canCreateWorkOrder = session.userRole == Role.ROLE_OWNER ||
+                                        session.userRole == Role.ROLE_ADMIN,
                                     onCreateWorkOrder = { navController.navigate(AppDestination.CreateWorkOrder.route) },
                                     onOpenWorkOrder = { id ->
                                         navController.navigate(AppDestination.WorkOrderDetail.createRoute(id))
@@ -551,7 +553,7 @@ class MainActivity : FragmentActivity() {
                             }
 
                             composable(AppDestination.ServiceCatalog.route) {
-                                if (session.userRole == Role.ROLE_OWNER || session.userRole == Role.ROLE_ADMIN) {
+                                if (session.userRole == Role.ROLE_OWNER || session.userRole == Role.ROLE_ADMIN || session.userRole == Role.ROLE_EMPLOYEE) {
                                     com.tuxlogic.shiftiq.mobile.feature.operations.presentation.services.ServicesCatalogRoute(
                                         onNavigateBack = { navController.popBackStack() }
                                     )
@@ -569,14 +571,45 @@ class MainActivity : FragmentActivity() {
                             // Bloque 3: Fleet (Citas y Personal de Taller)
                             composable(AppDestination.Appointments.route) {
                                 val viewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.AppointmentListViewModel = hiltViewModel()
+                                val createAppointmentViewModel: com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentViewModel = hiltViewModel()
                                 val uiState by viewModel.uiState.collectAsState()
+                                var showCreateAppointmentSheet by remember { mutableStateOf(false) }
+                                var reopenCreateAppointmentSheet by remember { mutableStateOf(false) }
+                                val lifecycleOwner = LocalLifecycleOwner.current
+                                DisposableEffect(lifecycleOwner, reopenCreateAppointmentSheet) {
+                                    val observer = LifecycleEventObserver { _, event ->
+                                        if (event == Lifecycle.Event.ON_RESUME && reopenCreateAppointmentSheet) {
+                                            reopenCreateAppointmentSheet = false
+                                            createAppointmentViewModel.refreshOptions()
+                                            showCreateAppointmentSheet = true
+                                        }
+                                    }
+                                    lifecycleOwner.lifecycle.addObserver(observer)
+                                    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                                }
+                                LaunchedEffect(requestCreateAppointmentSheet, backStackEntry?.destination?.route) {
+                                    if (requestCreateAppointmentSheet && backStackEntry?.destination?.route == AppDestination.Appointments.route) {
+                                        requestCreateAppointmentSheet = false
+                                        createAppointmentViewModel.prepareNewAppointment(
+                                            branchId = uiState.activeBranchId?.toString(),
+                                            scheduledDate = uiState.selectedDate
+                                        )
+                                        showCreateAppointmentSheet = true
+                                    }
+                                }
 
                                 com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.AppointmentListScreen(
                                     uiState = uiState,
                                     onRefresh = viewModel::loadAppointments,
                                     onFilterSelected = viewModel::setStatusFilter,
                                     onMarkStatus = viewModel::markAppointmentStatus,
-                                    onNavigateToCreate = { navController.navigate(AppDestination.CreateAppointment.createRoute()) },
+                                    onNavigateToCreate = {
+                                        createAppointmentViewModel.prepareNewAppointment(
+                                            branchId = uiState.activeBranchId?.toString(),
+                                            scheduledDate = uiState.selectedDate
+                                        )
+                                        showCreateAppointmentSheet = true
+                                    },
                                     onOpenWorkOrder = { appointment ->
                                         navController.currentBackStackEntry?.savedStateHandle?.set(
                                             WORK_ORDER_APPOINTMENT_PREFILL_KEY,
@@ -584,10 +617,31 @@ class MainActivity : FragmentActivity() {
                                         )
                                         navController.navigate(AppDestination.CreateWorkOrder.route)
                                     },
-                                    onNavigateToCustomerDirectory = { navController.navigate(AppDestination.CustomerDirectory.route) },
+                                    onNavigateToCustomerDirectory = {
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            CUSTOMER_DIRECTORY_APPOINTMENT_DATE_KEY,
+                                            uiState.selectedDate.toString()
+                                        )
+                                        navController.navigate(AppDestination.CustomerDirectory.route)
+                                    },
                                     onSelectDate = viewModel::selectDate,
                                     onClearMessages = viewModel::clearMessages
                                 )
+                                if (showCreateAppointmentSheet) {
+                                    com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentBottomSheet(
+                                        viewModel = createAppointmentViewModel,
+                                        onDismiss = { showCreateAppointmentSheet = false },
+                                        onAppointmentCreated = {
+                                            showCreateAppointmentSheet = false
+                                            viewModel.loadAppointments()
+                                        },
+                                        onNavigateToServices = {
+                                            showCreateAppointmentSheet = false
+                                            reopenCreateAppointmentSheet = true
+                                            navController.navigate(AppDestination.ServiceCatalog.route)
+                                        }
+                                    )
+                                }
                             }
 
                             composable(
@@ -608,11 +662,18 @@ class MainActivity : FragmentActivity() {
 
                                 com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.appointments.CreateAppointmentScreen(
                                     uiState = uiState,
-                                    onBranchIdChanged = viewModel::onBranchIdChanged,
-                                    onCustomerIdChanged = viewModel::onCustomerIdChanged,
-                                    onVehicleIdChanged = viewModel::onVehicleIdChanged,
+                                    onCustomerSelected = viewModel::selectCustomer,
+                                    onVehicleSelected = viewModel::onVehicleIdChanged,
+                                    onCustomerNameChanged = viewModel::onCustomerNameChanged,
+                                    onCustomerPhoneChanged = viewModel::onCustomerPhoneChanged,
+                                    onVehiclePlateChanged = viewModel::onVehiclePlateChanged,
+                                    onVehicleModelChanged = viewModel::onVehicleModelChanged,
+                                    onBaySelected = viewModel::onBaySelected,
+                                    onServiceSelected = viewModel::onServiceSelected,
                                     onScheduledStartChanged = viewModel::onScheduledStartChanged,
                                     onNotesChanged = viewModel::onNotesChanged,
+                                    onRefreshOptions = viewModel::refreshOptions,
+                                    onNavigateToServices = { navController.navigate(AppDestination.ServiceCatalog.route) },
                                     onSubmit = viewModel::createAppointment,
                                     onNavigateBack = { navController.popBackStack() },
                                     onAppointmentCreated = { navController.popBackStack() }
@@ -622,9 +683,8 @@ class MainActivity : FragmentActivity() {
                             composable(AppDestination.CustomerDirectory.route) {
                                 com.tuxlogic.shiftiq.mobile.feature.fleet.presentation.customers.CustomerDirectoryRoute(
                                     onNavigateBack = { navController.popBackStack() },
-                                    onCreateAppointment = { branchId, customerId ->
-                                        navController.navigate(AppDestination.CreateAppointment.createRoute(branchId, customerId))
-                                    }
+                                    initialAppointmentDate = navController.previousBackStackEntry?.savedStateHandle?.get<String>(CUSTOMER_DIRECTORY_APPOINTMENT_DATE_KEY),
+                                    onNavigateToServices = { navController.navigate(AppDestination.ServiceCatalog.route) }
                                 )
                             }
 

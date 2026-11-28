@@ -41,6 +41,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.tuxlogic.shiftiq.mobile.core.localization.LocalizedText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +54,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQEmptyStateIcon
+import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQSkeletonBox
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQTheme
@@ -79,11 +82,7 @@ fun AppointmentListScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.errorMessage, uiState.successMessage) {
-        uiState.errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            onClearMessages()
-        }
+    LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let {
             snackbarHostState.showSnackbar(it)
             onClearMessages()
@@ -98,7 +97,7 @@ fun AppointmentListScreen(
         ) {
             ShiftIQPageHeader(
                 title = "Agenda de Citas",
-                subtitle = uiState.activeBranchId?.let { "Sede: ${it.toString().take(8)}..." } ?: "Agenda de citas B2B",
+                subtitle = "Gestión de Bahías · ${uiState.activeBranchName}",
                 actions = {
                     IconButton(onClick = onNavigateToCustomerDirectory) {
                         Icon(
@@ -107,18 +106,12 @@ fun AppointmentListScreen(
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = onRefresh, enabled = !uiState.isLoading) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Actualizar",
-                            tint = Color.White
-                        )
-                    }
                 }
             )
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth()
                     .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp)
             ) {
             AppointmentDateStrip(uiState.selectedDate, onSelectDate)
@@ -155,64 +148,58 @@ fun AppointmentListScreen(
                 }
             }
 
-            Column(Modifier.weight(1f).fillMaxWidth()) {
-                when {
-                    uiState.isLoading && uiState.appointments.isEmpty() -> LazyColumn(Modifier.fillMaxSize()) {
-                        item {
-                            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
+            uiState.errorMessage?.let { message ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(14.dp)).background(Color(0xFFFFE4E6)).padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(message, modifier = Modifier.weight(1f), color = Color(0xFFB91C1C), style = MaterialTheme.typography.bodySmall)
+                    OutlinedButton(onClick = onRefresh, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
+                        Text("Reintentar", color = Color(0xFFB91C1C))
                     }
+                }
+            }
+
+            PullToRefreshBox(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                isRefreshing = uiState.isLoading,
+                onRefresh = onRefresh
+            ) {
+                when {
+                    uiState.isLoading && uiState.appointments.isEmpty() -> AppointmentSkeletonList()
 
                     uiState.filteredAppointments.isEmpty() -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(32.dp)
+                        contentPadding = PaddingValues(start = 32.dp, top = 64.dp, end = 32.dp, bottom = 120.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         item {
-                            Column(
-                                modifier = Modifier.fillParentMaxWidth().padding(vertical = 24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Event,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(36.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No hay citas agendadas para esta fecha",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "Selecciona otro día o agenda una nueva cita para comenzar.",
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = onNavigateToCreate) {
-                                    Icon(Icons.Default.Event, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Agendar en bahía")
-                                }
+                            ShiftIQEmptyStateIcon()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No hay citas agendadas para esta fecha",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Selecciona otro día o agenda una nueva cita para comenzar",
+                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Button(onClick = onNavigateToCreate) {
+                                Icon(Icons.Default.Event, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Agendar en bahía")
                             }
                         }
                     }
 
                     else -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 8.dp),
+                        contentPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 120.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(uiState.filteredAppointments, key = { it.id }) { appointment ->
@@ -233,6 +220,30 @@ fun AppointmentListScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+    }
+}
+
+@Composable
+private fun AppointmentSkeletonList() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(3) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, ShiftIQBorderSlate)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ShiftIQSkeletonBox(16.dp, widthFraction = 0.46f)
+                    ShiftIQSkeletonBox(14.dp, widthFraction = 0.76f)
+                    ShiftIQSkeletonBox(14.dp, widthFraction = 0.62f)
+                }
+            }
+        }
     }
 }
 

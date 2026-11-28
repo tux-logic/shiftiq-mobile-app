@@ -56,7 +56,15 @@ fun WorkOrderResourceDto.toDomain(): WorkOrder = WorkOrder(
     appointmentId = appointmentId,
     branchId = BranchId(branchId),
     vehicleId = VehicleId(vehicleId),
+    vehiclePlate = vehiclePlateNumber?.takeIf(String::isNotBlank) ?: "S/P",
+    vehicleModel = listOfNotNull(
+        vehicleBrand?.takeIf(String::isNotBlank),
+        vehicleModel?.takeIf(String::isNotBlank),
+        vehicleYear?.toString()
+    ).joinToString(" ").ifBlank { "Vehículo General" },
     customerId = CustomerId(customerId),
+    customerName = customerName?.takeIf(String::isNotBlank) ?: "Cliente General",
+    customerPhone = customerPhone.orEmpty(),
     internalNumber = internalNumber ?: 0,
     formattedNumber = formattedNumber ?: "",
     status = WorkOrderStatus.fromString(status),

@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -27,6 +29,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -142,7 +145,8 @@ private fun SummaryMiniCard(
 fun InventorySearchField(
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClear: (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -151,6 +155,10 @@ fun InventorySearchField(
         placeholder = {
             Text("Buscar por nombre o categoría...", color = Slate400, fontSize = 14.sp)
         },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Slate500) },
+        trailingIcon = if (value.isNotEmpty() && onClear != null) {
+            { IconButton(onClick = onClear) { Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda") } }
+        } else null,
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(

@@ -57,6 +57,16 @@ class EmitVoucherUseCase @Inject constructor(
                     )
                 }
             }
+            DocumentType.CE -> {
+                if (type == VoucherType.INVOICE || trimmedDocNumber.isBlank()) {
+                    return AppResult.Failure(
+                        AppError.Validation(
+                            details = "customerDocumentNumber",
+                            message = "A valid foreign resident card is required for a receipt"
+                        )
+                    )
+                }
+            }
         }
 
         return billingRepository.emitVoucher(
