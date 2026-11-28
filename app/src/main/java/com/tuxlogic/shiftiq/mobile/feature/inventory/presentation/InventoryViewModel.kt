@@ -73,6 +73,12 @@ class InventoryViewModel @Inject constructor(
         _uiState.update { it.copy(stockFilter = filter) }
     }
 
+    fun selectCategory(category: String) {
+        if (_uiState.value.selectedCategory == category) return
+        _uiState.update { it.copy(selectedCategory = category) }
+        loadProducts()
+    }
+
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null, infoMessage = null) }
     }
@@ -91,7 +97,7 @@ class InventoryViewModel @Inject constructor(
             val result = getProductsUseCase(
                 branchId = BranchId(branchIdStr),
                 name = _uiState.value.searchQuery,
-                category = null,
+                category = _uiState.value.selectedCategory.takeUnless { it == "TODOS" },
                 lowStockOnly = null
             )
             result.onSuccess { items ->
