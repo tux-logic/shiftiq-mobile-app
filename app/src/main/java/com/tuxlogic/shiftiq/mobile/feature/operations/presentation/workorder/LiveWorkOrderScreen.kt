@@ -38,6 +38,8 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Remove
@@ -51,6 +53,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -72,12 +76,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import java.math.BigDecimal
+import java.math.RoundingMode
 import com.tuxlogic.shiftiq.mobile.core.designsystem.components.ShiftIQPageHeader
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.PrimaryBlue
 import com.tuxlogic.shiftiq.mobile.core.designsystem.theme.ShiftIQBorderSlate
@@ -94,9 +103,15 @@ import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.ServiceItem
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.TaskStatus
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.WorkOrder
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.WorkOrderStatus
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.isCancelled
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.isCompleted
+import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.isPaid
 import com.tuxlogic.shiftiq.mobile.feature.operations.domain.model.WorkOrderTask
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.DocumentType
+import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.PaymentMethod
 import com.tuxlogic.shiftiq.mobile.feature.billing.domain.model.VoucherType
+import com.tuxlogic.shiftiq.mobile.feature.billing.presentation.VoucherCheckoutDemoData
+import com.tuxlogic.shiftiq.mobile.feature.billing.presentation.VoucherDemoItemType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -183,13 +198,18 @@ fun LiveWorkOrderScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 uiState.errorMessage?.let { ErrorBanner(it) }
-                WorkOrderSummaryCard(order, uiState.vehicleDescription)
+                WorkOrderSummaryCard(
+                    order = order,
+                    vehicleDescription = uiState.vehicleDescription,
+                    customerName = uiState.customerName,
+                    customerPhone = uiState.customerPhone
+                )
                 if (order.entryInspectionImages.isNotEmpty()) {
                     ImageStrip(title = "Inspección de recepción", urls = order.entryInspectionImages)
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("TAREAS EN BAHÍA (${order.tasks.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Slate700, modifier = Modifier.weight(1f))
-                    if (isOwnerAdmin && order.status != WorkOrderStatus.COMPLETED) {
+                    if (isOwnerAdmin && !order.status.isCompleted) {
                         TextButton(onClick = { showAddTaskDialog = true }, enabled = !uiState.isSaving) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                             Text("Agregar tarea")
@@ -203,7 +223,7 @@ fun LiveWorkOrderScreen(
                         val canExecute = canExecuteTasks && (isOwnerAdmin || onCanExecuteTask(task.assignedMechanicId?.toString()))
                         WorkOrderTaskCard(
                             task = task,
-                            canExecute = canExecute && order.status != WorkOrderStatus.COMPLETED,
+                            canExecute = canExecute && !order.status.isCompleted,
                             isSaving = uiState.isSaving,
                             onOpen = { selectedTaskId = task.id.toString() },
                             onStart = { onStartTask(task.id.toString()) },
@@ -212,33 +232,38 @@ fun LiveWorkOrderScreen(
                     }
                 }
                 FinancialSummary(order)
-                if (isOwnerAdmin && order.status != WorkOrderStatus.CANCELLED) {
+                if (order.status.isCompleted) {
+                    WorkOrderPaymentStatusCard(isPaid = order.status.isPaid)
+                }
+                if (isOwnerAdmin && order.status.isCompleted && !order.status.isPaid) {
                     Button(
                         onClick = { showCheckoutDialog = true },
                         enabled = !uiState.isSaving,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF168A53))
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("EMITIR COMPROBANTE (${order.totalAmount.formatted()})", fontWeight = FontWeight.Bold)
+                        Text("EMITIR COMPROBANTE", fontWeight = FontWeight.Bold)
                     }
                 }
-                if (isOwnerAdmin && order.status != WorkOrderStatus.COMPLETED && order.status != WorkOrderStatus.CANCELLED) {
+                if (isOwnerAdmin && !order.status.isCompleted && !order.status.isCancelled) {
                     Button(
                         onClick = { showCompleteDialog = true },
                         enabled = !uiState.isSaving,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0F172A),
+                            contentColor = Color.White
+                        )
                     ) {
                         if (uiState.isSaving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
                         else Icon(Icons.Default.CheckCircle, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("FINALIZAR Y LIQUIDAR (${order.totalAmount.formatted()})", fontWeight = FontWeight.Bold)
                     }
-                } else if (order.status == WorkOrderStatus.COMPLETED) {
-                    MessageCard("Orden completada · pendiente de pago")
                 }
             }
         }
@@ -252,7 +277,7 @@ fun LiveWorkOrderScreen(
             WorkOrderTaskDetailSheet(
                 task = task,
                 canExecute = canExecuteTasks && (isOwnerAdmin || onCanExecuteTask(task.assignedMechanicId?.toString())),
-                isSaving = uiState.isSaving || order.status == WorkOrderStatus.COMPLETED,
+                isSaving = uiState.isSaving || order.status.isCompleted,
                 availableProducts = uiState.availableProducts,
                 onStart = { onStartTask(task.id.toString()) },
                 onComplete = { onCompleteTask(task.id.toString()) },
@@ -303,26 +328,36 @@ fun LiveWorkOrderScreen(
         )
     }
 
-    uiState.emittedVoucher?.let { voucher ->
-        AlertDialog(
-            onDismissRequest = { onClearEmittedVoucher(); showCheckoutDialog = false },
-            title = { Text("Comprobante emitido") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("${voucher.series.orEmpty()}-${voucher.correlative.orEmpty()}".trim('-').ifBlank { "Comprobante ${voucher.id}" })
-                    Text("${voucher.customerName} · ${voucher.totalAmount.formatted()}")
-                    Text("Estado: ${voucher.status.name.replace('_', ' ')}")
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    val voucherId = voucher.id.toString()
-                    onClearEmittedVoucher()
-                    showCheckoutDialog = false
-                    onOpenVoucher(voucherId)
-                }) { Text("Ver comprobante") }
-            }
-        )
+    LaunchedEffect(uiState.emittedVoucher?.id) {
+        uiState.emittedVoucher?.let { voucher ->
+            showCheckoutDialog = false
+            onClearEmittedVoucher()
+            onOpenVoucher(voucher.id.toString())
+        }
+    }
+}
+
+@Composable
+private fun WorkOrderPaymentStatusCard(isPaid: Boolean) {
+    val statusColor = if (isPaid) PrimaryBlue else ShiftIQSuccess
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.08f)),
+        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.32f))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = statusColor)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                if (isPaid) "ORDEN PAGADA" else "ORDEN COMPLETADA · PENDIENTE DE PAGO",
+                color = statusColor,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -335,76 +370,284 @@ private fun WorkOrderCheckoutDialog(
 ) {
     val order = uiState.workOrder ?: return
     var voucherType by remember { mutableStateOf(VoucherType.RECEIPT) }
-    var documentType by remember {
-        mutableStateOf(runCatching { DocumentType.valueOf(uiState.customerDocumentType) }.getOrDefault(DocumentType.DNI))
+    var documentType by remember { mutableStateOf(DocumentType.DNI) }
+    var documentNumber by remember { mutableStateOf(VoucherCheckoutDemoData.dni) }
+    var customerName by remember {
+        mutableStateOf(uiState.customerName.takeIf(String::isNotBlank) ?: VoucherCheckoutDemoData.customerName)
     }
-    var documentNumber by remember { mutableStateOf(uiState.customerDocumentNumber) }
-    var customerName by remember { mutableStateOf(uiState.customerName) }
+    var customerAddress by remember { mutableStateOf(VoucherCheckoutDemoData.fiscalAddress) }
+    var paymentMethod by remember { mutableStateOf(PaymentMethod.CASH) }
     var validationMessage by remember { mutableStateOf<String?>(null) }
+    val checkoutItems = remember(order) { VoucherCheckoutDemoData.itemsFor(order) }
+    val total = checkoutItems.fold(BigDecimal.ZERO) { sum, item ->
+        sum + BigDecimal.valueOf(item.totalPrice)
+    }.setScale(2, RoundingMode.HALF_UP)
+    val subtotal = total.divide(BigDecimal("1.18"), 2, RoundingMode.HALF_UP)
+    val tax = total.subtract(subtotal)
+    val vehicleLabel = order.vehiclePlate.takeIf { it.isNotBlank() && it != "S/P" }
+        ?: VoucherCheckoutDemoData.vehicle
+    val orderLabel = order.id.toString().take(8)
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Liquidación y comprobante") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Vehículo: ${uiState.vehicleDescription}", style = MaterialTheme.typography.bodySmall)
-                Text("Orden ${order.formattedNumber} · ${order.totalAmount.formatted()}", fontWeight = FontWeight.SemiBold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.FilterChip(
-                        selected = voucherType == VoucherType.RECEIPT,
-                        onClick = { voucherType = VoucherType.RECEIPT; documentType = DocumentType.DNI; documentNumber = if (documentNumber.length == 11) "" else documentNumber },
-                        label = { Text("Boleta") }
-                    )
-                    androidx.compose.material3.FilterChip(
-                        selected = voucherType == VoucherType.INVOICE,
-                        onClick = { voucherType = VoucherType.INVOICE; documentType = DocumentType.RUC; documentNumber = if (documentNumber.length == 8) "" else documentNumber },
-                        label = { Text("Factura") }
-                    )
-                }
-                androidx.compose.material3.OutlinedTextField(
-                    value = customerName,
-                    onValueChange = { customerName = it; validationMessage = null },
-                    label = { Text("Nombre / razón social") },
-                    singleLine = true
-                )
-                androidx.compose.material3.OutlinedTextField(
-                    value = documentNumber,
-                    onValueChange = { documentNumber = it.filter(Char::isDigit).take(if (documentType == DocumentType.DNI) 8 else 11); validationMessage = null },
-                    label = { Text(documentType.name) },
-                    singleLine = true
-                )
-                Text("Servicios y repuestos se calculan con la orden guardada en el backend.", style = MaterialTheme.typography.bodySmall, color = Slate500)
-                validationMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                uiState.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = !isSaving,
-                onClick = {
-                    val requiredLength = if (documentType == DocumentType.DNI) 8 else 11
-                    when {
-                        customerName.isBlank() -> validationMessage = "Ingresa el nombre o razón social."
-                        documentNumber.length != requiredLength -> validationMessage = "${documentType.name} debe tener $requiredLength dígitos."
-                        else -> onEmit(voucherType, documentType, documentNumber, customerName)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(Modifier.fillMaxSize().background(Color(0xFFF8FAFC))) {
+            ShiftIQPageHeader(
+                title = "Liquidación y facturación",
+                subtitle = "Emisión de comprobante interno",
+                showBackButton = true,
+                onBackPressed = onDismiss
+            )
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PrimaryBlue.copy(alpha = 0.08f)),
+                    border = BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.2f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Build, contentDescription = null, tint = PrimaryBlue)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Vehículo: $vehicleLabel", fontWeight = FontWeight.Bold)
+                            Text("Orden de Trabajo: #$orderLabel", style = MaterialTheme.typography.bodySmall, color = Slate700)
+                        }
                     }
                 }
-            ) {
-                if (isSaving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                else Text("Emitir ${if (voucherType == VoucherType.RECEIPT) "boleta" else "factura"}")
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CheckoutSectionTitle("TIPO DE COMPROBANTE")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = voucherType == VoucherType.RECEIPT,
+                            onClick = {
+                                voucherType = VoucherType.RECEIPT
+                                documentType = DocumentType.DNI
+                                if (documentNumber == VoucherCheckoutDemoData.ruc) {
+                                    documentNumber = VoucherCheckoutDemoData.dni
+                                    customerName = uiState.customerName.takeIf(String::isNotBlank)
+                                        ?: VoucherCheckoutDemoData.customerName
+                                }
+                            },
+                            label = { Text("Boleta de venta") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = voucherType == VoucherType.INVOICE,
+                            onClick = {
+                                voucherType = VoucherType.INVOICE
+                                documentType = DocumentType.RUC
+                                if (documentNumber == VoucherCheckoutDemoData.dni) {
+                                    documentNumber = VoucherCheckoutDemoData.ruc
+                                    customerName = VoucherCheckoutDemoData.invoiceCustomerName
+                                }
+                            },
+                            label = { Text("Factura") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CheckoutSectionTitle("DATOS DEL CLIENTE Y DOCUMENTO")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = documentType == DocumentType.DNI,
+                            onClick = { documentType = DocumentType.DNI; documentNumber = documentNumber.take(8); validationMessage = null },
+                            label = { Text("DNI") }
+                        )
+                        FilterChip(
+                            selected = documentType == DocumentType.RUC,
+                            onClick = { documentType = DocumentType.RUC; documentNumber = documentNumber.take(11); validationMessage = null },
+                            label = { Text("RUC") }
+                        )
+                        FilterChip(
+                            selected = documentType == DocumentType.CE,
+                            onClick = { documentType = DocumentType.CE; validationMessage = null },
+                            label = { Text("CE") }
+                        )
+                    }
+                    androidx.compose.material3.OutlinedTextField(
+                        value = documentNumber,
+                        onValueChange = {
+                            documentNumber = when (documentType) {
+                                DocumentType.DNI -> it.filter(Char::isDigit).take(8)
+                                DocumentType.RUC -> it.filter(Char::isDigit).take(11)
+                                DocumentType.CE -> it.take(20)
+                            }
+                            validationMessage = null
+                        },
+                        label = { Text("Número de ${documentType.name}") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = customerName,
+                        onValueChange = { customerName = it; validationMessage = null },
+                        label = { Text("Nombre o razón social") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = customerAddress,
+                        onValueChange = { customerAddress = it },
+                        label = { Text("Dirección fiscal") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CheckoutSectionTitle("DETALLE DE SERVICIOS Y REPUESTOS EN BAHÍA")
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = BorderStroke(1.dp, ShiftIQBorderSlate),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column {
+                            checkoutItems.forEachIndexed { index, item ->
+                                CheckoutLineItem(
+                                    title = item.description,
+                                    subtitle = "Cant: ${item.quantity} × ${com.tuxlogic.shiftiq.mobile.core.model.Money(item.unitPrice).formatted()}",
+                                    amount = com.tuxlogic.shiftiq.mobile.core.model.Money(item.totalPrice).formatted(),
+                                    icon = if (item.type == VoucherDemoItemType.SERVICE) Icons.Default.Build else Icons.Default.Inventory2
+                                )
+                                if (index < checkoutItems.lastIndex) HorizontalDivider(color = ShiftIQBorderSlate)
+                            }
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CheckoutSectionTitle("RESUMEN FISCAL")
+                    Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(12.dp)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            CheckoutAmountRow("Subtotal", com.tuxlogic.shiftiq.mobile.core.model.Money(subtotal).formatted())
+                            CheckoutAmountRow("IGV (18%)", com.tuxlogic.shiftiq.mobile.core.model.Money(tax).formatted())
+                            HorizontalDivider(color = ShiftIQBorderSlate)
+                            CheckoutAmountRow("Total", com.tuxlogic.shiftiq.mobile.core.model.Money(total).formatted(), emphasize = true)
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CheckoutSectionTitle("MÉTODO DE PAGO Y COBRO EN CAJA")
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PaymentMethod.entries.forEach { method ->
+                            FilterChip(
+                                selected = paymentMethod == method,
+                                onClick = { paymentMethod = method },
+                                label = { Text(method.checkoutLabel()) }
+                            )
+                        }
+                    }
+                }
+
+                validationMessage?.let { ErrorBanner(it) }
+                uiState.errorMessage?.let { ErrorBanner(it) }
+                Button(
+                    enabled = !isSaving,
+                    onClick = {
+                        val documentError = when (documentType) {
+                            DocumentType.DNI -> if (documentNumber.length == 8) null else "DNI requiere 8 dígitos."
+                            DocumentType.RUC -> if (documentNumber.length == 11) null else "RUC requiere 11 dígitos."
+                            DocumentType.CE -> if (documentNumber.isNotBlank()) null else "Ingresa el número de CE."
+                        }
+                        when {
+                            customerName.isBlank() -> validationMessage = "Ingresa el nombre o razón social."
+                            documentError != null -> validationMessage = documentError
+                            else -> onEmit(voucherType, documentType, documentNumber, customerName)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = ShiftIQSuccess),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (isSaving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
+                    else {
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("EMITIR ${voucherType.checkoutLabel().uppercase()} ${com.tuxlogic.shiftiq.mobile.core.model.Money(total).formatted()}", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
-        },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") } }
-    )
+        }
+    }
 }
 
 @Composable
-private fun WorkOrderSummaryCard(order: WorkOrder, vehicleDescription: String) {
+private fun CheckoutSectionTitle(title: String) {
+    Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Slate700)
+}
+
+@Composable
+private fun CheckoutLineItem(title: String, subtitle: String, amount: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Icon(icon, contentDescription = null, tint = PrimaryBlue)
+        Column(Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Slate500)
+        }
+        Text(amount, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun CheckoutAmountRow(label: String, amount: String, emphasize: Boolean = false) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = if (emphasize) Color(0xFF0F172A) else Slate700, fontWeight = if (emphasize) FontWeight.Bold else FontWeight.Normal)
+        Text(amount, color = if (emphasize) PrimaryBlue else Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+    }
+}
+
+private fun PaymentMethod.checkoutLabel(): String = when (this) {
+    PaymentMethod.CASH -> "Efectivo"
+    PaymentMethod.CREDIT_CARD -> "Tarjeta de crédito"
+    PaymentMethod.DEBIT_CARD -> "Tarjeta de débito"
+    PaymentMethod.BANK_TRANSFER -> "Transferencia bancaria"
+}
+
+private fun VoucherType.checkoutLabel(): String = when (this) {
+    VoucherType.RECEIPT -> "Boleta"
+    VoucherType.INVOICE -> "Factura"
+}
+
+@Composable
+private fun WorkOrderSummaryCard(
+    order: WorkOrder,
+    vehicleDescription: String,
+    customerName: String,
+    customerPhone: String
+) {
     Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, ShiftIQBorderSlate)) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(order.formattedNumber.ifBlank { "OT-${order.internalNumber}" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
             Text(vehicleDescription, style = MaterialTheme.typography.bodyMedium, color = Slate700)
             StatusPill(statusLabel(order.status.name), statusColor(order.status.name))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.PersonOutline, contentDescription = null, modifier = Modifier.size(16.dp), tint = Slate500)
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "Cliente: $customerName",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = customerPhone.isBlank())
+                )
+                if (customerPhone.isNotBlank()) {
+                    Spacer(Modifier.width(12.dp))
+                    Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(14.dp), tint = Slate500)
+                    Spacer(Modifier.width(4.dp))
+                    Text(customerPhone, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                }
+            }
             order.diagnosticSummary.takeIf(String::isNotBlank)?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium)
             }
@@ -813,13 +1056,15 @@ private fun statusLabel(status: String): String = when (status.uppercase()) {
     "PENDING" -> "Pendiente"
     "IN_PROGRESS", "DOING" -> "En progreso"
     "COMPLETED" -> "Completada"
-    "CANCELLED", "CANCELED" -> "Cancelada"
+    "PAID" -> "Pagada"
+    "DELETED", "CANCELLED", "CANCELED" -> "Cancelada"
     else -> status.replace('_', ' ').lowercase().replaceFirstChar(Char::uppercase)
 }
 
 private fun statusColor(status: String): Color = when (status.uppercase()) {
     "COMPLETED" -> ShiftIQSuccess
-    "CANCELLED", "CANCELED" -> Color(0xFFDC2626)
+    "PAID" -> PrimaryBlue
+    "DELETED", "CANCELLED", "CANCELED" -> Color(0xFFDC2626)
     "IN_PROGRESS", "DOING" -> Color(0xFF0D9488)
     else -> Color(0xFFD97706)
 }
